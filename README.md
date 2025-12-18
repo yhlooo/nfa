@@ -1,4 +1,4 @@
-# NFA
+# NFA (Not Financial Advice)
 
-Financial Trading LLM AI Agent. **This is Not Financial Advice (NFA).**
+Financial Trading LLM AI Agent. **This is Not Financial Advice.**
 
