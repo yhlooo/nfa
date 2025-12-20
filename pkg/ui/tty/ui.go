@@ -135,10 +135,8 @@ func (ui *ChatUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		ui.vp.Reset()
 
 	case QuitError:
-		logger.Error(typedMsg, "error")
-		cmds = append(cmds,
-			tea.Quit,
-		)
+		logger.Error(typedMsg.Error, "error")
+		cmds = append(cmds, tea.Quit)
 
 	case error:
 		logger.Error(typedMsg, "error")

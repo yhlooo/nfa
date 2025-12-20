@@ -32,3 +32,6 @@ go.work
 /bin/
 /dist/
 /outputs/
+
+# Genkit
+.genkit/

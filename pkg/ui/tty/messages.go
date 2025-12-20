@@ -2,7 +2,9 @@ package tty
 
 import "github.com/coder/acp-go-sdk"
 
-type QuitError error
+type QuitError struct {
+	Error error
+}
 
 type PromptResult struct {
 	Response acp.PromptResponse

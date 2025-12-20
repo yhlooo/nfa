@@ -22,12 +22,12 @@ func (ui *ChatUI) initAgent() tea.Msg {
 		},
 	})
 	if err != nil {
-		return QuitError(fmt.Errorf("initialize agent error: %w", err))
+		return QuitError{Error: fmt.Errorf("initialize agent error: %w", err)}
 	}
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		return QuitError(fmt.Errorf("new session error: get current working directory error: %w", err))
+		return QuitError{Error: fmt.Errorf("new session error: get current working directory error: %w", err)}
 	}
 
 	resp, err := ui.conn.NewSession(ui.ctx, acp.NewSessionRequest{
@@ -35,7 +35,7 @@ func (ui *ChatUI) initAgent() tea.Msg {
 		McpServers: []acp.McpServer{},
 	})
 	if err != nil {
-		return QuitError(fmt.Errorf("new session error: %w", err))
+		return QuitError{Error: fmt.Errorf("new session error: %w", err)}
 	}
 	ui.sessionID = resp.SessionId
 
