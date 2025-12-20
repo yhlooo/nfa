@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -12,6 +13,8 @@ import (
 	"github.com/spf13/pflag"
 	"gopkg.in/natefinch/lumberjack.v2"
 
+	"github.com/yhlooo/nfa/pkg/agents"
+	uitty "github.com/yhlooo/nfa/pkg/ui/tty"
 	"github.com/yhlooo/nfa/pkg/version"
 )
 
@@ -94,10 +97,25 @@ func NewCommand(name string) *cobra.Command {
 		},
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := cmd.Context()
-			logger := logr.FromContextOrDiscard(ctx)
-			logger.Info("Hello World!")
-			return cmd.Help()
+			agent := agents.NewNFA(agents.Options{})
+
+			agentIn, clientOut := io.Pipe()
+			clientIn, agentOut := io.Pipe()
+			defer func() {
+				_ = clientOut.Close()
+				_ = agentIn.Close()
+				_ = agentOut.Close()
+				_ = clientIn.Close()
+			}()
+
+			if err := agent.Connect(agentIn, agentOut); err != nil {
+				return fmt.Errorf("create agent side connection error: %w", err)
+			}
+
+			return uitty.NewChatUI(uitty.Options{
+				AgentClientIn:  clientIn,
+				AgentClientOut: clientOut,
+			}).Run(cmd.Context())
 		},
 	}
 
