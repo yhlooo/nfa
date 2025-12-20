@@ -45,13 +45,18 @@ func (ui *ChatUI) initAgent() tea.Msg {
 // newPrompt 开始一轮对话
 func (ui *ChatUI) newPrompt(prompt string) tea.Cmd {
 	return func() tea.Msg {
-		resp, err := ui.conn.Prompt(ui.ctx, acp.PromptRequest{
+		req := acp.PromptRequest{
 			SessionId: ui.sessionID,
 			Prompt: []acp.ContentBlock{
 				acp.TextBlock(prompt),
 			},
-		})
-		return PromptResult{Response: resp, Error: err}
+		}
+		ui.p.Send(req)
+		resp, err := ui.conn.Prompt(ui.ctx, req)
+		if err != nil {
+			ui.p.Send(fmt.Errorf("new prompt error: %w", err))
+		}
+		return resp
 	}
 }
 
@@ -82,6 +87,6 @@ func (ui *ChatUI) RequestPermission(
 
 // SessionUpdate 更新会话
 func (ui *ChatUI) SessionUpdate(_ context.Context, params acp.SessionNotification) error {
-	ui.p.Send(params.Update)
+	ui.p.Send(params)
 	return nil
 }

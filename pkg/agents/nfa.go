@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"sync"
 
 	"github.com/coder/acp-go-sdk"
@@ -158,15 +159,32 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 			default:
 			}
 
-			if chunk.Text() == "" {
+			var reasoning strings.Builder
+			var text strings.Builder
+			for _, part := range chunk.Content {
+				if part.IsReasoning() {
+					reasoning.WriteString(part.Text)
+				}
+				if part.IsText() || part.IsText() {
+					text.WriteString(part.Text)
+				}
+			}
+			if reasoning.Len() > 0 {
+				if err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
+					SessionId: params.SessionId,
+					Update:    acp.UpdateAgentThoughtText(reasoning.String()),
+				}); err != nil {
+					return fmt.Errorf("session update error: %w", err)
+				}
 				return nil
 			}
-
-			if err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
-				SessionId: params.SessionId,
-				Update:    acp.UpdateAgentMessageText(chunk.Text()),
-			}); err != nil {
-				return fmt.Errorf("session update error: %w", err)
+			if text.Len() > 0 {
+				if err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
+					SessionId: params.SessionId,
+					Update:    acp.UpdateAgentMessageText(chunk.Text()),
+				}); err != nil {
+					return fmt.Errorf("session update error: %w", err)
+				}
 			}
 
 			return nil

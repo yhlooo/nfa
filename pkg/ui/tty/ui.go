@@ -35,9 +35,8 @@ type ChatUI struct {
 
 	width int
 
-	input       textarea.Model
-	inPrompting bool
-	buffer      string
+	input textarea.Model
+	vp    MessageViewport
 
 	acputil.NopFS
 	acputil.NopTerminal
@@ -62,6 +61,8 @@ func (ui *ChatUI) Run(ctx context.Context) error {
 	ui.input.SetWidth(30)
 	ui.input.SetHeight(1)
 	ui.input.Focus()
+
+	ui.vp = NewMessageViewport()
 
 	p := tea.NewProgram(ui, tea.WithContext(ctx))
 	ui.p = p
@@ -94,8 +95,13 @@ func (ui *ChatUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	var inputCmd tea.Cmd
 	ui.input, inputCmd = ui.input.Update(msg)
+	var vpCmd tea.Cmd
+	ui.vp, vpCmd = ui.vp.Update(msg)
 
-	cmds := []tea.Cmd{inputCmd}
+	cmds := []tea.Cmd{
+		inputCmd,
+		vpCmd,
+	}
 
 	switch typedMsg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -104,77 +110,38 @@ func (ui *ChatUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch typedMsg.Type {
 		case tea.KeyEnter:
-			if !ui.inPrompting {
-				if !ui.input.KeyMap.InsertNewline.Enabled() {
-					content := strings.TrimRight(ui.input.Value(), "\n")
-					ui.input.Reset()
-					if content != "" {
-						cmds = append(cmds, tea.Sequence(
-							tea.Printf("> %s", content),
-							ui.newPrompt(content),
-						))
-						ui.inPrompting = true
-					}
+			if !ui.vp.AgentProcessing() {
+				content := strings.TrimRight(ui.input.Value(), "\n")
+				ui.input.Reset()
+				if content != "" {
+					cmds = append(cmds, ui.newPrompt(content))
 				}
 			}
 
-		case tea.KeyTab:
-			ui.input.KeyMap.InsertNewline.SetEnabled(true)
-			ui.input.SetHeight(5)
 		case tea.KeyEsc:
-			content := strings.Trim(ui.input.Value(), "\n")
-
-			if content != "" && !ui.inPrompting {
-				cmds = append(cmds, tea.Sequence(
-					tea.Printf("> %s", content),
-					ui.newPrompt(content),
-				))
-				ui.inPrompting = true
-			}
-
-			if content == "" || !ui.inPrompting {
-				ui.input.KeyMap.InsertNewline.SetEnabled(false)
-				ui.input.SetHeight(1)
-				ui.input.Reset()
+			if ui.vp.AgentProcessing() {
+				cmds = append(cmds, ui.cancelPrompt)
 			}
 
 		case tea.KeyCtrlC:
-			if !ui.inPrompting {
+			if !ui.vp.AgentProcessing() {
 				return ui, tea.Quit
 			}
 			cmds = append(cmds, ui.cancelPrompt)
 		}
 
-	case acp.SessionUpdate:
-		switch {
-		case typedMsg.AgentMessageChunk != nil:
-			content := typedMsg.AgentMessageChunk.Content
-			switch {
-			case content.Text != nil:
-				ui.buffer += content.Text.Text
-			}
-		}
-
-	case PromptResult:
-		logger.Error(typedMsg.Error, "prompt error")
-		ui.inPrompting = false
-		if typedMsg.Error != nil {
-			cmds = append(cmds, tea.Println(ui.buffer+"\n"+typedMsg.Error.Error()))
-		} else {
-			cmds = append(cmds, tea.Println(ui.buffer))
-		}
-		ui.buffer = ""
+	case acp.PromptResponse:
+		cmds = append(cmds, tea.Println(ui.vp.View()))
+		ui.vp.Reset()
 
 	case QuitError:
 		logger.Error(typedMsg, "error")
 		cmds = append(cmds,
-			tea.Println(typedMsg.Error()),
 			tea.Quit,
 		)
 
 	case error:
 		logger.Error(typedMsg, "error")
-		cmds = append(cmds, tea.Println(typedMsg.Error()))
 	}
 
 	return ui, tea.Batch(cmds...)
@@ -182,12 +149,15 @@ func (ui *ChatUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View 渲染显示内容
 func (ui *ChatUI) View() string {
+	vpView := ui.vp.View()
+	if vpView != "" {
+		vpView += "\n"
+	}
 	return fmt.Sprintf(`%s
-
 %s
 %s
 %s`,
-		ui.buffer,
+		vpView,
 		strings.Repeat("─", ui.width),
 		ui.input.View(),
 		strings.Repeat("─", ui.width))
