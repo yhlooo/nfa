@@ -12,22 +12,36 @@ import (
 	"github.com/coder/acp-go-sdk"
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/genkit"
-	"github.com/firebase/genkit/go/plugins/ollama"
 	"github.com/go-logr/logr"
 	"github.com/google/uuid"
 
 	"github.com/yhlooo/nfa/pkg/acputil"
+	"github.com/yhlooo/nfa/pkg/agents/models"
 	"github.com/yhlooo/nfa/pkg/version"
 )
 
 const loggerName = "agent"
 
 // Options Agent 运行选项
-type Options struct{}
+type Options struct {
+	ModelProviders []models.ModelProvider
+	DefaultModel   string
+}
+
+// Complete 使用默认值补全选项
+func (opts *Options) Complete() {
+	if len(opts.ModelProviders) == 0 {
+		opts.ModelProviders = append(opts.ModelProviders, models.ModelProvider{Ollama: &models.OllamaOptions{}})
+	}
+}
 
 // NewNFA 创建 NFA Agent
-func NewNFA(_ Options) *NFAAgent {
+func NewNFA(opts Options) *NFAAgent {
+	opts.Complete()
 	return &NFAAgent{
+		modelProviders: opts.ModelProviders,
+		defaultModel:   opts.DefaultModel,
+
 		sessions: map[acp.SessionId]*Session{},
 	}
 }
@@ -36,10 +50,14 @@ func NewNFA(_ Options) *NFAAgent {
 type NFAAgent struct {
 	lock sync.RWMutex
 
+	modelProviders []models.ModelProvider
+	defaultModel   string
+
 	conn *acp.AgentSideConnection
 	g    *genkit.Genkit
 
-	tools []ai.ToolRef
+	availableModels []string
+	tools           []ai.ToolRef
 
 	sessions map[acp.SessionId]*Session
 }
@@ -79,27 +97,13 @@ func (a *NFAAgent) Initialize(ctx context.Context, _ acp.InitializeRequest) (acp
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
-	if a.g == nil {
-		o := &ollama.Ollama{
-			ServerAddress: "http://localhost:11434",
-			Timeout:       120,
-		}
-		a.g = genkit.Init(ctx, genkit.WithPlugins(o))
-		o.DefineModel(a.g, ollama.ModelDefinition{
-			Name: "qwen3:14b",
-			Type: "chat",
-		}, &ai.ModelOptions{
-			Supports: &ai.ModelSupports{
-				Multiturn: true,
-				Tools:     true,
-			},
-		})
-
-		// 注册工具
-		a.tools = append(a.tools, DefineToolQueryAssetPriceTrends(a.g))
-	}
+	a.InitGenkit(ctx)
 
 	return acp.InitializeResponse{
+		Meta: map[string]any{
+			MetaKeyAvailableModels: a.availableModels,
+			MetaKeyDefaultModel:    a.defaultModel,
+		},
 		AgentCapabilities: acp.AgentCapabilities{},
 		AgentInfo: &acp.Implementation{
 			Name:    "NFA",
@@ -170,6 +174,14 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	}()
 	session.lock.Unlock()
 
+	modelName := GetMetaStringValue(params.Meta, MetaKeyModelName)
+	if modelName == "" {
+		modelName = a.defaultModel
+	}
+	if modelName == "" {
+		return acp.PromptResponse{}, fmt.Errorf("no available model")
+	}
+
 	prompt := ""
 	for _, content := range params.Prompt {
 		switch {
@@ -186,7 +198,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	for {
 		genOpts = append(genOpts,
 			ai.WithMessages(messages...),
-			ai.WithModelName("ollama/qwen3:14b"),
+			ai.WithModelName(modelName),
 			ai.WithTools(a.tools...),
 			ai.WithReturnToolRequests(true),
 			ai.WithStreaming(a.handleStreamChunk(params.SessionId)),

@@ -41,8 +41,11 @@ type ChatUI struct {
 	acputil.NopFS
 	acputil.NopTerminal
 
-	conn      *acp.ClientSideConnection
-	sessionID acp.SessionId
+	conn            *acp.ClientSideConnection
+	cwd             string
+	sessionID       acp.SessionId
+	defaultModel    string
+	availableModels []string
 }
 
 var _ tea.Model = (*ChatUI)(nil)
@@ -51,6 +54,11 @@ var _ acp.Client = (*ChatUI)(nil)
 // Run 运行 UI
 func (ui *ChatUI) Run(ctx context.Context) error {
 	logger := logr.FromContextOrDiscard(ctx)
+
+	if err := ui.initAgent(ctx); err != nil {
+		return fmt.Errorf("initialize agent error: %w", err)
+	}
+
 	ui.ctx = ctx
 	ui.logger = logger
 
@@ -73,18 +81,8 @@ func (ui *ChatUI) Run(ctx context.Context) error {
 // Init 开始运行 UI 的第一个操作
 func (ui *ChatUI) Init() tea.Cmd {
 	return tea.Sequence(
-		ui.initAgent,
-		tea.Println(`
-╭─────────────────────────────────╮
-│         _   __ ______ ___       │
-│        / | / // ____//   |      │
-│       /  |/ // /_   / /| |      │
-│      / /|  // __/  / ___ |      │
-│     /_/ |_//_/    /_/  |_|      │
-│                                 │
-╰─────────────────────────────────╯
-
-`),
+		ui.newSession,
+		ui.printHello(),
 		textarea.Blink,
 	)
 }
@@ -159,4 +157,22 @@ func (ui *ChatUI) View() string {
 		strings.Repeat("─", ui.width),
 		ui.input.View(),
 		strings.Repeat("─", ui.width))
+}
+
+// printHello 输出欢迎信息
+func (ui *ChatUI) printHello() tea.Cmd {
+	return func() tea.Msg {
+		return tea.Printf(`
+╭─────────────────────────────────╮
+│         _   __ ______ ___       │
+│        / | / // ____//   |      │
+│       /  |/ // /_   / /| |      │
+│      / /|  // __/  / ___ |      │
+│     /_/ |_//_/    /_/  |_|      │
+│                                 │
+╰─────────────────────────────────╯
+Session : %s
+Model   : %s
+`, ui.sessionID, ui.defaultModel)()
+	}
 }

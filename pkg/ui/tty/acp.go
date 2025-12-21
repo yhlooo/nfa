@@ -8,12 +8,13 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/coder/acp-go-sdk"
 
+	"github.com/yhlooo/nfa/pkg/agents"
 	"github.com/yhlooo/nfa/pkg/version"
 )
 
 // initAgent 初始化 Agent
-func (ui *ChatUI) initAgent() tea.Msg {
-	_, err := ui.conn.Initialize(ui.ctx, acp.InitializeRequest{
+func (ui *ChatUI) initAgent(ctx context.Context) error {
+	resp, err := ui.conn.Initialize(ctx, acp.InitializeRequest{
 		ClientCapabilities: acp.ClientCapabilities{},
 		ClientInfo: &acp.Implementation{
 			Name:    "NFA",
@@ -22,16 +23,24 @@ func (ui *ChatUI) initAgent() tea.Msg {
 		},
 	})
 	if err != nil {
-		return QuitError{Error: fmt.Errorf("initialize agent error: %w", err)}
+		return fmt.Errorf("initialize agent error: %w", err)
 	}
+	ui.defaultModel = agents.GetMetaStringValue(resp.Meta, agents.MetaKeyDefaultModel)
+	ui.availableModels = agents.GetMetaStringSliceValue(resp.Meta, agents.MetaKeyAvailableModels)
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		return QuitError{Error: fmt.Errorf("new session error: get current working directory error: %w", err)}
+		return fmt.Errorf("new session error: get current working directory error: %w", err)
 	}
+	ui.cwd = cwd
 
+	return nil
+}
+
+// newSession 创建会话
+func (ui *ChatUI) newSession() tea.Msg {
 	resp, err := ui.conn.NewSession(ui.ctx, acp.NewSessionRequest{
-		Cwd:        cwd,
+		Cwd:        ui.cwd,
 		McpServers: []acp.McpServer{},
 	})
 	if err != nil {
