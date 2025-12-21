@@ -130,10 +130,15 @@ func NewCommand(name string) *cobra.Command {
 			cfg := ConfigFromContext(ctx)
 			logger := logr.FromContextOrDiscard(ctx)
 
+			defaultModel := opts.DefaultModel
+			if defaultModel == "" {
+				defaultModel = cfg.DefaultModel
+			}
+
 			agent := agents.NewNFA(agents.Options{
 				Logger:         logger,
 				ModelProviders: cfg.ModelProviders,
-				DefaultModel:   opts.DefaultModel,
+				DefaultModel:   defaultModel,
 			})
 
 			agentIn, clientOut := io.Pipe()
