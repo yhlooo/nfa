@@ -11,7 +11,7 @@ import (
 
 // InitGenkit 初始化 genkit
 func (a *NFAAgent) InitGenkit(ctx context.Context) {
-	logger := logr.FromContextOrDiscard(ctx).WithName(loggerName)
+	ctx = logr.NewContext(ctx, a.logger)
 
 	if a.g != nil {
 		return
@@ -38,7 +38,7 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 		case p.Ollama != nil:
 			models, err := p.Ollama.DefineModels(ctx, a.g, ollamaPlugin)
 			if err != nil {
-				logger.Error(err, "define ollama models error")
+				a.logger.Error(err, "define ollama models error")
 			}
 			a.availableModels = append(a.availableModels, models...)
 		}

@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 
+	"github.com/go-logr/logr"
 	"github.com/spf13/cobra"
 
 	"github.com/yhlooo/nfa/pkg/agents"
@@ -31,8 +32,10 @@ func newModelsListCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			cfg := ConfigFromContext(ctx)
+			logger := logr.FromContextOrDiscard(ctx)
 
 			agent := agents.NewNFA(agents.Options{
+				Logger:         logger,
 				ModelProviders: cfg.ModelProviders,
 			})
 			agent.InitGenkit(ctx)

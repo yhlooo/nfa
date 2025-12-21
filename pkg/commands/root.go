@@ -128,8 +128,10 @@ func NewCommand(name string) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			cfg := ConfigFromContext(ctx)
+			logger := logr.FromContextOrDiscard(ctx)
 
 			agent := agents.NewNFA(agents.Options{
+				Logger:         logger,
 				ModelProviders: cfg.ModelProviders,
 				DefaultModel:   opts.DefaultModel,
 			})

@@ -24,6 +24,7 @@ const loggerName = "agent"
 
 // Options Agent 运行选项
 type Options struct {
+	Logger         logr.Logger
 	ModelProviders []models.ModelProvider
 	DefaultModel   string
 }
@@ -39,6 +40,7 @@ func (opts *Options) Complete() {
 func NewNFA(opts Options) *NFAAgent {
 	opts.Complete()
 	return &NFAAgent{
+		logger:         opts.Logger,
 		modelProviders: opts.ModelProviders,
 		defaultModel:   opts.DefaultModel,
 
@@ -50,6 +52,7 @@ func NewNFA(opts Options) *NFAAgent {
 type NFAAgent struct {
 	lock sync.RWMutex
 
+	logger         logr.Logger
 	modelProviders []models.ModelProvider
 	defaultModel   string
 
@@ -141,8 +144,6 @@ func (a *NFAAgent) SetSessionMode(_ context.Context, _ acp.SetSessionModeRequest
 
 // Prompt 对话
 func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.PromptResponse, error) {
-	logger := logr.FromContextOrDiscard(ctx).WithName(loggerName)
-
 	a.lock.RLock()
 	session, ok := a.sessions[params.SessionId]
 	a.lock.RUnlock()
@@ -194,7 +195,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	}
 
 	genOpts := []ai.GenerateOption{ai.WithPrompt(prompt)}
-	logger.Info("prompt turn start")
+	a.logger.Info("prompt turn start")
 	for {
 		genOpts = append(genOpts,
 			ai.WithMessages(messages...),
@@ -217,7 +218,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 
 		toolRequests := resp.ToolRequests()
 		if len(toolRequests) == 0 {
-			logger.Info("prompt turn end")
+			a.logger.Info("prompt turn end")
 			break
 		}
 
@@ -226,7 +227,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 		for _, toolReq := range resp.ToolRequests() {
 			part, err := a.handleToolRequest(ctx, params.SessionId, toolReq)
 			if err != nil {
-				logger.Error(err, "tool call error")
+				a.logger.Error(err, "tool call error")
 			}
 			if part != nil {
 				parts = append(parts, part)
@@ -262,11 +263,9 @@ func (a *NFAAgent) Cancel(_ context.Context, params acp.CancelNotification) erro
 
 // handleToolRequest 处理工具请求
 func (a *NFAAgent) handleToolRequest(ctx context.Context, sessionID acp.SessionId, req *ai.ToolRequest) (*ai.Part, error) {
-	logger := logr.FromContextOrDiscard(ctx).WithName(loggerName)
-
 	callID := acp.ToolCallId(uuid.New().String())
 	inputRaw, _ := json.Marshal(req.Input)
-	logger.Info(fmt.Sprintf("call tool %s: id: %s, input: %s", req.Name, callID, string(inputRaw)))
+	a.logger.Info(fmt.Sprintf("call tool %s: id: %s, input: %s", req.Name, callID, string(inputRaw)))
 	if err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
 		SessionId: sessionID,
 		Update: acp.StartToolCall(
@@ -349,8 +348,6 @@ func (a *NFAAgent) handleToolRequest(ctx context.Context, sessionID acp.SessionI
 // handleStreamChunk 处理模型流输出
 func (a *NFAAgent) handleStreamChunk(sessionID acp.SessionId) ai.ModelStreamCallback {
 	return func(ctx context.Context, chunk *ai.ModelResponseChunk) error {
-		logger := logr.FromContextOrDiscard(ctx).WithName(loggerName)
-
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
@@ -368,7 +365,7 @@ func (a *NFAAgent) handleStreamChunk(sessionID acp.SessionId) ai.ModelStreamCall
 			}
 		}
 		if reasoning.Len() > 0 {
-			logger.Info(fmt.Sprintf("output reasoning: %s", reasoning.String()))
+			a.logger.Info(fmt.Sprintf("output reasoning: %s", reasoning.String()))
 			if err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
 				SessionId: sessionID,
 				Update:    acp.UpdateAgentThoughtText(reasoning.String()),
@@ -378,7 +375,7 @@ func (a *NFAAgent) handleStreamChunk(sessionID acp.SessionId) ai.ModelStreamCall
 			return nil
 		}
 		if text.Len() > 0 {
-			logger.Info(fmt.Sprintf("output text: %s", text.String()))
+			a.logger.Info(fmt.Sprintf("output text: %s", text.String()))
 			if err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
 				SessionId: sessionID,
 				Update:    acp.UpdateAgentMessageText(text.String()),
