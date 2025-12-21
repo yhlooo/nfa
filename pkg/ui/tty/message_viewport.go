@@ -3,6 +3,7 @@ package tty
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -13,10 +14,12 @@ import (
 // NewMessageViewport 创建消息视窗
 func NewMessageViewport() MessageViewport {
 	return MessageViewport{
-		UserStyle:         lipgloss.NewStyle().Bold(true),
-		AgentStyle:        lipgloss.NewStyle(),
-		AgentThoughtStyle: lipgloss.NewStyle().Faint(true),
-		ErrorStyle:        lipgloss.NewStyle().Foreground(lipgloss.Color("1")),
+		UserStyle:                 lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("2")),
+		AgentStyle:                lipgloss.NewStyle(),
+		AgentThoughtStyle:         lipgloss.NewStyle().Faint(true),
+		AgentToolCallStyle:        lipgloss.NewStyle().Foreground(lipgloss.Color("4")),
+		AgentToolCallContentStyle: lipgloss.NewStyle().Faint(true),
+		ErrorStyle:                lipgloss.NewStyle().Foreground(lipgloss.Color("1")),
 	}
 }
 
@@ -26,10 +29,12 @@ type MessageViewport struct {
 
 	messages MessagesList
 
-	UserStyle         lipgloss.Style
-	AgentStyle        lipgloss.Style
-	AgentThoughtStyle lipgloss.Style
-	ErrorStyle        lipgloss.Style
+	UserStyle                 lipgloss.Style
+	AgentStyle                lipgloss.Style
+	AgentThoughtStyle         lipgloss.Style
+	AgentToolCallStyle        lipgloss.Style
+	AgentToolCallContentStyle lipgloss.Style
+	ErrorStyle                lipgloss.Style
 }
 
 // AgentProcessing 返回是否 Agent 处理中
@@ -69,6 +74,16 @@ func (vp MessageViewport) Update(msg tea.Msg) (MessageViewport, tea.Cmd) {
 				Type: MessageTypeAgentThought,
 				Text: renderAgentContent(typedMsg.Update.AgentThoughtChunk.Content),
 			})
+		case typedMsg.Update.ToolCall != nil:
+			vp.messages = vp.messages.Append(MessageItem{
+				Type: MessageTypeToolCall,
+				Text: vp.renderAgentToolCallStartMessage(typedMsg.Update.ToolCall),
+			})
+		case typedMsg.Update.ToolCallUpdate != nil:
+			vp.messages = vp.messages.Append(MessageItem{
+				Type: MessageTypeToolCallUpdate,
+				Text: vp.renderAgentToolCallUpdateMessage(typedMsg.Update.ToolCallUpdate),
+			})
 		default:
 			raw, _ := json.Marshal(typedMsg.Update)
 			vp.messages = vp.messages.Append(MessageItem{Type: MessageTypeUnknown, Text: string(raw)})
@@ -103,13 +118,17 @@ func (vp MessageViewport) View() string {
 	for _, msg := range vp.messages {
 		switch msg.Type {
 		case MessageTypeUser:
-			ret.WriteString(vp.UserStyle.Render("> "+strings.ReplaceAll(msg.Text, "\n", "\n  ")) + "\n")
+			ret.WriteString("🤔 " + vp.UserStyle.Render(withIndent(msg.Text, 2)) + "\n")
 		case MessageTypeAgent:
 			ret.WriteString(vp.AgentStyle.Render(msg.Text) + "\n")
 		case MessageTypeAgentThought:
-			ret.WriteString(vp.AgentThoughtStyle.Render(msg.Text) + "\n")
+			ret.WriteString("🧠 " + vp.AgentThoughtStyle.Render(withIndent(msg.Text, 2)) + "\n")
+		case MessageTypeToolCall:
+			ret.WriteString("🔧 " + vp.AgentToolCallStyle.Render(withIndent(msg.Text, 2)) + "\n")
+		case MessageTypeToolCallUpdate:
+			ret.WriteString("  " + vp.AgentToolCallStyle.Render(withIndent(msg.Text, 2)) + "\n")
 		case MessageTypeError:
-			ret.WriteString(vp.ErrorStyle.Render(msg.Text) + "\n")
+			ret.WriteString("❌ " + vp.ErrorStyle.Render(withIndent(msg.Text, 2)) + "\n")
 		case MessageTypeUnknown:
 			ret.WriteString(msg.Text + "\n")
 		}
@@ -118,9 +137,62 @@ func (vp MessageViewport) View() string {
 }
 
 // Reset 重置
+//
+//goland:noinspection GoMixedReceiverTypes
 func (vp *MessageViewport) Reset() {
 	vp.agentProcessing = 0
 	vp.messages = nil
+}
+
+// renderAgentToolCallStartMessage 渲染开始调用工具信息
+//
+//goland:noinspection GoMixedReceiverTypes
+func (vp MessageViewport) renderAgentToolCallStartMessage(msg *acp.SessionUpdateToolCall) string {
+	return fmt.Sprintf(
+		"ToolCall: %s %s",
+		msg.Title,
+		vp.AgentToolCallContentStyle.Render(withIndent(renderAgentToolCallContent(msg.Content), 11+len(msg.Title))),
+	)
+}
+
+// renderAgentToolCallUpdateMessage 渲染工具调用更新信息
+//
+//goland:noinspection GoMixedReceiverTypes
+func (vp MessageViewport) renderAgentToolCallUpdateMessage(msg *acp.SessionToolCallUpdate) string {
+	status := acp.ToolCallStatus("unknown")
+	if msg.Status != nil {
+		status = *msg.Status
+	}
+	if status == acp.ToolCallStatusFailed {
+		status = acp.ToolCallStatus(vp.ErrorStyle.Render(string(status)))
+	}
+	return fmt.Sprintf(
+		"          %s %s",
+		status,
+		vp.AgentToolCallContentStyle.Render(withIndent(renderAgentToolCallContent(msg.Content), 11+len(status))),
+	)
+}
+
+// withIndent 返回带缩进的文本
+func withIndent(content string, indent int) string {
+	indentStr := strings.Repeat(" ", indent)
+	return strings.ReplaceAll(content, "\n", "\n"+indentStr)
+}
+
+// renderAgentToolCallContent 将 Agent 工具调用内容转换为文本
+func renderAgentToolCallContent(content []acp.ToolCallContent) string {
+	var ret strings.Builder
+	for _, item := range content {
+		if item.Content == nil {
+			continue
+		}
+		line := renderAgentContent(item.Content.Content)
+		if len(line) > 128 {
+			line = line[:125] + "..."
+		}
+		ret.WriteString(line + "\n")
+	}
+	return strings.TrimRight(ret.String(), "\n")
 }
 
 // renderAgentContent 将 Agent 输出内容转换为文本
@@ -149,6 +221,8 @@ const (
 	MessageTypeUser MessageType = iota
 	MessageTypeAgent
 	MessageTypeAgentThought
+	MessageTypeToolCall
+	MessageTypeToolCallUpdate
 	MessageTypeError
 	MessageTypeUnknown
 )
@@ -159,8 +233,7 @@ type MessagesList []MessageItem
 // Append 追加消息
 func (l MessagesList) Append(item MessageItem) MessagesList {
 	if len(l) == 0 ||
-		item.Type == MessageTypeError ||
-		item.Type == MessageTypeUnknown ||
+		!slices.Contains([]MessageType{MessageTypeUser, MessageTypeAgent, MessageTypeAgentThought}, item.Type) ||
 		item.Type != l[len(l)-1].Type {
 		return append(l, item)
 	}

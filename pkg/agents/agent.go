@@ -57,6 +57,7 @@ type NFAAgent struct {
 
 	availableModels []string
 	availableTools  []ai.ToolRef
+	mainFlow        any
 
 	sessions map[acp.SessionId]*Session
 }
