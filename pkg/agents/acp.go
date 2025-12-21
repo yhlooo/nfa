@@ -149,7 +149,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	a.lock.RUnlock()
 
 	if !ok {
-		return acp.PromptResponse{}, fmt.Errorf(
+		return acp.PromptResponse{StopReason: acp.StopReasonRefusal}, fmt.Errorf(
 			"%w: session %q not found",
 			acputil.ErrSessionNotFound, params.SessionId,
 		)
@@ -158,7 +158,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	session.lock.Lock()
 	if session.cancelPrompt != nil {
 		session.lock.Unlock()
-		return acp.PromptResponse{}, fmt.Errorf(
+		return acp.PromptResponse{StopReason: acp.StopReasonRefusal}, fmt.Errorf(
 			"%w: session %q already in prompting",
 			acputil.ErrInPrompting, session.id,
 		)
@@ -180,7 +180,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 		modelName = a.defaultModel
 	}
 	if modelName == "" {
-		return acp.PromptResponse{}, fmt.Errorf("no available model")
+		return acp.PromptResponse{StopReason: acp.StopReasonRefusal}, fmt.Errorf("no available model")
 	}
 
 	prompt := ""
@@ -211,7 +211,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 			if errors.Is(err, context.Canceled) {
 				return acp.PromptResponse{StopReason: acp.StopReasonCancelled}, nil
 			}
-			return acp.PromptResponse{}, err
+			return acp.PromptResponse{StopReason: acp.StopReasonRefusal}, err
 		}
 		messages = resp.History()
 		genOpts = nil

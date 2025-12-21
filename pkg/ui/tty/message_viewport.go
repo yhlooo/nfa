@@ -77,7 +77,7 @@ func (vp MessageViewport) Update(msg tea.Msg) (MessageViewport, tea.Cmd) {
 	case acp.PromptResponse:
 		// 会话响应
 		vp.agentProcessing--
-		if typedMsg.StopReason != acp.StopReasonEndTurn {
+		if typedMsg.StopReason != "" && typedMsg.StopReason != acp.StopReasonEndTurn {
 			vp.messages = vp.messages.Append(MessageItem{
 				Type: MessageTypeError,
 				Text: fmt.Sprintf("stop reason: %s", typedMsg.StopReason),

@@ -5,8 +5,11 @@ import (
 
 	"github.com/firebase/genkit/go/core/api"
 	"github.com/firebase/genkit/go/genkit"
+	oai "github.com/firebase/genkit/go/plugins/compat_oai"
 	"github.com/firebase/genkit/go/plugins/ollama"
 	"github.com/go-logr/logr"
+
+	"github.com/yhlooo/nfa/pkg/agents/models"
 )
 
 // InitGenkit 初始化 genkit
@@ -19,14 +22,18 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 
 	// 确定插件
 	var (
-		ollamaPlugin = &ollama.Ollama{}
-		plugins      []api.Plugin
+		ollamaPlugin   = &ollama.Ollama{}
+		deepseekPlugin = &oai.OpenAICompatible{}
+		plugins        []api.Plugin
 	)
 	for _, p := range a.modelProviders {
 		switch {
 		case p.Ollama != nil:
 			ollamaPlugin = p.Ollama.OllamaPlugin()
 			plugins = append(plugins, ollamaPlugin)
+		case p.Deepseek != nil:
+			deepseekPlugin = p.Deepseek.DeepseekPlugin()
+			plugins = append(plugins, deepseekPlugin)
 		}
 	}
 
@@ -36,11 +43,17 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	for _, p := range a.modelProviders {
 		switch {
 		case p.Ollama != nil:
-			models, err := p.Ollama.DefineModels(ctx, a.g, ollamaPlugin)
+			modelNames, err := p.Ollama.DefineModels(ctx, a.g, ollamaPlugin)
 			if err != nil {
 				a.logger.Error(err, "define ollama models error")
 			}
-			a.availableModels = append(a.availableModels, models...)
+			a.availableModels = append(a.availableModels, modelNames...)
+		case p.Deepseek != nil:
+			modelNames, err := models.ListOpenAICompatibleModels(ctx, deepseekPlugin)
+			if err != nil {
+				a.logger.Error(err, "list deepseek models error")
+			}
+			a.availableModels = append(a.availableModels, modelNames...)
 		}
 	}
 
@@ -49,7 +62,7 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	}
 
 	// 注册工具
-	a.tools = append(a.tools, DefineToolQueryAssetPriceTrends(a.g))
+	a.tools = append(a.tools, DefineToolCheckAssetPriceTrends(a.g))
 }
 
 // AvailableModels 获取可用模型名列表

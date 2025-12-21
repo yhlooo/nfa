@@ -50,7 +50,11 @@ func (opts *OllamaOptions) OllamaPlugin() *ollama.Ollama {
 }
 
 // DefineModels 注册模型
-func (opts *OllamaOptions) DefineModels(ctx context.Context, g *genkit.Genkit, o *ollama.Ollama) ([]string, error) {
+func (opts *OllamaOptions) DefineModels(
+	ctx context.Context,
+	g *genkit.Genkit,
+	plugin *ollama.Ollama,
+) ([]string, error) {
 	logger := logr.FromContextOrDiscard(ctx)
 
 	if len(opts.Models) == 0 {
@@ -66,8 +70,8 @@ func (opts *OllamaOptions) DefineModels(ctx context.Context, g *genkit.Genkit, o
 
 	var definedModels []string
 	for _, model := range opts.Models {
-		logger.V(1).Info(fmt.Sprintf("define ollama model %q", model))
-		m := o.DefineModel(g, ollama.ModelDefinition{
+		logger.Info(fmt.Sprintf("define ollama model %q", model))
+		m := plugin.DefineModel(g, ollama.ModelDefinition{
 			Name: model,
 			Type: "chat",
 		}, &ai.ModelOptions{
@@ -84,8 +88,8 @@ func (opts *OllamaOptions) DefineModels(ctx context.Context, g *genkit.Genkit, o
 	return definedModels, nil
 }
 
-// GetOllamaTagsResponse 获取 Ollama tags 列表响应
-type GetOllamaTagsResponse struct {
+// ListOllamaTagsResponse 获取 Ollama tags 列表响应
+type ListOllamaTagsResponse struct {
 	Models []OllamaModel `json:"models,omitempty"`
 }
 
@@ -132,7 +136,7 @@ func (opts *OllamaOptions) ListModels(ctx context.Context) ([]OllamaModel, error
 		return nil, fmt.Errorf("unexpected status code: %d (!=200), body: %s", resp.StatusCode, string(body))
 	}
 
-	respData := &GetOllamaTagsResponse{}
+	respData := &ListOllamaTagsResponse{}
 	if err := json.Unmarshal(body, respData); err != nil {
 		return nil, fmt.Errorf("unmarshal response body error: %w, body: %s", err, string(body))
 	}
