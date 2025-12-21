@@ -138,6 +138,7 @@ func NewCommand(name string) *cobra.Command {
 			agent := agents.NewNFA(agents.Options{
 				Logger:         logger,
 				ModelProviders: cfg.ModelProviders,
+				DataProviders:  cfg.DataProviders,
 				DefaultModel:   defaultModel,
 			})
 

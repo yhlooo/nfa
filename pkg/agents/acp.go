@@ -7,73 +7,15 @@ import (
 	"fmt"
 	"io"
 	"strings"
-	"sync"
 
 	"github.com/coder/acp-go-sdk"
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/genkit"
-	"github.com/go-logr/logr"
 	"github.com/google/uuid"
 
 	"github.com/yhlooo/nfa/pkg/acputil"
-	"github.com/yhlooo/nfa/pkg/agents/models"
 	"github.com/yhlooo/nfa/pkg/version"
 )
-
-const loggerName = "agent"
-
-// Options Agent 运行选项
-type Options struct {
-	Logger         logr.Logger
-	ModelProviders []models.ModelProvider
-	DefaultModel   string
-}
-
-// Complete 使用默认值补全选项
-func (opts *Options) Complete() {
-	if len(opts.ModelProviders) == 0 {
-		opts.ModelProviders = append(opts.ModelProviders, models.ModelProvider{Ollama: &models.OllamaOptions{}})
-	}
-}
-
-// NewNFA 创建 NFA Agent
-func NewNFA(opts Options) *NFAAgent {
-	opts.Complete()
-	return &NFAAgent{
-		logger:         opts.Logger,
-		modelProviders: opts.ModelProviders,
-		defaultModel:   opts.DefaultModel,
-
-		sessions: map[acp.SessionId]*Session{},
-	}
-}
-
-// NFAAgent NFA Agent
-type NFAAgent struct {
-	lock sync.RWMutex
-
-	logger         logr.Logger
-	modelProviders []models.ModelProvider
-	defaultModel   string
-
-	conn *acp.AgentSideConnection
-	g    *genkit.Genkit
-
-	availableModels []string
-	tools           []ai.ToolRef
-
-	sessions map[acp.SessionId]*Session
-}
-
-// Session 会话
-type Session struct {
-	lock sync.RWMutex
-
-	id           acp.SessionId
-	cancelPrompt context.CancelFunc
-
-	history []*ai.Message
-}
 
 var _ acp.Agent = (*NFAAgent)(nil)
 
@@ -200,7 +142,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 		genOpts = append(genOpts,
 			ai.WithMessages(messages...),
 			ai.WithModelName(modelName),
-			ai.WithTools(a.tools...),
+			ai.WithTools(a.availableTools...),
 			ai.WithReturnToolRequests(true),
 			ai.WithStreaming(a.handleStreamChunk(params.SessionId)),
 		)

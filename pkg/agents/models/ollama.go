@@ -11,7 +11,6 @@ import (
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/genkit"
 	"github.com/firebase/genkit/go/plugins/ollama"
-	"github.com/go-logr/logr"
 )
 
 // OllamaOptions Ollama 选项
@@ -49,14 +48,12 @@ func (opts *OllamaOptions) OllamaPlugin() *ollama.Ollama {
 	}
 }
 
-// DefineModels 注册模型
-func (opts *OllamaOptions) DefineModels(
+// RegisterModels 注册模型
+func (opts *OllamaOptions) RegisterModels(
 	ctx context.Context,
 	g *genkit.Genkit,
 	plugin *ollama.Ollama,
 ) ([]string, error) {
-	logger := logr.FromContextOrDiscard(ctx)
-
 	if len(opts.Models) == 0 {
 		models, err := opts.ListModels(ctx)
 		if err != nil {
@@ -70,7 +67,6 @@ func (opts *OllamaOptions) DefineModels(
 
 	var definedModels []string
 	for _, model := range opts.Models {
-		logger.Info(fmt.Sprintf("define ollama model %q", model))
 		m := plugin.DefineModel(g, ollama.ModelDefinition{
 			Name: model,
 			Type: "chat",

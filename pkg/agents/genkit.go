@@ -2,6 +2,7 @@ package agents
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/firebase/genkit/go/core/api"
 	"github.com/firebase/genkit/go/genkit"
@@ -43,15 +44,18 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	for _, p := range a.modelProviders {
 		switch {
 		case p.Ollama != nil:
-			modelNames, err := p.Ollama.DefineModels(ctx, a.g, ollamaPlugin)
+			modelNames, err := p.Ollama.RegisterModels(ctx, a.g, ollamaPlugin)
 			if err != nil {
 				a.logger.Error(err, "define ollama models error")
+				continue
 			}
 			a.availableModels = append(a.availableModels, modelNames...)
 		case p.Deepseek != nil:
+			// 注册插件后自动注册模型，这里仅获取模型名
 			modelNames, err := models.ListOpenAICompatibleModels(ctx, deepseekPlugin)
 			if err != nil {
 				a.logger.Error(err, "list deepseek models error")
+				continue
 			}
 			a.availableModels = append(a.availableModels, modelNames...)
 		}
@@ -61,8 +65,26 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 		a.defaultModel = a.availableModels[0]
 	}
 
+	for _, m := range a.availableModels {
+		a.logger.Info(fmt.Sprintf("registered model: %s", m))
+	}
+
 	// 注册工具
-	a.tools = append(a.tools, DefineToolCheckAssetPriceTrends(a.g))
+	for _, p := range a.dataProviders {
+		switch {
+		case p.AlphaVantage != nil:
+			tools, err := p.AlphaVantage.RegisterTools(ctx, a.g)
+			if err != nil {
+				a.logger.Error(err, "register alpha vantage tools error")
+				continue
+			}
+			a.availableTools = append(a.availableTools, tools...)
+		}
+	}
+
+	for _, t := range a.availableTools {
+		a.logger.Info(fmt.Sprintf("registered tool: %s", t.Name()))
+	}
 }
 
 // AvailableModels 获取可用模型名列表
