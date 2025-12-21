@@ -34,7 +34,24 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 			plugins = append(plugins, ollamaPlugin)
 		case p.Deepseek != nil:
 			deepseekPlugin = p.Deepseek.DeepseekPlugin()
+			// 注册插件后自动注册模型，这里仅获取模型名
+			modelNames, err := models.ListOpenAICompatibleModels(ctx, deepseekPlugin)
+			if err != nil {
+				a.logger.Error(err, "list deepseek models error")
+				continue
+			}
+			a.availableModels = append(a.availableModels, modelNames...)
 			plugins = append(plugins, deepseekPlugin)
+		case p.OpenAICompatible != nil:
+			plugin := p.OpenAICompatible.OpenAICompatiblePlugin()
+			// 注册插件后自动注册模型，这里仅获取模型名
+			modelNames, err := models.ListOpenAICompatibleModels(ctx, plugin)
+			if err != nil {
+				a.logger.Error(err, fmt.Sprintf("list %s models error", p.OpenAICompatible.Name))
+				continue
+			}
+			a.availableModels = append(a.availableModels, modelNames...)
+			plugins = append(plugins, plugin)
 		}
 	}
 
@@ -47,14 +64,6 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 			modelNames, err := p.Ollama.RegisterModels(ctx, a.g, ollamaPlugin)
 			if err != nil {
 				a.logger.Error(err, "define ollama models error")
-				continue
-			}
-			a.availableModels = append(a.availableModels, modelNames...)
-		case p.Deepseek != nil:
-			// 注册插件后自动注册模型，这里仅获取模型名
-			modelNames, err := models.ListOpenAICompatibleModels(ctx, deepseekPlugin)
-			if err != nil {
-				a.logger.Error(err, "list deepseek models error")
 				continue
 			}
 			a.availableModels = append(a.availableModels, modelNames...)

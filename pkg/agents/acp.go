@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/coder/acp-go-sdk"
 	"github.com/firebase/genkit/go/ai"
@@ -140,6 +141,14 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	a.logger.Info("prompt turn start")
 	for {
 		genOpts = append(genOpts,
+			ai.WithSystem(
+				fmt.Sprintf(`你是一个专业的金融分析师，为用户提供专业的金融咨询服务，你的目标是回答用户咨询的问题。
+如果缺少为了回答用户问题的必要信息，你可以通过工具查询相关信息，但是仅做必要查询。
+当信息足够回答用户问题后就停止查询直接回答用户问题。
+上下文中包含历史对话，和工具查询结果，只需对用户最新问题进行回答即可。
+用用户提问的语言回答问题，比如用户用中文提问就用中文回答，用户用英文提问就用英文回答。
+当前时间是： %s`, time.Now()),
+			),
 			ai.WithMessages(messages...),
 			ai.WithModelName(modelName),
 			ai.WithTools(a.availableTools...),
