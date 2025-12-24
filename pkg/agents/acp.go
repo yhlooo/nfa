@@ -301,6 +301,9 @@ func (a *NFAAgent) handleStreamChunk(sessionID acp.SessionId) ai.ModelStreamCall
 		default:
 		}
 
+		raw, _ := json.Marshal(chunk)
+		a.logger.V(1).Info(fmt.Sprintf("model chunk: %s", string(raw)))
+
 		var reasoning strings.Builder
 		var text strings.Builder
 		for _, part := range chunk.Content {

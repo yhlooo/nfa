@@ -2,6 +2,7 @@ package models
 
 import (
 	oai "github.com/firebase/genkit/go/plugins/compat_oai"
+	"github.com/openai/openai-go/option"
 )
 
 const (
@@ -21,5 +22,8 @@ func (opts *DeepseekOptions) DeepseekPlugin() *oai.OpenAICompatible {
 		Provider: DeepseekProviderName,
 		BaseURL:  DeepseekBaseURL,
 		APIKey:   opts.APIKey,
+		Opts: []option.RequestOption{
+			option.WithJSONSet("extra_body.thinking.type", "enabled"),
+		},
 	}
 }

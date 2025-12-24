@@ -11,6 +11,7 @@ require (
 	github.com/firebase/genkit/go v1.2.0
 	github.com/go-logr/logr v1.4.3
 	github.com/google/uuid v1.6.0
+	github.com/openai/openai-go v1.8.2
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
@@ -45,7 +46,6 @@ require (
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
-	github.com/openai/openai-go v1.8.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect

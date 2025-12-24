@@ -2,10 +2,14 @@ package commands
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
+	"net"
+	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/bombsimon/logrusr/v4"
 	"github.com/go-logr/logr"
@@ -68,6 +72,7 @@ func NewCommand(name string) *cobra.Command {
 	globalOpts := NewGlobalOptions()
 	opts := NewOptions()
 
+	var keylog *os.File
 	cmd := &cobra.Command{
 		Use:           fmt.Sprintf("%s", name),
 		Short:         "Financial Trading LLM AI Agent. **This is Not Financial Advice.**",
@@ -120,6 +125,11 @@ func NewCommand(name string) *cobra.Command {
 			}
 			ctx = NewContextWithConfig(ctx, cfg)
 
+			keylog, err = setKeyLog()
+			if err != nil {
+				return fmt.Errorf("set tls key log error: %w", err)
+			}
+
 			cmd.SetContext(ctx)
 
 			return nil
@@ -160,6 +170,13 @@ func NewCommand(name string) *cobra.Command {
 				AgentClientOut: clientOut,
 			}).Run(ctx)
 		},
+
+		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
+			if keylog != nil {
+				_ = keylog.Close()
+			}
+			return nil
+		},
 	}
 
 	globalOpts.AddPFlags(cmd.PersistentFlags())
@@ -187,4 +204,41 @@ func ConfigFromContext(ctx context.Context) configs.Config {
 		return configs.Config{}
 	}
 	return cfg
+}
+
+// setKeyLog 设置 TLS keylog
+func setKeyLog() (*os.File, error) {
+	keylog := os.Getenv("SSLKEYLOGFILE")
+	if keylog == "" {
+		return nil, nil
+	}
+
+	if err := os.MkdirAll(filepath.Dir(keylog), 0o755); err != nil {
+		return nil, err
+	}
+
+	f, err := os.OpenFile(keylog, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return nil, err
+	}
+
+	// 设置输出 keylog 文件
+	http.DefaultClient = &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			ForceAttemptHTTP2:     true,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+
+			TLSClientConfig: &tls.Config{KeyLogWriter: f},
+		},
+	}
+
+	return f, nil
 }
