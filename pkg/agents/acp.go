@@ -310,7 +310,7 @@ func (a *NFAAgent) handleStreamChunk(sessionID acp.SessionId) ai.ModelStreamCall
 			if part.IsReasoning() {
 				reasoning.WriteString(part.Text)
 			}
-			if part.IsText() || part.IsText() {
+			if part.IsText() || part.IsData() {
 				text.WriteString(part.Text)
 			}
 		}

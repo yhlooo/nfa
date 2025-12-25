@@ -3,6 +3,7 @@ package deepseek
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"sync"
 
 	"github.com/firebase/genkit/go/ai"
@@ -57,7 +58,10 @@ func (d *Deepseek) Init(_ context.Context) []api.Action {
 		d.Provider = ProviderName
 	}
 
-	opts := []option.RequestOption{option.WithBaseURL(d.BaseURL)}
+	opts := []option.RequestOption{
+		option.WithHTTPClient(http.DefaultClient),
+		option.WithBaseURL(d.BaseURL),
+	}
 	if d.APIKey != "" {
 		opts = append(opts, option.WithAPIKey(d.APIKey))
 	}

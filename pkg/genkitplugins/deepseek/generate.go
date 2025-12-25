@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/core"
@@ -70,6 +71,7 @@ func (g *ModelGenerator) WithMessages(messages []*ai.Message) *ModelGenerator {
 			}
 			if len(toolCalls) > 0 {
 				am.ToolCalls = toolCalls
+				am.SetExtraFields(map[string]any{"reasoning_content": concatenateReasoningContent(msg.Content)})
 			}
 			oaiMessages = append(oaiMessages, openai.ChatCompletionMessageParamUnion{
 				OfAssistant: &am,
@@ -287,7 +289,7 @@ func (g *ModelGenerator) generateStream(ctx context.Context, handleChunk core.St
 
 			// 思考
 			if reasoningContent, ok := msgRawMap["reasoning_content"].(string); ok {
-				part := ai.NewReasoningPart(reasoningContent, nil)
+				part := &ai.Part{Kind: ai.PartReasoning, ContentType: "plain/text", Text: reasoningContent}
 				modelChunk.Content = append(modelChunk.Content, part)
 				fullResponse.Message.Content = append(fullResponse.Message.Content, part)
 			}
@@ -364,7 +366,10 @@ func (g *ModelGenerator) generateComplete(ctx context.Context, req *ai.ModelRequ
 
 	// 思考内容
 	if reasoningContent, ok := msgRawMap["reasoning_content"].(string); ok {
-		resp.Message.Content = append(resp.Message.Content, ai.NewReasoningPart(reasoningContent, nil))
+		resp.Message.Content = append(
+			resp.Message.Content,
+			&ai.Part{Kind: ai.PartReasoning, ContentType: "plain/text", Text: reasoningContent},
+		)
 	}
 
 	// 普通文本
@@ -394,11 +399,23 @@ func (g *ModelGenerator) generateComplete(ctx context.Context, req *ai.ModelRequ
 }
 
 func concatenateContent(parts []*ai.Part) string {
-	content := ""
+	var content strings.Builder
 	for _, part := range parts {
-		content += part.Text
+		if part.IsText() || part.IsData() {
+			content.WriteString(part.Text)
+		}
 	}
-	return content
+	return content.String()
+}
+
+func concatenateReasoningContent(parts []*ai.Part) string {
+	var content strings.Builder
+	for _, part := range parts {
+		if part.IsReasoning() {
+			content.WriteString(part.Text)
+		}
+	}
+	return content.String()
 }
 
 func convertToolCalls(content []*ai.Part) ([]openai.ChatCompletionMessageToolCallParam, error) {
