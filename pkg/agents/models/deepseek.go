@@ -1,13 +1,7 @@
 package models
 
 import (
-	oai "github.com/firebase/genkit/go/plugins/compat_oai"
-	"github.com/openai/openai-go/option"
-)
-
-const (
-	DeepseekProviderName = "deepseek"
-	DeepseekBaseURL      = "https://api.deepseek.com"
+	"github.com/yhlooo/nfa/pkg/genkitplugins/deepseek"
 )
 
 // DeepseekOptions Deepseek 选项
@@ -17,13 +11,8 @@ type DeepseekOptions struct {
 }
 
 // DeepseekPlugin 基于选项创建 Deepseek 插件
-func (opts *DeepseekOptions) DeepseekPlugin() *oai.OpenAICompatible {
-	return &oai.OpenAICompatible{
-		Provider: DeepseekProviderName,
-		BaseURL:  DeepseekBaseURL,
-		APIKey:   opts.APIKey,
-		Opts: []option.RequestOption{
-			option.WithJSONSet("extra_body.thinking.type", "enabled"),
-		},
+func (opts *DeepseekOptions) DeepseekPlugin() *deepseek.Deepseek {
+	return &deepseek.Deepseek{
+		APIKey: opts.APIKey,
 	}
 }

@@ -6,11 +6,11 @@ import (
 
 	"github.com/firebase/genkit/go/core/api"
 	"github.com/firebase/genkit/go/genkit"
-	oai "github.com/firebase/genkit/go/plugins/compat_oai"
 	"github.com/firebase/genkit/go/plugins/ollama"
 	"github.com/go-logr/logr"
 
 	"github.com/yhlooo/nfa/pkg/agents/models"
+	"github.com/yhlooo/nfa/pkg/genkitplugins/deepseek"
 )
 
 // InitGenkit 初始化 genkit
@@ -24,7 +24,7 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	// 确定插件
 	var (
 		ollamaPlugin   = &ollama.Ollama{}
-		deepseekPlugin = &oai.OpenAICompatible{}
+		deepseekPlugin = &deepseek.Deepseek{}
 		plugins        []api.Plugin
 	)
 	for _, p := range a.modelProviders {
@@ -34,13 +34,6 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 			plugins = append(plugins, ollamaPlugin)
 		case p.Deepseek != nil:
 			deepseekPlugin = p.Deepseek.DeepseekPlugin()
-			// 注册插件后自动注册模型，这里仅获取模型名
-			modelNames, err := models.ListOpenAICompatibleModels(ctx, deepseekPlugin)
-			if err != nil {
-				a.logger.Error(err, "list deepseek models error")
-				continue
-			}
-			a.availableModels = append(a.availableModels, modelNames...)
 			plugins = append(plugins, deepseekPlugin)
 		case p.OpenAICompatible != nil:
 			plugin := p.OpenAICompatible.OpenAICompatiblePlugin()
@@ -67,6 +60,8 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 				continue
 			}
 			a.availableModels = append(a.availableModels, modelNames...)
+		case p.Deepseek != nil:
+			a.availableModels = append(a.availableModels, deepseekPlugin.RegisterModels()...)
 		}
 	}
 
