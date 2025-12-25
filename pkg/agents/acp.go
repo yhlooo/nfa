@@ -133,6 +133,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 			prompt += content.Text.Text + "\n"
 		}
 	}
+	prompt = strings.TrimRight(prompt, "\n")
 	if prompt == "" {
 		return acp.PromptResponse{StopReason: acp.StopReasonEndTurn}, nil
 	}
