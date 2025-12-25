@@ -279,9 +279,15 @@ func (g *ModelGenerator) generateStream(ctx context.Context, handleChunk core.St
 				fullResponse.Message.Content = append(fullResponse.Message.Content, ai.NewToolRequestPart(currentToolCall))
 			}
 
+			msgRaw := choice.Delta.RawJSON()
+			var msgRawMap map[string]any
+			if err := json.Unmarshal([]byte(msgRaw), &msgRawMap); err != nil {
+				return nil, fmt.Errorf("unmarshal choices[0].delta error: %w", err)
+			}
+
 			// 思考
-			if reasoningContent := choice.Delta.JSON.ExtraFields["reasoning_content"]; reasoningContent.Valid() {
-				part := ai.NewReasoningPart(reasoningContent.Raw(), nil)
+			if reasoningContent, ok := msgRawMap["reasoning_content"].(string); ok {
+				part := ai.NewReasoningPart(reasoningContent, nil)
 				modelChunk.Content = append(modelChunk.Content, part)
 				fullResponse.Message.Content = append(fullResponse.Message.Content, part)
 			}
@@ -350,9 +356,15 @@ func (g *ModelGenerator) generateComplete(ctx context.Context, req *ai.ModelRequ
 		resp.FinishReason = ai.FinishReasonUnknown
 	}
 
+	msgRaw := choice.Message.RawJSON()
+	var msgRawMap map[string]any
+	if err := json.Unmarshal([]byte(msgRaw), &msgRawMap); err != nil {
+		return nil, fmt.Errorf("unmarshal choices[0].message error: %w", err)
+	}
+
 	// 思考内容
-	if reasoningContent := choice.Message.JSON.ExtraFields["reasoning_content"]; reasoningContent.Valid() {
-		resp.Message.Content = append(resp.Message.Content, ai.NewTextPart(reasoningContent.Raw()))
+	if reasoningContent, ok := msgRawMap["reasoning_content"].(string); ok {
+		resp.Message.Content = append(resp.Message.Content, ai.NewReasoningPart(reasoningContent, nil))
 	}
 
 	// 普通文本

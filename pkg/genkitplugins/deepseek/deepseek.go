@@ -2,11 +2,13 @@ package deepseek
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/core"
 	"github.com/firebase/genkit/go/core/api"
+	"github.com/firebase/genkit/go/genkit"
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
 )
@@ -40,7 +42,7 @@ func (d *Deepseek) Name() string {
 }
 
 // Init 初始化插件
-func (d *Deepseek) Init(ctx context.Context) []api.Action {
+func (d *Deepseek) Init(_ context.Context) []api.Action {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
@@ -55,44 +57,51 @@ func (d *Deepseek) Init(ctx context.Context) []api.Action {
 		d.Provider = ProviderName
 	}
 
-	var opts []option.RequestOption
+	opts := []option.RequestOption{option.WithBaseURL(d.BaseURL)}
+	if d.APIKey != "" {
+		opts = append(opts, option.WithAPIKey(d.APIKey))
+	}
 
 	client := openai.NewClient(opts...)
 	d.client = &client
 	d.initted = true
 
-	models, err := d.client.Models.List(ctx)
-	if err == nil {
-		for _, m := range models.Data {
-			registerModel := d.defineModel(m.ID, ai.ModelOptions{
-				Label: m.ID,
-				Supports: &ai.ModelSupports{
-					Multiturn:  true,
-					Tools:      true,
-					SystemRole: true,
-					Media:      true,
-					ToolChoice: true,
-				},
-			}, m.ID == "deepseek-reasoner")
-			d.models = append(d.models, registerModel.Name())
-		}
-	}
-
 	return nil
 }
 
-// RegisterModels 返回注册的模型
-func (d *Deepseek) RegisterModels() []string {
+// RegisterModels 注册模型
+func (d *Deepseek) RegisterModels(ctx context.Context, g *genkit.Genkit) ([]string, error) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
+	models, err := d.client.Models.List(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list models error: %w", err)
+	}
+
+	for _, m := range models.Data {
+		opts := ai.ModelOptions{
+			Label: m.ID,
+			Supports: &ai.ModelSupports{
+				Multiturn:  true,
+				Tools:      true,
+				SystemRole: true,
+				Media:      true,
+				ToolChoice: true,
+			},
+		}
+		model := d.defineModel(m.ID, opts, m.ID == "deepseek-reasoner")
+		genkit.DefineModel(g, model.Name(), &opts, model.Generate)
+		d.models = append(d.models, model.Name())
+	}
+
 	if d.models == nil {
-		return nil
+		return nil, nil
 	}
 
 	ret := make([]string, len(d.models))
 	copy(ret, d.models)
-	return ret
+	return ret, nil
 }
 
 // DefineModel 定义模型

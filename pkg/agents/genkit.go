@@ -61,7 +61,12 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 			}
 			a.availableModels = append(a.availableModels, modelNames...)
 		case p.Deepseek != nil:
-			a.availableModels = append(a.availableModels, deepseekPlugin.RegisterModels()...)
+			modelNames, err := deepseekPlugin.RegisterModels(ctx, a.g)
+			if err != nil {
+				a.logger.Error(err, "define deepseek models error")
+				continue
+			}
+			a.availableModels = append(a.availableModels, modelNames...)
 		}
 	}
 
