@@ -105,6 +105,7 @@ func (ui *ChatUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		ui.width = typedMsg.Width
 		ui.input.SetWidth(typedMsg.Width)
+		ui.vp.SetWidth(typedMsg.Width)
 	case tea.KeyMsg:
 		switch typedMsg.Type {
 		case tea.KeyEnter:

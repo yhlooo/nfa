@@ -14,6 +14,7 @@ import (
 // NewMessageViewport 创建消息视窗
 func NewMessageViewport() MessageViewport {
 	return MessageViewport{
+		baseStyle:                 lipgloss.NewStyle(),
 		UserStyle:                 lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("2")),
 		AgentStyle:                lipgloss.NewStyle(),
 		AgentThoughtStyle:         lipgloss.NewStyle().Faint(true),
@@ -29,6 +30,7 @@ type MessageViewport struct {
 
 	messages MessagesList
 
+	baseStyle                 lipgloss.Style
 	UserStyle                 lipgloss.Style
 	AgentStyle                lipgloss.Style
 	AgentThoughtStyle         lipgloss.Style
@@ -133,7 +135,12 @@ func (vp MessageViewport) View() string {
 			ret.WriteString(msg.Text + "\n")
 		}
 	}
-	return strings.TrimRight(ret.String(), "\n")
+	return vp.baseStyle.Render(strings.TrimRight(ret.String(), "\n"))
+}
+
+// SetWidth 设置显示宽度
+func (vp *MessageViewport) SetWidth(width int) {
+	vp.baseStyle = vp.baseStyle.Width(width)
 }
 
 // Reset 重置
