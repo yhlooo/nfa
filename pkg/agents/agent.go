@@ -10,6 +10,7 @@ import (
 	"github.com/go-logr/logr"
 
 	"github.com/yhlooo/nfa/pkg/agents/dataproviders"
+	"github.com/yhlooo/nfa/pkg/agents/flows"
 	"github.com/yhlooo/nfa/pkg/agents/models"
 )
 
@@ -57,7 +58,7 @@ type NFAAgent struct {
 
 	availableModels []string
 	availableTools  []ai.ToolRef
-	mainFlow        any
+	mainFlow        flows.ChatFlow
 
 	sessions map[acp.SessionId]*Session
 }

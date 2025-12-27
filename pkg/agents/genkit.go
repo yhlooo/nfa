@@ -9,6 +9,7 @@ import (
 	"github.com/firebase/genkit/go/plugins/ollama"
 	"github.com/go-logr/logr"
 
+	"github.com/yhlooo/nfa/pkg/agents/flows"
 	"github.com/yhlooo/nfa/pkg/agents/models"
 	"github.com/yhlooo/nfa/pkg/genkitplugins/deepseek"
 )
@@ -94,6 +95,10 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	for _, t := range a.availableTools {
 		a.logger.Info(fmt.Sprintf("registered tool: %s", t.Name()))
 	}
+
+	// 注册 flows
+	a.mainFlow = flows.DefineSimpleChatFlow(a.g)
+	a.logger.Info(fmt.Sprintf("registered main flow: %s", a.mainFlow.Name()))
 }
 
 // AvailableModels 获取可用模型名列表
