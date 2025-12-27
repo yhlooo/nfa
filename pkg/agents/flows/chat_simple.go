@@ -6,17 +6,16 @@ import (
 	"slices"
 
 	"github.com/firebase/genkit/go/ai"
-	"github.com/firebase/genkit/go/core"
 	"github.com/firebase/genkit/go/genkit"
 )
 
-// SimpleChatFlowName 简单对话流名
+// SimpleChatFlowName 简单对话流程名
 const SimpleChatFlowName = "SimpleChat"
 
-// DefineSimpleChatFlow 定义简单对话流
+// DefineSimpleChatFlow 定义简单对话流程
 func DefineSimpleChatFlow(g *genkit.Genkit) ChatFlow {
 	return genkit.DefineStreamingFlow(g, SimpleChatFlowName,
-		func(ctx context.Context, in ChatInput, handleStream core.StreamCallback[*ai.ModelResponseChunk]) (ChatOutput, error) {
+		func(ctx context.Context, in ChatInput, handleStream ai.ModelStreamCallback) (ChatOutput, error) {
 			output := ChatOutput{}
 			messages := slices.Clone(in.History)
 			promptMsg := ai.NewUserTextMessage(in.Prompt)
@@ -34,7 +33,7 @@ func DefineSimpleChatFlow(g *genkit.Genkit) ChatFlow {
 				opts = append(opts, ai.WithTools(in.Tools...))
 			}
 			if handleStream != nil {
-				opts = append(opts, ai.WithStreaming(handleTextStream(handleStream)))
+				opts = append(opts, ai.WithStreaming(handleTextStream(handleStream, true, true)))
 			}
 
 			for {
@@ -88,11 +87,13 @@ func DefineSimpleChatFlow(g *genkit.Genkit) ChatFlow {
 }
 
 // handleTextStream 处理文本流
-func handleTextStream(handler ai.ModelStreamCallback) ai.ModelStreamCallback {
+func handleTextStream(handler ai.ModelStreamCallback, reasoning, text bool) ai.ModelStreamCallback {
 	return func(ctx context.Context, chunk *ai.ModelResponseChunk) error {
 		content := make([]*ai.Part, 0, len(chunk.Content))
 		for _, part := range chunk.Content {
-			if part.IsReasoning() || part.IsText() || part.IsData() {
+			if reasoning && part.IsReasoning() {
+				content = append(content, part)
+			} else if text && (part.IsText() || part.IsData()) {
 				content = append(content, part)
 			}
 		}

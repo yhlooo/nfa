@@ -266,7 +266,7 @@ func (g *ModelGenerator) generateStream(ctx context.Context, handleChunk core.St
 				for _, toolcall := range toolCallCollects {
 					args, err := jsonStringToMap(toolcall.args)
 					if err != nil {
-						return nil, fmt.Errorf("could not parse tool args: %w", err)
+						return nil, fmt.Errorf("generate error: could not parse tool args: %w", err)
 					}
 					toolcall.toolCall.Input = args
 					fullResponse.Message.Content = append(fullResponse.Message.Content, ai.NewToolRequestPart(toolcall.toolCall))
@@ -274,7 +274,7 @@ func (g *ModelGenerator) generateStream(ctx context.Context, handleChunk core.St
 				if currentArguments != "" {
 					args, err := jsonStringToMap(currentArguments)
 					if err != nil {
-						return nil, fmt.Errorf("could not parse tool args: %w", err)
+						return nil, fmt.Errorf("generate error: could not parse tool args: %w", err)
 					}
 					currentToolCall.Input = args
 				}
@@ -284,7 +284,7 @@ func (g *ModelGenerator) generateStream(ctx context.Context, handleChunk core.St
 			msgRaw := choice.Delta.RawJSON()
 			var msgRawMap map[string]any
 			if err := json.Unmarshal([]byte(msgRaw), &msgRawMap); err != nil {
-				return nil, fmt.Errorf("unmarshal choices[0].delta error: %w", err)
+				return nil, fmt.Errorf("generate error: unmarshal choices[0].delta error: %w", err)
 			}
 
 			// 思考
@@ -301,7 +301,7 @@ func (g *ModelGenerator) generateStream(ctx context.Context, handleChunk core.St
 			}
 
 			if err := handleChunk(ctx, modelChunk); err != nil {
-				return nil, fmt.Errorf("callback error: %w", err)
+				return nil, fmt.Errorf("generate error: callback error: %w", err)
 			}
 
 			fullResponse.Usage.InputTokens += int(chunk.Usage.PromptTokens)
@@ -312,7 +312,7 @@ func (g *ModelGenerator) generateStream(ctx context.Context, handleChunk core.St
 	}
 
 	if err := stream.Err(); err != nil {
-		return nil, fmt.Errorf("stream error: %w", err)
+		return nil, fmt.Errorf("generate error: stream error: %w", err)
 	}
 
 	return &fullResponse, nil

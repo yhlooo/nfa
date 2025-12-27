@@ -99,6 +99,8 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	// 注册 flows
 	a.mainFlow = flows.DefineSimpleChatFlow(a.g)
 	a.logger.Info(fmt.Sprintf("registered main flow: %s", a.mainFlow.Name()))
+	a.summarizeFlow = flows.DefineSummarizeFlow(a.g)
+	a.logger.Info(fmt.Sprintf("registered summarize flow: %s", a.summarizeFlow.Name()))
 }
 
 // AvailableModels 获取可用模型名列表

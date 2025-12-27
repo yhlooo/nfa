@@ -59,6 +59,7 @@ type NFAAgent struct {
 	availableModels []string
 	availableTools  []ai.ToolRef
 	mainFlow        flows.ChatFlow
+	summarizeFlow   flows.SummarizeFlow
 
 	sessions map[acp.SessionId]*Session
 }
