@@ -22,10 +22,11 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptions
 			opts := []ai.GenerateOption{
 				ai.WithReturnToolRequests(true),
 			}
-			if in.ModelName != "" {
-				opts = append(opts, ai.WithModelName(in.ModelName))
+			if modelName, ok := ModelNameFromContext(ctx); ok {
+				opts = append(opts, ai.WithModelName(modelName))
 			}
 			if handleStream != nil {
+				ctx = ContextWithHandleStreamFn(ctx, handleStream)
 				opts = append(opts, ai.WithStreaming(handleTextStream(handleStream, true, true)))
 			}
 

@@ -114,17 +114,13 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 			ai.WithTools(a.allTools...),
 		))
 	} else {
-		a.mainFlow = flows.DefineMultiAgentsChatFlow(
-			a.g,
-			ChatFlowName,
-			NewDefaultAgents(
-				a.comprehensiveAnalysisTools,
-				a.macroeconomicAnalysisTools,
-				a.fundamentalAnalysisTools,
-				a.technicalAnalysisTools,
-			),
-			"AllAroundAnalyst",
+		mainAgent, subAgents := NewDefaultAgents(
+			a.comprehensiveAnalysisTools,
+			a.macroeconomicAnalysisTools,
+			a.fundamentalAnalysisTools,
+			a.technicalAnalysisTools,
 		)
+		a.mainFlow = flows.DefineMultiAgentsChatFlow(a.g, ChatFlowName, mainAgent, subAgents)
 	}
 	a.logger.Info(fmt.Sprintf("registered main flow: %s", a.mainFlow.Name()))
 	a.summarizeFlow = flows.DefineSummarizeFlow(a.g)

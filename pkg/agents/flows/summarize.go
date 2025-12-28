@@ -13,8 +13,7 @@ const SummarizeFlowName = "Summarize"
 
 // SummarizeInput 总结输入
 type SummarizeInput struct {
-	ModelName string        `json:"modelName,omitempty"`
-	History   []*ai.Message `json:"history,omitempty"`
+	History []*ai.Message `json:"history,omitempty"`
 }
 
 // SummarizeOutput 总结输出
@@ -43,8 +42,8 @@ func DefineSummarizeFlow(g *genkit.Genkit) SummarizeFlow {
 `),
 				ai.WithPrompt("总结以上对话"),
 			}
-			if in.ModelName != "" {
-				opts = append(opts, ai.WithModelName(in.ModelName))
+			if modelName, ok := ModelNameFromContext(ctx); ok {
+				opts = append(opts, ai.WithModelName(modelName))
 			}
 			if handleStream != nil {
 				opts = append(opts, ai.WithStreaming(handleTextStream(handleStream, true, false)))

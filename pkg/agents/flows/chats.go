@@ -7,16 +7,13 @@ import (
 
 // ChatInput 对话输入
 type ChatInput struct {
-	ModelName     string        `json:"modelName,omitempty"`
-	Prompt        string        `json:"prompt"`
-	History       []*ai.Message `json:"history,omitempty"`
-	AssistantName string        `json:"assistantName,omitempty"`
+	Prompt  string        `json:"prompt"`
+	History []*ai.Message `json:"history,omitempty"`
 }
 
 // ChatOutput 对话输出
 type ChatOutput struct {
-	Messages             []*ai.Message `json:"messages"`
-	CurrentAssistantName string        `json:"currentAssistantName,omitempty"`
+	Messages []*ai.Message `json:"messages"`
 }
 
 // ChatFlow 对话流程

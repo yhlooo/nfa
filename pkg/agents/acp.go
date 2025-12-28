@@ -137,6 +137,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	if prompt == "" {
 		return acp.PromptResponse{StopReason: acp.StopReasonEndTurn}, nil
 	}
+	ctx = flows.ContextWithModelName(ctx, modelName)
 
 	a.logger.Info("prompt turn start")
 
@@ -148,8 +149,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	switch strings.TrimSpace(prompt) {
 	case "/summarize", "/summary":
 		a.summarizeFlow.Stream(ctx, flows.SummarizeInput{
-			ModelName: modelName,
-			History:   messages,
+			History: messages,
 		})(func(chunk *core.StreamingFlowValue[flows.SummarizeOutput, *ai.ModelResponseChunk], err error) bool {
 			if err != nil {
 				if errors.Is(err, context.Canceled) {
@@ -199,9 +199,8 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 		})
 	default:
 		a.mainFlow.Stream(ctx, flows.ChatInput{
-			ModelName: modelName,
-			Prompt:    prompt,
-			History:   messages,
+			Prompt:  prompt,
+			History: messages,
 		})(func(chunk *core.StreamingFlowValue[flows.ChatOutput, *ai.ModelResponseChunk], err error) bool {
 			if err != nil {
 				if errors.Is(err, context.Canceled) {
