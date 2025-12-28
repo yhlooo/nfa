@@ -202,7 +202,6 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 			ModelName: modelName,
 			Prompt:    prompt,
 			History:   messages,
-			Tools:     a.availableTools,
 		})(func(chunk *core.StreamingFlowValue[flows.ChatOutput, *ai.ModelResponseChunk], err error) bool {
 			if err != nil {
 				if errors.Is(err, context.Canceled) {

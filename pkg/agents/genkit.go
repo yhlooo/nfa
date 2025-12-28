@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/core/api"
 	"github.com/firebase/genkit/go/genkit"
 	"github.com/firebase/genkit/go/plugins/ollama"
@@ -13,6 +14,8 @@ import (
 	"github.com/yhlooo/nfa/pkg/agents/models"
 	"github.com/yhlooo/nfa/pkg/genkitplugins/deepseek"
 )
+
+const ChatFlowName = "Chat"
 
 // InitGenkit 初始化 genkit
 func (a *NFAAgent) InitGenkit(ctx context.Context) {
@@ -83,21 +86,46 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	for _, p := range a.dataProviders {
 		switch {
 		case p.AlphaVantage != nil:
-			tools, err := p.AlphaVantage.RegisterTools(ctx, a.g)
+			comprehensiveAnalysisTools,
+				macroeconomicAnalysisTools,
+				fundamentalAnalysisTools,
+				technicalAnalysisTools,
+				allTools, err := p.AlphaVantage.RegisterTools(ctx, a.g)
 			if err != nil {
 				a.logger.Error(err, "register alpha vantage tools error")
 				continue
 			}
-			a.availableTools = append(a.availableTools, tools...)
+			a.comprehensiveAnalysisTools = append(a.comprehensiveAnalysisTools, comprehensiveAnalysisTools...)
+			a.macroeconomicAnalysisTools = append(a.macroeconomicAnalysisTools, macroeconomicAnalysisTools...)
+			a.fundamentalAnalysisTools = append(a.fundamentalAnalysisTools, fundamentalAnalysisTools...)
+			a.technicalAnalysisTools = append(a.technicalAnalysisTools, technicalAnalysisTools...)
+			a.allTools = append(a.allTools, allTools...)
 		}
 	}
 
-	for _, t := range a.availableTools {
+	for _, t := range a.allTools {
 		a.logger.Info(fmt.Sprintf("registered tool: %s", t.Name()))
 	}
 
 	// 注册 flows
-	a.mainFlow = flows.DefineSimpleChatFlow(a.g)
+	if a.singleAgent {
+		a.mainFlow = flows.DefineSimpleChatFlow(a.g, ChatFlowName, flows.FixedGenerateOptions(
+			ai.WithSystemFn(AllAroundAnalystSystemPrompt),
+			ai.WithTools(a.allTools...),
+		))
+	} else {
+		a.mainFlow = flows.DefineMultiAgentsChatFlow(
+			a.g,
+			ChatFlowName,
+			NewDefaultAgents(
+				a.comprehensiveAnalysisTools,
+				a.macroeconomicAnalysisTools,
+				a.fundamentalAnalysisTools,
+				a.technicalAnalysisTools,
+			),
+			"AllAroundAnalyst",
+		)
+	}
 	a.logger.Info(fmt.Sprintf("registered main flow: %s", a.mainFlow.Name()))
 	a.summarizeFlow = flows.DefineSummarizeFlow(a.g)
 	a.logger.Info(fmt.Sprintf("registered summarize flow: %s", a.summarizeFlow.Name()))

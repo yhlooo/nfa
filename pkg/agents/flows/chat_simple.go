@@ -9,12 +9,9 @@ import (
 	"github.com/firebase/genkit/go/genkit"
 )
 
-// SimpleChatFlowName 简单对话流程名
-const SimpleChatFlowName = "SimpleChat"
-
 // DefineSimpleChatFlow 定义简单对话流程
-func DefineSimpleChatFlow(g *genkit.Genkit) ChatFlow {
-	return genkit.DefineStreamingFlow(g, SimpleChatFlowName,
+func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptionsFn) ChatFlow {
+	return genkit.DefineStreamingFlow(g, name,
 		func(ctx context.Context, in ChatInput, handleStream ai.ModelStreamCallback) (ChatOutput, error) {
 			output := ChatOutput{}
 			messages := slices.Clone(in.History)
@@ -23,25 +20,21 @@ func DefineSimpleChatFlow(g *genkit.Genkit) ChatFlow {
 			output.Messages = append(output.Messages, promptMsg)
 
 			opts := []ai.GenerateOption{
-				ai.WithSystemFn(DefaultChatSystemPrompt),
 				ai.WithReturnToolRequests(true),
 			}
 			if in.ModelName != "" {
 				opts = append(opts, ai.WithModelName(in.ModelName))
-			}
-			if len(in.Tools) > 0 {
-				opts = append(opts, ai.WithTools(in.Tools...))
 			}
 			if handleStream != nil {
 				opts = append(opts, ai.WithStreaming(handleTextStream(handleStream, true, true)))
 			}
 
 			for {
+				curTurnOpts := append([]ai.GenerateOption{ai.WithMessages(messages...)}, opts...)
+				curTurnOpts = append(curTurnOpts, genOpts()...)
+
 				// 进行一轮生成
-				resp, err := genkit.Generate(
-					ctx, g,
-					append([]ai.GenerateOption{ai.WithMessages(messages...)}, opts...)...,
-				)
+				resp, err := genkit.Generate(ctx, g, curTurnOpts...)
 				if err != nil {
 					return output, err
 				}

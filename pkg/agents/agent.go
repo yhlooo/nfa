@@ -22,6 +22,7 @@ type Options struct {
 	ModelProviders []models.ModelProvider
 	DataProviders  []dataproviders.DataProvider
 	DefaultModel   string
+	SingleAgent    bool
 }
 
 // Complete 使用默认值补全选项
@@ -39,6 +40,7 @@ func NewNFA(opts Options) *NFAAgent {
 		modelProviders: opts.ModelProviders,
 		dataProviders:  opts.DataProviders,
 		defaultModel:   opts.DefaultModel,
+		singleAgent:    opts.SingleAgent,
 
 		sessions: map[acp.SessionId]*Session{},
 	}
@@ -52,14 +54,21 @@ type NFAAgent struct {
 	modelProviders []models.ModelProvider
 	dataProviders  []dataproviders.DataProvider
 	defaultModel   string
+	singleAgent    bool
 
 	conn *acp.AgentSideConnection
 	g    *genkit.Genkit
 
 	availableModels []string
-	availableTools  []ai.ToolRef
-	mainFlow        flows.ChatFlow
-	summarizeFlow   flows.SummarizeFlow
+
+	allTools                   []ai.ToolRef
+	comprehensiveAnalysisTools []ai.ToolRef
+	macroeconomicAnalysisTools []ai.ToolRef
+	fundamentalAnalysisTools   []ai.ToolRef
+	technicalAnalysisTools     []ai.ToolRef
+
+	mainFlow      flows.ChatFlow
+	summarizeFlow flows.SummarizeFlow
 
 	sessions map[acp.SessionId]*Session
 }
