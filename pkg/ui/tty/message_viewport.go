@@ -14,7 +14,8 @@ import (
 // NewMessageViewport 创建消息视窗
 func NewMessageViewport() MessageViewport {
 	return MessageViewport{
-		baseStyle:                 lipgloss.NewStyle(),
+		flushStyle:                lipgloss.NewStyle().BorderStyle(lipgloss.HiddenBorder()).BorderLeft(true),
+		viewStyle:                 lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder()).BorderLeft(true),
 		UserStyle:                 lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("2")),
 		AgentStyle:                lipgloss.NewStyle(),
 		AgentThoughtStyle:         lipgloss.NewStyle().Faint(true),
@@ -30,7 +31,8 @@ type MessageViewport struct {
 
 	messages MessagesList
 
-	baseStyle                 lipgloss.Style
+	flushStyle                lipgloss.Style
+	viewStyle                 lipgloss.Style
 	UserStyle                 lipgloss.Style
 	AgentStyle                lipgloss.Style
 	AgentThoughtStyle         lipgloss.Style
@@ -40,15 +42,11 @@ type MessageViewport struct {
 }
 
 // AgentProcessing 返回是否 Agent 处理中
-//
-//goland:noinspection GoMixedReceiverTypes
 func (vp MessageViewport) AgentProcessing() bool {
 	return vp.agentProcessing > 0
 }
 
 // Update 处理更新事件
-//
-//goland:noinspection GoMixedReceiverTypes
 func (vp MessageViewport) Update(msg tea.Msg) (MessageViewport, tea.Cmd) {
 	switch typedMsg := msg.(type) {
 	case acp.PromptRequest:
@@ -113,11 +111,17 @@ func (vp MessageViewport) Update(msg tea.Msg) (MessageViewport, tea.Cmd) {
 }
 
 // View 渲染显示内容
-//
-//goland:noinspection GoMixedReceiverTypes
 func (vp MessageViewport) View() string {
+	if len(vp.messages) == 0 {
+		return ""
+	}
+	return vp.viewStyle.Render(vp.viewMessages(vp.messages))
+}
+
+// viewMessages 渲染消息
+func (vp MessageViewport) viewMessages(messages MessagesList) string {
 	var ret strings.Builder
-	for _, msg := range vp.messages {
+	for _, msg := range messages {
 		switch msg.Type {
 		case MessageTypeUser:
 			ret.WriteString("🤔 " + vp.UserStyle.Render(withIndent(msg.Text, 2)) + "\n")
@@ -135,12 +139,32 @@ func (vp MessageViewport) View() string {
 			ret.WriteString(msg.Text + "\n")
 		}
 	}
-	return vp.baseStyle.Render(strings.TrimRight(ret.String(), "\n"))
+	return strings.TrimRight(ret.String(), "\n")
 }
 
 // SetWidth 设置显示宽度
+//
+//goland:noinspection GoMixedReceiverTypes
 func (vp *MessageViewport) SetWidth(width int) {
-	vp.baseStyle = vp.baseStyle.Width(width)
+	vp.viewStyle = vp.viewStyle.Width(width)
+}
+
+// Flush 将缓存的消息刷到屏幕上
+//
+//goland:noinspection GoMixedReceiverTypes
+func (vp *MessageViewport) Flush() tea.Cmd {
+	n := len(vp.messages) - 1
+	if vp.agentProcessing == 0 {
+		n = len(vp.messages)
+	}
+	if n <= 0 {
+		return nil
+	}
+
+	content := vp.flushStyle.Render(vp.viewMessages(vp.messages[:n]))
+	vp.messages = vp.messages[n:]
+
+	return tea.Println(content)
 }
 
 // Reset 重置

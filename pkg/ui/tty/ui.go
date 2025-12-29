@@ -129,9 +129,8 @@ func (ui *ChatUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, ui.cancelPrompt)
 		}
 
-	case acp.PromptResponse:
-		cmds = append(cmds, tea.Println(ui.vp.View()))
-		ui.vp.Reset()
+	case acp.PromptRequest, acp.PromptResponse, acp.SessionNotification:
+		cmds = append(cmds, ui.vp.Flush())
 
 	case QuitError:
 		logger.Error(typedMsg.Error, "error")
