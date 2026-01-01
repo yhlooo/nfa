@@ -147,6 +147,12 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 
 	// 斜杠命令
 	switch strings.TrimSpace(prompt) {
+	case "/clear":
+		_ = a.conn.SessionUpdate(ctx, acp.SessionNotification{
+			SessionId: params.SessionId,
+			Update:    acp.UpdateAgentMessageText("The context has been cleared."),
+		})
+		messages = nil
 	case "/summarize", "/summary":
 		a.summarizeFlow.Stream(ctx, flows.SummarizeInput{
 			History: messages,

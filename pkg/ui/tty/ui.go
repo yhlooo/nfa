@@ -35,8 +35,8 @@ type ChatUI struct {
 
 	width int
 
-	input textarea.Model
 	vp    MessageViewport
+	input InputBox
 
 	acputil.NopFS
 	acputil.NopTerminal
@@ -62,15 +62,14 @@ func (ui *ChatUI) Run(ctx context.Context) error {
 	ui.ctx = ctx
 	ui.logger = logger
 
-	ui.input = textarea.New()
-	ui.input.Prompt = "> "
-	ui.input.CharLimit = 1024
-	ui.input.ShowLineNumbers = false
-	ui.input.SetWidth(30)
-	ui.input.SetHeight(1)
-	ui.input.Focus()
-
 	ui.vp = NewMessageViewport()
+
+	ui.input = NewInputBox([]SelectorOption{
+		//{Name: "mcp", Description: "Manage MCP servers"},
+		{Name: "clear", Description: "Start a fresh conversation"},
+		//{Name: "model", Description: "Set the AI model for NFA"},
+		{Name: "exit", Description: "Exit the NFA"},
+	})
 
 	p := tea.NewProgram(ui, tea.WithContext(ctx))
 	ui.p = p
@@ -104,7 +103,6 @@ func (ui *ChatUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch typedMsg := msg.(type) {
 	case tea.WindowSizeMsg:
 		ui.width = typedMsg.Width
-		ui.input.SetWidth(typedMsg.Width)
 		ui.vp.SetWidth(typedMsg.Width)
 	case tea.KeyMsg:
 		switch typedMsg.Type {
@@ -113,7 +111,12 @@ func (ui *ChatUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				content := strings.TrimRight(ui.input.Value(), "\n")
 				ui.input.Reset()
 				if content != "" {
-					cmds = append(cmds, ui.newPrompt(content))
+					switch content {
+					case "/exit":
+						return ui, tea.Quit
+					default:
+						cmds = append(cmds, ui.newPrompt(content))
+					}
 				}
 			}
 
@@ -149,14 +152,13 @@ func (ui *ChatUI) View() string {
 	if vpView != "" {
 		vpView += "\n"
 	}
-	return fmt.Sprintf(`%s
+	return fmt.Sprintf(
+		`%s
 %s
-%s
-%s`,
+`,
 		vpView,
-		strings.Repeat("─", ui.width),
 		ui.input.View(),
-		strings.Repeat("─", ui.width))
+	)
 }
 
 // printHello 输出欢迎信息

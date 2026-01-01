@@ -124,7 +124,11 @@ func (vp MessageViewport) viewMessages(messages MessagesList) string {
 	for _, msg := range messages {
 		switch msg.Type {
 		case MessageTypeUser:
-			ret.WriteString("🤔 " + vp.UserStyle.Render(withIndent(msg.Text, 2)) + "\n")
+			if strings.HasPrefix(msg.Text, "/") {
+				ret.WriteString("👉 " + vp.UserStyle.Render(withIndent(msg.Text, 2)) + "\n")
+			} else {
+				ret.WriteString("☝️ " + vp.UserStyle.Render(withIndent(msg.Text, 2)) + "\n")
+			}
 		case MessageTypeAgent:
 			ret.WriteString(vp.AgentStyle.Render(msg.Text) + "\n")
 		case MessageTypeAgentThought:
