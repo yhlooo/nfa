@@ -1,49 +1,60 @@
 package tty
 
 import (
+	"context"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/go-logr/logr"
 )
 
 // NewInputBox 创建输入框
-func NewInputBox(commands []SelectorOption) InputBox {
+func NewInputBox(ctx context.Context, commands []SelectorOption) *InputBox {
+	logger := logr.FromContextOrDiscard(ctx)
 
 	input := textarea.New()
-	input.Prompt = "> "
 	input.ShowLineNumbers = false
 	input.SetWidth(100)
-	input.SetHeight(1)
+	input.FocusedStyle.Base = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true, false)
 	input.Focus()
 
 	commandSelector := NewSelector(commands, "/", 8, 100)
 
-	return InputBox{
+	return &InputBox{
+		logger:          logger,
 		input:           input,
 		commandSelector: commandSelector,
-		enabled:         true,
+		rightTipsStyle:  lipgloss.NewStyle().Width(100).AlignHorizontal(lipgloss.Right),
+		faintTipsStyle:  lipgloss.NewStyle().Faint(true),
 		width:           100,
 	}
 }
 
 // InputBox 输入框
 type InputBox struct {
+	logger logr.Logger
+
 	input           textarea.Model
 	commandSelector Selector
 
-	enabled   bool
+	rightTipsStyle lipgloss.Style
+	faintTipsStyle lipgloss.Style
+
+	multiLine bool
 	width     int
 	doubleEsc bool
 }
 
 // Update 处理更新事件
-func (box InputBox) Update(msg tea.Msg) (InputBox, tea.Cmd) {
-	if !box.enabled {
+func (box *InputBox) Update(msg tea.Msg) (*InputBox, tea.Cmd) {
+	if !box.Focused() {
 		return box, nil
 	}
+
+	box.input.SetHeight(10)
 
 	var inputCmd, commandSelectorCmd tea.Cmd
 	box.input, inputCmd = box.input.Update(msg)
@@ -54,8 +65,6 @@ func (box InputBox) Update(msg tea.Msg) (InputBox, tea.Cmd) {
 	switch typedMsg := msg.(type) {
 	case tea.WindowSizeMsg:
 		box.width = typedMsg.Width
-		box.input.SetWidth(typedMsg.Width)
-		box.commandSelector.SetWidth(typedMsg.Width)
 
 	case tea.KeyMsg:
 		switch typedMsg.Type {
@@ -69,13 +78,24 @@ func (box InputBox) Update(msg tea.Msg) (InputBox, tea.Cmd) {
 				box.commandSelector.SetEnabled(false)
 			}
 
-		case tea.KeyEnter, tea.KeyTab:
+		case tea.KeyEnter:
 			if box.commandSelector.Enabled() {
 				selected := box.commandSelector.Selected()
 				if selected != "" {
 					box.input.SetValue(selected)
 					box.commandSelector.SetEnabled(false)
 				}
+			}
+
+		case tea.KeyTab:
+			if box.commandSelector.Enabled() {
+				selected := box.commandSelector.Selected()
+				if selected != "" {
+					box.input.SetValue(selected)
+					box.commandSelector.SetEnabled(false)
+				}
+			} else {
+				box.multiLine = !box.multiLine
 			}
 
 		case tea.KeyEsc:
@@ -89,39 +109,85 @@ func (box InputBox) Update(msg tea.Msg) (InputBox, tea.Cmd) {
 		}
 	}
 
+	cmds = append(cmds, box.updateComponents()...)
+
 	return box, tea.Batch(cmds...)
 }
 
+// updateComponents 根据状态更新组件
+func (box *InputBox) updateComponents() []tea.Cmd {
+	var cmds []tea.Cmd
+
+	// 设置宽度
+	box.input.SetWidth(box.width)
+	box.commandSelector.SetWidth(box.width)
+	box.rightTipsStyle = box.rightTipsStyle.Width(box.width)
+
+	// 设置多行/单行输入
+	inputHeight := 0
+	if box.multiLine {
+		inputHeight = 10
+	} else {
+		inputHeight = box.input.LineCount()
+		if inputHeight > 10 {
+			inputHeight = 10
+		}
+	}
+	if inputHeight > 1 {
+		box.input.Prompt = ""
+		box.input.ShowLineNumbers = true
+	} else {
+		box.input.Prompt = "  > "
+		box.input.ShowLineNumbers = false
+	}
+	box.input.SetHeight(inputHeight)
+	box.input.KeyMap.InsertNewline.SetEnabled(box.multiLine)
+
+	return cmds
+}
+
 // View 渲染显示内容
-func (box InputBox) View() string {
+func (box *InputBox) View() string {
 	var ret strings.Builder
-	ret.WriteString(strings.Repeat("─", box.width) + "\n")
+
 	ret.WriteString(box.input.View() + "\n")
-	ret.WriteString(strings.Repeat("─", box.width) + "\n")
 
 	if box.commandSelector.Enabled() {
 		ret.WriteString(box.commandSelector.View() + "\n")
+	} else if box.multiLine {
+		ret.WriteString(box.rightTipsStyle.Render("MULTILINE MODE " + box.faintTipsStyle.Render("(tab to toggle)")))
 	}
 
 	return ret.String()
 }
 
-// Enabled 返回是否启用
-func (box InputBox) Enabled() bool {
-	return box.enabled
+// Focused 返回是否获得焦点
+func (box *InputBox) Focused() bool {
+	return box.input.Focused()
+}
+
+// MultiLineMode 返回是否处于多行编辑模式
+func (box *InputBox) MultiLineMode() bool {
+	return box.multiLine
 }
 
 // Value 返回输入内容
-func (box InputBox) Value() string {
+func (box *InputBox) Value() string {
 	return box.input.Value()
 }
 
-// SetEnabled 设置是否启用
+// Blur 移除焦点
 //
 //goland:noinspection GoMixedReceiverTypes
-func (box *InputBox) SetEnabled(enabled bool) {
-	box.enabled = enabled
-	box.commandSelector.SetEnabled(enabled)
+func (box *InputBox) Blur() {
+	box.input.Blur()
+}
+
+// Focus 获得焦点
+//
+//goland:noinspection GoMixedReceiverTypes
+func (box *InputBox) Focus() tea.Cmd {
+	return box.input.Focus()
 }
 
 // Reset 重置
@@ -130,6 +196,7 @@ func (box *InputBox) SetEnabled(enabled bool) {
 func (box *InputBox) Reset() {
 	box.input.Reset()
 	box.commandSelector.SetEnabled(false)
+	box.multiLine = false
 }
 
 // NewSelector 创建选择器
@@ -140,7 +207,6 @@ func NewSelector(items []SelectorOption, suggestionPrefix string, height, width 
 		NamePadding:      4,
 		items:            items,
 		table: table.New(
-			table.WithHeight(height+1),
 			table.WithFocused(true),
 			table.WithStyles(table.Styles{
 				Header:   lipgloss.NewStyle(),
@@ -271,5 +337,12 @@ func (s *Selector) RenewTable() {
 
 	s.table.SetColumns(cols)
 	s.table.SetRows(rows)
+
+	height := len(rows)
+	if height > s.height {
+		height = s.height
+	}
+	s.table.SetHeight(height + 1)
+
 	s.table.GotoTop()
 }

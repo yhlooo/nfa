@@ -49,6 +49,9 @@ func (vp MessageViewport) AgentProcessing() bool {
 // Update 处理更新事件
 func (vp MessageViewport) Update(msg tea.Msg) (MessageViewport, tea.Cmd) {
 	switch typedMsg := msg.(type) {
+	case tea.WindowSizeMsg:
+		vp.viewStyle = vp.viewStyle.Width(typedMsg.Width)
+
 	case acp.PromptRequest:
 		// 对话请求
 		vp.agentProcessing++
@@ -144,13 +147,6 @@ func (vp MessageViewport) viewMessages(messages MessagesList) string {
 		}
 	}
 	return strings.TrimRight(ret.String(), "\n")
-}
-
-// SetWidth 设置显示宽度
-//
-//goland:noinspection GoMixedReceiverTypes
-func (vp *MessageViewport) SetWidth(width int) {
-	vp.viewStyle = vp.viewStyle.Width(width)
 }
 
 // Flush 将缓存的消息刷到屏幕上

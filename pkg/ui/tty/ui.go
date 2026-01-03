@@ -33,10 +33,8 @@ type ChatUI struct {
 	logger logr.Logger
 	p      *tea.Program
 
-	width int
-
 	vp    MessageViewport
-	input InputBox
+	input *InputBox
 
 	acputil.NopFS
 	acputil.NopTerminal
@@ -64,7 +62,7 @@ func (ui *ChatUI) Run(ctx context.Context) error {
 
 	ui.vp = NewMessageViewport()
 
-	ui.input = NewInputBox([]SelectorOption{
+	ui.input = NewInputBox(ctx, []SelectorOption{
 		//{Name: "mcp", Description: "Manage MCP servers"},
 		{Name: "clear", Description: "Start a fresh conversation"},
 		//{Name: "model", Description: "Set the AI model for NFA"},
@@ -95,19 +93,17 @@ func (ui *ChatUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var vpCmd tea.Cmd
 	ui.vp, vpCmd = ui.vp.Update(msg)
 
-	cmds := []tea.Cmd{
-		inputCmd,
-		vpCmd,
-	}
+	cmds := []tea.Cmd{inputCmd, vpCmd}
 
 	switch typedMsg := msg.(type) {
 	case tea.WindowSizeMsg:
-		ui.width = typedMsg.Width
-		ui.vp.SetWidth(typedMsg.Width)
+		ui.logger.Info(fmt.Sprintf("resize message: width: %d, height: %d", typedMsg.Width, typedMsg.Height))
+
 	case tea.KeyMsg:
+		ui.logger.Info(fmt.Sprintf("key message: %q", typedMsg.String()))
 		switch typedMsg.Type {
 		case tea.KeyEnter:
-			if !ui.vp.AgentProcessing() {
+			if !ui.vp.AgentProcessing() && !ui.input.MultiLineMode() {
 				content := strings.TrimRight(ui.input.Value(), "\n")
 				ui.input.Reset()
 				if content != "" {
@@ -143,7 +139,25 @@ func (ui *ChatUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		logger.Error(typedMsg, "error")
 	}
 
+	cmds = append(cmds, ui.updateComponents()...)
+
 	return ui, tea.Batch(cmds...)
+}
+
+// updateComponents 根据状态更新组件
+func (ui *ChatUI) updateComponents() []tea.Cmd {
+	var cmds []tea.Cmd
+
+	// 设置输入状态
+	if ui.vp.AgentProcessing() {
+		ui.input.Blur()
+	} else {
+		if !ui.input.Focused() {
+			cmds = append(cmds, ui.input.Focus())
+		}
+	}
+
+	return cmds
 }
 
 // View 渲染显示内容
