@@ -66,7 +66,7 @@ type Options struct {
 // AddPFlags 将选项绑定到命令行参数
 func (o *Options) AddPFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.DefaultModel, "model", o.DefaultModel, "Default model for the current session")
-	fs.BoolVar(&o.SingleAgent, "single", o.SingleAgent, "Run in single agent mode")
+	fs.BoolVar(&o.SingleAgent, "single-agent", o.SingleAgent, "Run in single agent mode")
 }
 
 // NewCommand 创建根命令
