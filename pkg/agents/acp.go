@@ -11,6 +11,7 @@ import (
 	"github.com/coder/acp-go-sdk"
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/core"
+	"github.com/go-logr/logr"
 	"github.com/google/uuid"
 
 	"github.com/yhlooo/nfa/pkg/acputil"
@@ -138,6 +139,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 		return acp.PromptResponse{StopReason: acp.StopReasonEndTurn}, nil
 	}
 	ctx = flows.ContextWithModelName(ctx, modelName)
+	ctx = logr.NewContext(ctx, a.logger)
 
 	a.logger.Info("prompt turn start")
 
