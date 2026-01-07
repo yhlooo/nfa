@@ -7,6 +7,8 @@ import (
 
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/genkit"
+
+	"github.com/yhlooo/nfa/pkg/ctxutil"
 )
 
 // DefineSimpleChatFlow 定义简单对话流程
@@ -22,11 +24,11 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptions
 			opts := []ai.GenerateOption{
 				ai.WithReturnToolRequests(true),
 			}
-			if modelName, ok := ModelNameFromContext(ctx); ok {
+			if modelName, ok := ctxutil.ModelNameFromContext(ctx); ok {
 				opts = append(opts, ai.WithModelName(modelName))
 			}
 			if handleStream != nil {
-				ctx = ContextWithHandleStreamFn(ctx, handleStream)
+				ctx = ctxutil.ContextWithHandleStreamFn(ctx, handleStream)
 				opts = append(opts, ai.WithStreaming(handleTextStream(handleStream, true, true)))
 			}
 

@@ -16,6 +16,7 @@ import (
 
 	"github.com/yhlooo/nfa/pkg/acputil"
 	"github.com/yhlooo/nfa/pkg/agents/flows"
+	"github.com/yhlooo/nfa/pkg/ctxutil"
 	"github.com/yhlooo/nfa/pkg/version"
 )
 
@@ -138,7 +139,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	if prompt == "" {
 		return acp.PromptResponse{StopReason: acp.StopReasonEndTurn}, nil
 	}
-	ctx = flows.ContextWithModelName(ctx, modelName)
+	ctx = ctxutil.ContextWithModelName(ctx, modelName)
 	ctx = logr.NewContext(ctx, a.logger)
 
 	a.logger.Info("prompt turn start")

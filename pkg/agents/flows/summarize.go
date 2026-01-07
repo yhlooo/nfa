@@ -6,6 +6,8 @@ import (
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/core"
 	"github.com/firebase/genkit/go/genkit"
+
+	"github.com/yhlooo/nfa/pkg/ctxutil"
 )
 
 // SummarizeFlowName 总结流名
@@ -42,7 +44,7 @@ func DefineSummarizeFlow(g *genkit.Genkit) SummarizeFlow {
 `),
 				ai.WithPrompt("总结以上对话"),
 			}
-			if modelName, ok := ModelNameFromContext(ctx); ok {
+			if modelName, ok := ctxutil.ModelNameFromContext(ctx); ok {
 				opts = append(opts, ai.WithModelName(modelName))
 			}
 			if handleStream != nil {

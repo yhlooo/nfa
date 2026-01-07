@@ -26,54 +26,7 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 		return
 	}
 
-	// 确定插件
-	var (
-		ollamaPlugin   = &ollama.Ollama{}
-		deepseekPlugin = &deepseek.Deepseek{}
-		plugins        []api.Plugin
-	)
-	for _, p := range a.modelProviders {
-		switch {
-		case p.Ollama != nil:
-			ollamaPlugin = p.Ollama.OllamaPlugin()
-			plugins = append(plugins, ollamaPlugin)
-		case p.Deepseek != nil:
-			deepseekPlugin = p.Deepseek.DeepseekPlugin()
-			plugins = append(plugins, deepseekPlugin)
-		case p.OpenAICompatible != nil:
-			plugin := p.OpenAICompatible.OpenAICompatiblePlugin()
-			// 注册插件后自动注册模型，这里仅获取模型名
-			modelNames, err := models.ListOpenAICompatibleModels(ctx, plugin)
-			if err != nil {
-				a.logger.Error(err, fmt.Sprintf("list %s models error", p.OpenAICompatible.Name))
-				continue
-			}
-			a.availableModels = append(a.availableModels, modelNames...)
-			plugins = append(plugins, plugin)
-		}
-	}
-
-	a.g = genkit.Init(ctx, genkit.WithPlugins(plugins...))
-
-	// 注册模型
-	for _, p := range a.modelProviders {
-		switch {
-		case p.Ollama != nil:
-			modelNames, err := p.Ollama.RegisterModels(ctx, a.g, ollamaPlugin)
-			if err != nil {
-				a.logger.Error(err, "define ollama models error")
-				continue
-			}
-			a.availableModels = append(a.availableModels, modelNames...)
-		case p.Deepseek != nil:
-			modelNames, err := deepseekPlugin.RegisterModels(ctx, a.g)
-			if err != nil {
-				a.logger.Error(err, "define deepseek models error")
-				continue
-			}
-			a.availableModels = append(a.availableModels, modelNames...)
-		}
-	}
+	a.g, a.availableModels = NewGenkitWithModels(ctx, a.modelProviders)
 
 	if a.defaultModel == "" && len(a.availableModels) > 0 {
 		a.defaultModel = a.availableModels[0]
@@ -132,6 +85,63 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	a.logger.Info(fmt.Sprintf("registered main flow: %s", a.mainFlow.Name()))
 	a.summarizeFlow = flows.DefineSummarizeFlow(a.g)
 	a.logger.Info(fmt.Sprintf("registered summarize flow: %s", a.summarizeFlow.Name()))
+}
+
+// NewGenkitWithModels 创建 genkit 对象并注册模型
+func NewGenkitWithModels(ctx context.Context, providers []models.ModelProvider) (*genkit.Genkit, []string) {
+	logger := logr.FromContextOrDiscard(ctx)
+
+	// 确定插件
+	var (
+		ollamaPlugin   = &ollama.Ollama{}
+		deepseekPlugin = &deepseek.Deepseek{}
+		plugins        []api.Plugin
+		modelNames     []string
+	)
+	for _, p := range providers {
+		switch {
+		case p.Ollama != nil:
+			ollamaPlugin = p.Ollama.OllamaPlugin()
+			plugins = append(plugins, ollamaPlugin)
+		case p.Deepseek != nil:
+			deepseekPlugin = p.Deepseek.DeepseekPlugin()
+			plugins = append(plugins, deepseekPlugin)
+		case p.OpenAICompatible != nil:
+			plugin := p.OpenAICompatible.OpenAICompatiblePlugin()
+			// 注册插件后自动注册模型，这里仅获取模型名
+			oaiModelNames, err := models.ListOpenAICompatibleModels(ctx, plugin)
+			if err != nil {
+				logger.Error(err, fmt.Sprintf("list %s models error", p.OpenAICompatible.Name))
+				continue
+			}
+			modelNames = append(modelNames, oaiModelNames...)
+			plugins = append(plugins, plugin)
+		}
+	}
+
+	g := genkit.Init(ctx, genkit.WithPlugins(plugins...))
+
+	// 注册模型
+	for _, p := range providers {
+		switch {
+		case p.Ollama != nil:
+			ollamaModelNames, err := p.Ollama.RegisterModels(ctx, g, ollamaPlugin)
+			if err != nil {
+				logger.Error(err, "define ollama models error")
+				continue
+			}
+			modelNames = append(modelNames, ollamaModelNames...)
+		case p.Deepseek != nil:
+			dsModelNames, err := deepseekPlugin.RegisterModels(ctx, g)
+			if err != nil {
+				logger.Error(err, "define deepseek models error")
+				continue
+			}
+			modelNames = append(modelNames, dsModelNames...)
+		}
+	}
+
+	return g, modelNames
 }
 
 // AvailableModels 获取可用模型名列表

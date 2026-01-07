@@ -187,6 +187,7 @@ func NewCommand(name string) *cobra.Command {
 
 	cmd.AddCommand(
 		newModelsCommand(),
+		newInternalToolsCommand(),
 	)
 
 	return cmd

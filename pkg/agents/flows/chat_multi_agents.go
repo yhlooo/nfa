@@ -6,6 +6,8 @@ import (
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/core"
 	"github.com/firebase/genkit/go/genkit"
+
+	"github.com/yhlooo/nfa/pkg/ctxutil"
 )
 
 type AgentOptions struct {
@@ -120,7 +122,7 @@ func DefineCallSubAgentTool(g *genkit.Genkit, name string, agents []AgentOptions
 		}
 
 		output := CallSubAgentOutput{}
-		handleStream := HandleStreamFnFromContext(ctx)
+		handleStream := ctxutil.HandleStreamFnFromContext(ctx)
 		agentChatFlow.Stream(
 			ctx,
 			ChatInput{Prompt: input.Prompt},
