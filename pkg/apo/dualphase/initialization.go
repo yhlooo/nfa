@@ -13,7 +13,7 @@ import (
 	"github.com/yhlooo/nfa/pkg/ctxutil"
 )
 
-// InitializationInput 原版初始化输入
+// InitializationInput 初始化输入
 type InitializationInput struct {
 	PreviousP0   string         `json:"previousP0,omitempty"`
 	TrainingData []TrainingData `json:"trainingData,omitempty"`
@@ -34,17 +34,17 @@ type InitializationOutput struct {
 	Prompt string `json:"prompt"`
 }
 
-// DefineInitializationFlow 定义原版初始化流程
+// DefineInitializationFlow 定义初始化流程
 func DefineInitializationFlow(
 	g *genkit.Genkit,
 ) *core.Flow[InitializationInput, InitializationOutput, struct{}] {
-	return genkit.DefineFlow(g, "DualPhaseAPOInitialization", Initialization(g))
+	return genkit.DefineFlow(g, "DualPhaseAPOInitialization", InitializationFlow(g))
 }
 
-// Initialization 原版初始化
+// InitializationFlow 初始化流程
 //
 // 根据少量示例输入输出和元提示词生成初始 Prompt p0
-func Initialization(g *genkit.Genkit) core.Func[InitializationInput, InitializationOutput] {
+func InitializationFlow(g *genkit.Genkit) core.Func[InitializationInput, InitializationOutput] {
 	return func(ctx context.Context, in InitializationInput) (InitializationOutput, error) {
 		prompt, err := InitializationPrompt(in)
 		if err != nil {
@@ -84,7 +84,7 @@ func Initialization(g *genkit.Genkit) core.Func[InitializationInput, Initializat
 	}
 }
 
-// InitializationPromptTpl 原版初始化元提示词模版
+// InitializationPromptTpl 初始化元提示词模版
 var InitializationPromptTpl = template.Must(template.New("InitializationPrompt").
 	Parse(`You gave me an instruction on a certain task and some example inputs with chain-of-thought. I read the instruction carefully and wrote an output with chain-of-thought for every input correctly. Here are some correct input-output pairs which strictly meet all your requirements:
 
@@ -113,7 +113,7 @@ Output constraints: <constraints on output>
 <add several useful tips from a professional point of view to accomplish this task better>
 `))
 
-// InitializationPrompt 获取原版初始化元提示词
+// InitializationPrompt 获取初始化元提示词
 func InitializationPrompt(in InitializationInput) (string, error) {
 	buf := &bytes.Buffer{}
 	if err := InitializationPromptTpl.Execute(buf, in); err != nil {

@@ -95,20 +95,13 @@ func newInternalToolsAPOCommand() *cobra.Command {
 				ctx = ctxutil.ContextWithModelName(ctx, model)
 				ctx = ctxutil.ContextWithHandleStreamFn(ctx, handleModelStream(os.Stdout))
 
-				originalInitFlow := dualphase.DefineInitializationFlow(g)
+				optimizer := dualphase.NewOptimizer(g, opts)
 
 				fmt.Println("----------------- Initialization -----------------")
-				out, err := originalInitFlow.Run(ctx, dualphase.InitializationInput{
-					PreviousP0:   opts.Initialization.PreviousP0,
-					TrainingData: opts.Initialization.TrainingData,
-					InChinese:    opts.Initialization.InChinese,
-				})
-				if err != nil {
+				if _, err := optimizer.Initialization(ctx); err != nil {
 					return fmt.Errorf("initialization error: %w", err)
 				}
 				fmt.Println()
-
-				_ = out
 
 				return nil
 			},

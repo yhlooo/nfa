@@ -6,11 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestOriginalInitializationPrompt 测试 OriginalInitializationPrompt 方法
-func TestOriginalInitializationPrompt(t *testing.T) {
+// TestInitializationPrompt 测试 InitializationPrompt 方法
+func TestInitializationPrompt(t *testing.T) {
 	a := assert.New(t)
 
-	ret, err := OriginalInitializationPrompt(OriginalInitializationInput{
+	ret, err := InitializationPrompt(InitializationInput{
 		TrainingData: []TrainingData{
 			{Input: "input1", Output: "output1"},
 		},
@@ -23,13 +23,13 @@ Output: output1
 
 The instruction given contains the following parts.`)
 
-	ret, err = OriginalInitializationPrompt(OriginalInitializationInput{})
+	ret, err = InitializationPrompt(InitializationInput{})
 	a.NoError(err)
 	a.Contains(ret, `Here are some correct input-output pairs which strictly meet all your requirements:
 
 The instruction given contains the following parts.`)
 
-	ret, err = OriginalInitializationPrompt(OriginalInitializationInput{
+	ret, err = InitializationPrompt(InitializationInput{
 		TrainingData: []TrainingData{
 			{Input: "input1", Output: "output1"},
 			{Input: "input2", Output: "output2"},
