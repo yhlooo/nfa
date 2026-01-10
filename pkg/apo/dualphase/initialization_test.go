@@ -11,7 +11,7 @@ func TestInitializationPrompt(t *testing.T) {
 	a := assert.New(t)
 
 	ret, err := InitializationPrompt(InitializationInput{
-		TrainingData: []TrainingData{
+		TrainingData: []InputOutputPair{
 			{Input: "input1", Output: "output1"},
 		},
 	})
@@ -30,7 +30,7 @@ The instruction given contains the following parts.`)
 The instruction given contains the following parts.`)
 
 	ret, err = InitializationPrompt(InitializationInput{
-		TrainingData: []TrainingData{
+		TrainingData: []InputOutputPair{
 			{Input: "input1", Output: "output1"},
 			{Input: "input2", Output: "output2"},
 		},

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/firebase/genkit/go/ai"
+	"github.com/go-logr/logr"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -34,19 +35,28 @@ func newInternalToolsCommand() *cobra.Command {
 
 // APOOptions internal-tools apo 子命令选项
 type APOOptions struct {
+	// 优化选项文件
 	OptionsFile string
+	// 最大迭代轮次
+	MaxTurns int
+	// 预期准确率
+	ExpectedAccuracy float64
 }
 
 // NewAPOOptions 创建 internal-tools apo 子命令选项
 func NewAPOOptions() APOOptions {
 	return APOOptions{
-		OptionsFile: "",
+		OptionsFile:      "",
+		MaxTurns:         10,
+		ExpectedAccuracy: 0.9,
 	}
 }
 
 // AddPFlags 将选项绑定到命令行参数
 func (o *APOOptions) AddPFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.OptionsFile, "opts", o.OptionsFile, "Path of options file")
+	fs.IntVar(&o.MaxTurns, "max-turns", o.MaxTurns, "Maximum number of turns")
+	fs.Float64Var(&o.ExpectedAccuracy, "expected-accuracy", o.ExpectedAccuracy, "Expected accuracy")
 }
 
 // newInternalToolsAPOCommand 创建 internal-tools apo 子命令
@@ -64,6 +74,7 @@ func newInternalToolsAPOCommand() *cobra.Command {
 			Short: "Dual-Phase Accelerated Prompt Optimization (See https://arxiv.org/abs/2406.13443)",
 			RunE: func(cmd *cobra.Command, args []string) error {
 				ctx := cmd.Context()
+				logger := logr.FromContextOrDiscard(ctx)
 				cfg := ConfigFromContext(ctx)
 
 				opts := dualphase.Options{}
@@ -105,7 +116,10 @@ func newInternalToolsAPOCommand() *cobra.Command {
 				fmt.Println()
 
 				defer func() {
-					raw, _ := json.MarshalIndent(curPrompt, "", "  ")
+					raw, err := json.MarshalIndent(curPrompt, "", "  ")
+					if err != nil {
+						logger.Error(err, "marshal current prompt error")
+					}
 					fmt.Println("Current prompt:")
 					fmt.Println(string(raw))
 				}()
@@ -114,6 +128,20 @@ func newInternalToolsAPOCommand() *cobra.Command {
 				fmt.Printf("Accuracy: %.4f\n", curAccuracy)
 				fmt.Println(curPrompt.WithWeightColors())
 				fmt.Println("--------------------------------------------------")
+
+				for i := 0; i < apoOpts.MaxTurns; i++ {
+					fmt.Println("================== Optimization ==================")
+					curPrompt, curAccuracy, err = optimizer.Optimize(ctx)
+					if curPrompt != nil {
+						fmt.Printf("----------------------- P%d -----------------------\n", i+1)
+						fmt.Printf("Accuracy: %.4f\n", curAccuracy)
+						fmt.Println(curPrompt.WithWeightColors())
+						fmt.Println("--------------------------------------------------")
+					}
+					if err != nil {
+						return fmt.Errorf("optimization error: %w", err)
+					}
+				}
 
 				return nil
 			},

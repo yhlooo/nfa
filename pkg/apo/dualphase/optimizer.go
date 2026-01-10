@@ -3,18 +3,23 @@ package dualphase
 import (
 	"context"
 	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/firebase/genkit/go/core"
 	"github.com/firebase/genkit/go/genkit"
+	"github.com/go-logr/logr"
 )
 
 // NewOptimizer 创建优化器
 func NewOptimizer(g *genkit.Genkit, opts Options) *Optimizer {
+	opts.Complete()
 	return &Optimizer{
-		opts:       opts,
-		initFlow:   DefineInitializationFlow(g),
-		divideFlow: DefineDivideToSentencesFlow(g),
-		evalFlow:   DefineBatchEvaluationFlow(g),
+		opts:             opts,
+		initFlow:         DefineInitializationFlow(g),
+		divideFlow:       DefineDivideToSentencesFlow(g),
+		evalFlow:         DefineBatchEvaluationFlow(g),
+		optimizationFlow: DefineOptimizationFlow(g),
 	}
 }
 
@@ -22,13 +27,14 @@ func NewOptimizer(g *genkit.Genkit, opts Options) *Optimizer {
 //
 // 参考 https://arxiv.org/abs/2406.13443 (Dual-Phase Accelerated Prompt Optimization)
 type Optimizer struct {
-	opts       Options
-	initFlow   *core.Flow[InitializationInput, InitializationOutput, struct{}]
-	divideFlow *core.Flow[DivideToSentencesInput, DivideToSentencesOutput, struct{}]
-	evalFlow   *core.Flow[BatchEvaluationInput, BatchEvaluationOutput, struct{}]
+	opts             Options
+	initFlow         *core.Flow[InitializationInput, InitializationOutput, struct{}]
+	divideFlow       *core.Flow[DivideToSentencesInput, DivideToSentencesOutput, struct{}]
+	evalFlow         *core.Flow[BatchEvaluationInput, BatchEvaluationOutput, struct{}]
+	optimizationFlow *core.Flow[OptimizationInput, OptimizationOutput, struct{}]
 
 	prompts        []string
-	curSentences   PromptSentences
+	curPrompt      PromptSentences
 	curAccuracy    float64
 	curFailedCases []FailedCase
 }
@@ -45,20 +51,20 @@ func (o *Optimizer) Initialize(ctx context.Context) (PromptSentences, float64, e
 	var err error
 	o.curAccuracy = 1
 	if len(o.opts.Evaluation.ValidationData) != 0 {
-		o.curAccuracy, o.curFailedCases, err = o.evaluate(ctx, o.curSentences.String())
+		o.curAccuracy, o.curFailedCases, err = o.evaluate(ctx, o.curPrompt.String(), false)
 		if err != nil {
 			return nil, 0, fmt.Errorf("evaluate error: %w", err)
 		}
 	}
 
-	return o.curSentences.Copy(), o.curAccuracy, nil
+	return o.curPrompt.Copy(), o.curAccuracy, nil
 }
 
 // initP0 初始化待优化 Prompt P0
 func (o *Optimizer) initP0(ctx context.Context) error {
 	if o.opts.Initialization.ContinueWith != nil {
-		o.curSentences = o.opts.Initialization.ContinueWith.Copy()
-		o.prompts = []string{o.curSentences.String()}
+		o.curPrompt = o.opts.Initialization.ContinueWith.Copy()
+		o.prompts = []string{o.curPrompt.String()}
 		return nil
 	}
 
@@ -84,22 +90,39 @@ func (o *Optimizer) initP0(ctx context.Context) error {
 
 	// 为每个句子赋予初始权重 1
 	for _, s := range divideOut.Sentences {
-		o.curSentences = append(o.curSentences, WeightedSentence{
-			Sentence: s,
-			Weight:   1,
-			Ignore:   false,
-		})
+		if strings.HasPrefix(s.Content, "###") && strings.HasSuffix(s.Content, "###") {
+			o.curPrompt = append(o.curPrompt, WeightedSentence{
+				Sentence: s,
+				Ignore:   true,
+			})
+		} else {
+			o.curPrompt = append(o.curPrompt, WeightedSentence{
+				Sentence: s,
+				Weight:   1,
+			})
+		}
 	}
 
-	o.prompts = []string{o.curSentences.String()}
+	o.prompts = []string{o.curPrompt.String()}
 
 	return nil
 }
 
 // evaluate 评估
-func (o *Optimizer) evaluate(ctx context.Context, prompt string) (float64, []FailedCase, error) {
+func (o *Optimizer) evaluate(ctx context.Context, prompt string, failedOnly bool) (float64, []FailedCase, error) {
+	data := o.opts.Evaluation.ValidationData
+	if failedOnly {
+		data = make([]InputOutputPair, len(o.curFailedCases))
+		for i, c := range o.curFailedCases {
+			data[i] = InputOutputPair{
+				Input:  c.Input,
+				Output: c.Expected,
+			}
+		}
+	}
+
 	// 确定验证数据量和批次大小
-	dataLen := len(o.opts.Evaluation.ValidationData)
+	dataLen := len(data)
 	if dataLen == 0 {
 		return 0, nil, fmt.Errorf("no validation data")
 	}
@@ -114,13 +137,13 @@ func (o *Optimizer) evaluate(ctx context.Context, prompt string) (float64, []Fai
 	var failedCases []FailedCase
 	for i := 0; i*batchSize < dataLen; i++ {
 		endI := (i + 1) * batchSize
-		if endI >= dataLen {
-			endI = dataLen - 1
+		if endI > dataLen {
+			endI = dataLen
 		}
 
 		out, err := o.evalFlow.Run(ctx, BatchEvaluationInput{
 			Prompt:         prompt,
-			ValidationData: o.opts.Evaluation.ValidationData[i*batchSize : endI],
+			ValidationData: data[i*batchSize : endI],
 		})
 		if err != nil {
 			return float64(correct) / float64(correct+wrong), failedCases, err
@@ -134,6 +157,103 @@ func (o *Optimizer) evaluate(ctx context.Context, prompt string) (float64, []Fai
 }
 
 // Optimize 进行一轮优化
-func (o *Optimizer) Optimize(ctx context.Context) (PromptSentences, error) {
-	return nil, nil
+func (o *Optimizer) Optimize(ctx context.Context) (PromptSentences, float64, error) {
+	logger := logr.FromContextOrDiscard(ctx)
+
+	if len(o.curFailedCases) == 0 {
+		return o.curPrompt.Copy(), o.curAccuracy, fmt.Errorf("current result are the best")
+	}
+
+	// 选择待优化句子
+	sentenceI, sentence := o.curPrompt.Sample()
+	newPrompt := o.curPrompt.Copy()
+	var undesiredSentences []string
+	for i := 0; i < 6; i++ {
+		// 优化
+		out, err := o.optimizationFlow.Run(ctx, OptimizationInput{
+			Prompt:      o.curPrompt.String(),
+			Sentence:    sentence.Content,
+			FailedCases: o.curFailedCases,
+		})
+		if err != nil {
+			return nil, 0, err
+		}
+		newPrompt[sentenceI].Content = out.NewSentence
+
+		if slices.Contains(undesiredSentences, out.NewSentence) {
+			// 重复输出，重试，这次重试不算次数
+			i--
+			continue
+		}
+
+		// 新句子在失败集上快速评估
+		// 参考文章中 Eq. 7
+		accuracyF, _, err := o.evaluate(ctx, newPrompt.String(), true)
+		if err != nil {
+			return nil, 0, fmt.Errorf("evaluate error: %w", err)
+		}
+		logger.Info(fmt.Sprintf("new prompt's accuracy in failed cases: %.4f (expected >0.3)", accuracyF))
+		if accuracyF < o.opts.Optimization.Hf {
+			if i > 2 {
+				// 多次重试仍不理想，重新选择句子优化
+				// 这不符合文章，但是感觉更合理
+				for {
+					newChoiceI, newChoiceSentence := o.curPrompt.Sample()
+					if len(o.curPrompt) == 1 || newChoiceI != sentenceI {
+						sentenceI, sentence = newChoiceI, newChoiceSentence
+						break
+					}
+				}
+				newPrompt = o.curPrompt.Copy()
+				undesiredSentences = nil
+				continue
+			}
+			// 未通过快速评估，重新优化该句子
+			undesiredSentences = append(undesiredSentences, out.NewSentence)
+			continue
+		}
+
+		// 完整评估
+		accuracyV, failedCases, err := o.evaluate(ctx, newPrompt.String(), false)
+		if err != nil {
+			return nil, 0, fmt.Errorf("evaluate error: %w", err)
+		}
+
+		// 检查新 Prompt 效果提升是否达到阈值
+		// 参考文章中 Eq. 8
+		if accuracyV <= o.curAccuracy ||
+			(o.curAccuracy < 1-o.opts.Optimization.Hv && accuracyV-o.curAccuracy < o.opts.Optimization.Hv) {
+			// 提升效果不及预期，重新选择句子优化
+			for {
+				newChoiceI, newChoiceSentence := o.curPrompt.Sample()
+				if len(o.curPrompt) == 1 || newChoiceI != sentenceI {
+					sentenceI, sentence = newChoiceI, newChoiceSentence
+					break
+				}
+			}
+			newPrompt = o.curPrompt.Copy()
+			undesiredSentences = nil
+			continue
+		}
+
+		// 新 Prompt 在验证集和失败集上的综合效果
+		accuracyMixed := accuracyV*o.opts.Optimization.MixingRate + (1-o.opts.Optimization.MixingRate)*accuracyF
+		// 更新句子权重
+		newPrompt.UpdateWeight(accuracyMixed, o.opts.Optimization.LearningRate)
+
+		weights := make([]float64, len(newPrompt))
+		for j, p := range newPrompt {
+			weights[j] = p.Weight
+		}
+		logger.Info(fmt.Sprintf("Weights: %v", weights))
+
+		o.prompts = append(o.prompts, newPrompt.String())
+		o.curAccuracy = accuracyV
+		o.curFailedCases = failedCases
+		o.curPrompt = newPrompt
+
+		return o.curPrompt.Copy(), o.curAccuracy, nil
+	}
+
+	return o.curPrompt.Copy(), o.curAccuracy, fmt.Errorf("current result have already converged")
 }

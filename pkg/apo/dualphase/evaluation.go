@@ -59,7 +59,7 @@ func BatchEvaluationFlow(g *genkit.Genkit) core.Func[BatchEvaluationInput, Batch
 		handleStream := ctxutil.HandleStreamFnFromContext(ctx)
 		if handleStream != nil {
 			_ = handleStream(ctx, &ai.ModelResponseChunk{
-				Content: []*ai.Part{ai.NewTextPart(prompt)},
+				Content: []*ai.Part{ai.NewTextPart("Write outputs for inputs ...")},
 				Role:    ai.RoleUser,
 			})
 		}

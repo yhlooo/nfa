@@ -10,6 +10,12 @@ type Options struct {
 	Optimization OptimizationOptions `json:"optimization,omitempty"`
 }
 
+// Complete 使用默认值补充选项
+func (opts *Options) Complete() {
+	opts.Evaluation.Complete()
+	opts.Optimization.Complete()
+}
+
 // InitializationOptions 初始化选项
 type InitializationOptions struct {
 	// 初始 Prompt
@@ -37,8 +43,40 @@ type EvaluationOptions struct {
 	EvaluationBatchSize int `json:"evaluationBatchSize,omitempty"`
 }
 
+// Complete 使用默认值补充选项
+func (opts *EvaluationOptions) Complete() {
+	if opts.EvaluationBatchSize == 0 {
+		opts.EvaluationBatchSize = 1
+	}
+}
+
 // OptimizationOptions 优化选项
-type OptimizationOptions struct{}
+type OptimizationOptions struct {
+	// 每轮迭代在上轮失败集上的提升幅度阈值
+	Hf float64 `json:"hf,omitempty"`
+	// 每轮迭代在验证集上的提升幅度阈值
+	Hv float64 `json:"hv,omitempty"`
+	// 综合效果中混合验证集效果的比例（文章中 Eq. 9 中的 α ）
+	MixingRate float64 `json:"alpha,omitempty"`
+	// 学习率（文章中 Eq. 9 中的 μ ）
+	LearningRate float64 `json:"learningRate,omitempty"`
+}
+
+// Complete 使用默认值补充选项
+func (opts *OptimizationOptions) Complete() {
+	if opts.Hf == 0 {
+		opts.Hf = 0.3
+	}
+	if opts.Hv == 0 {
+		opts.Hv = 0.1
+	}
+	if opts.MixingRate == 0 {
+		opts.MixingRate = 0.4
+	}
+	if opts.LearningRate == 0 {
+		opts.LearningRate = 0.055
+	}
+}
 
 // InputOutputPair 输入输出对
 type InputOutputPair struct {
