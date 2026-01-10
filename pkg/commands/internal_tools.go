@@ -97,11 +97,23 @@ func newInternalToolsAPOCommand() *cobra.Command {
 
 				optimizer := dualphase.NewOptimizer(g, opts)
 
-				fmt.Println("----------------- Initialization -----------------")
-				if _, err := optimizer.Initialization(ctx); err != nil {
+				fmt.Println("================= Initialization =================")
+				curPrompt, curAccuracy, err := optimizer.Initialize(ctx)
+				if err != nil {
 					return fmt.Errorf("initialization error: %w", err)
 				}
 				fmt.Println()
+
+				defer func() {
+					raw, _ := json.MarshalIndent(curPrompt, "", "  ")
+					fmt.Println("Current prompt:")
+					fmt.Println(string(raw))
+				}()
+
+				fmt.Println("----------------------- P0 -----------------------")
+				fmt.Printf("Accuracy: %.4f\n", curAccuracy)
+				fmt.Println(curPrompt.WithWeightColors())
+				fmt.Println("--------------------------------------------------")
 
 				return nil
 			},
