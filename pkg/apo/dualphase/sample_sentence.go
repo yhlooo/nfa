@@ -11,7 +11,7 @@ type WeightedSentence struct {
 	Sentence
 
 	// 权重
-	Weight float64 `json:"weight,omitempty"`
+	Weight float64 `json:"weight,omitempty,string"`
 	// 忽略优化句子或部分
 	Ignore bool `json:"ignore,omitempty"`
 }

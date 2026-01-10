@@ -192,7 +192,10 @@ func (o *Optimizer) Optimize(ctx context.Context) (PromptSentences, float64, err
 		if err != nil {
 			return nil, 0, fmt.Errorf("evaluate error: %w", err)
 		}
-		logger.Info(fmt.Sprintf("new prompt's accuracy in failed cases: %.4f (expected >0.3)", accuracyF))
+		logger.Info(fmt.Sprintf(
+			"new prompt's accuracy in failed cases: %.4f (expected >%.2f)",
+			accuracyF, o.opts.Optimization.Hf,
+		))
 		if accuracyF < o.opts.Optimization.Hf {
 			if i > 2 {
 				// 多次重试仍不理想，重新选择句子优化
@@ -218,6 +221,10 @@ func (o *Optimizer) Optimize(ctx context.Context) (PromptSentences, float64, err
 		if err != nil {
 			return nil, 0, fmt.Errorf("evaluate error: %w", err)
 		}
+		logger.Info(fmt.Sprintf(
+			"new prompt's accuracy in full cases: %.4f (old: %.4f, expected >+%.2f)",
+			accuracyF, o.curAccuracy, o.opts.Optimization.Hv,
+		))
 
 		// 检查新 Prompt 效果提升是否达到阈值
 		// 参考文章中 Eq. 8
