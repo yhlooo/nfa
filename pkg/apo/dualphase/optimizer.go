@@ -3,6 +3,7 @@ package dualphase
 import (
 	"context"
 	"fmt"
+	"math/rand/v2"
 	"slices"
 	"strings"
 
@@ -121,6 +122,10 @@ func (o *Optimizer) evaluate(ctx context.Context, prompt string, failedOnly bool
 		}
 	}
 
+	rand.Shuffle(len(data), func(i, j int) {
+		data[i], data[j] = data[j], data[i]
+	})
+
 	// 确定验证数据量和批次大小
 	dataLen := len(data)
 	if dataLen == 0 {
@@ -223,7 +228,7 @@ func (o *Optimizer) Optimize(ctx context.Context) (PromptSentences, float64, err
 		}
 		logger.Info(fmt.Sprintf(
 			"new prompt's accuracy in full cases: %.4f (old: %.4f, expected >+%.2f)",
-			accuracyF, o.curAccuracy, o.opts.Optimization.Hv,
+			accuracyV, o.curAccuracy, o.opts.Optimization.Hv,
 		))
 
 		// 检查新 Prompt 效果提升是否达到阈值

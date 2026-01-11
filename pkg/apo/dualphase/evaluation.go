@@ -3,6 +3,7 @@ package dualphase
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"text/template"
 
@@ -133,11 +134,14 @@ func BatchEvaluationFlow(g *genkit.Genkit) core.Func[BatchEvaluationInput, Batch
 				correct++
 			} else {
 				wrong++
-				failedCases = append(failedCases, FailedCase{
+				fc := FailedCase{
 					Input:    item.Input,
 					Expected: item.Output,
 					Actual:   ret,
-				})
+				}
+				fcRaw, _ := json.MarshalIndent(fc, "", "  ")
+				logger.Info(fmt.Sprintf("failed case: %s", string(fcRaw)))
+				failedCases = append(failedCases, fc)
 			}
 		}
 
