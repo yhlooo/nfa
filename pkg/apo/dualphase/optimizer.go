@@ -16,11 +16,11 @@ import (
 func NewOptimizer(g *genkit.Genkit, opts Options) *Optimizer {
 	opts.Complete()
 	return &Optimizer{
-		opts:             opts,
-		initFlow:         DefineInitializationFlow(g),
-		divideFlow:       DefineDivideToSentencesFlow(g),
-		evalFlow:         DefineBatchEvaluationFlow(g),
-		optimizationFlow: DefineOptimizationFlow(g),
+		opts:       opts,
+		initFlow:   DefineInitializationFlow(g),
+		divideFlow: DefineDivideToSentencesFlow(g),
+		evalFlow:   DefineBatchEvaluationFlow(g),
+		optFlow:    DefineOptimizationFlow(g),
 	}
 }
 
@@ -28,11 +28,11 @@ func NewOptimizer(g *genkit.Genkit, opts Options) *Optimizer {
 //
 // 参考 https://arxiv.org/abs/2406.13443 (Dual-Phase Accelerated Prompt Optimization)
 type Optimizer struct {
-	opts             Options
-	initFlow         *core.Flow[InitializationInput, InitializationOutput, struct{}]
-	divideFlow       *core.Flow[DivideToSentencesInput, DivideToSentencesOutput, struct{}]
-	evalFlow         *core.Flow[BatchEvaluationInput, BatchEvaluationOutput, struct{}]
-	optimizationFlow *core.Flow[OptimizationInput, OptimizationOutput, struct{}]
+	opts       Options
+	initFlow   *core.Flow[InitializationInput, InitializationOutput, struct{}]
+	divideFlow *core.Flow[DivideToSentencesInput, DivideToSentencesOutput, struct{}]
+	evalFlow   *core.Flow[BatchEvaluationInput, BatchEvaluationOutput, struct{}]
+	optFlow    *core.Flow[OptimizationInput, OptimizationOutput, struct{}]
 
 	prompts        []string
 	curPrompt      PromptSentences
@@ -175,7 +175,7 @@ func (o *Optimizer) Optimize(ctx context.Context) (PromptSentences, float64, err
 	var undesiredSentences []string
 	for i := 0; i < 6; i++ {
 		// 优化
-		out, err := o.optimizationFlow.Run(ctx, OptimizationInput{
+		out, err := o.optFlow.Run(ctx, OptimizationInput{
 			Prompt:      o.curPrompt.String(),
 			Sentence:    sentence.Content,
 			FailedCases: o.curFailedCases,

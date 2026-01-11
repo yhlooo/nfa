@@ -1,10 +1,9 @@
-package dualphase
+package spo
 
 import (
 	"bytes"
 	"context"
 	"fmt"
-	"strings"
 	"text/template"
 
 	"github.com/firebase/genkit/go/ai"
@@ -16,18 +15,22 @@ import (
 
 // OptimizationInput 优化输入
 type OptimizationInput struct {
-	// 待优化 Prompt
+	// 额外要求
+	Requirements string `json:"requirements,omitempty"`
+	// 当前 Prompt
 	Prompt string `json:"prompt"`
-	// 待优化句子
-	Sentence string `json:"sentence"`
-	// 当前失败案例
-	FailedCases []FailedCase `json:"failedCases"`
+	// 当前回答
+	Answers []string `json:"answers"`
 }
 
 // OptimizationOutput 优化输出
 type OptimizationOutput struct {
-	// 优化后的句子
-	NewSentence string `json:"newSentence"`
+	// 分析
+	Analysis string `json:"analysis"`
+	// 修改关键点
+	Modification string `json:"modification"`
+	// 修改后的 Prompt
+	Prompt string `json:"prompt"`
 }
 
 // DefineOptimizationFlow 定义优化流程
@@ -52,46 +55,57 @@ func OptimizationFlow(g *genkit.Genkit) core.Func[OptimizationInput, Optimizatio
 		if handleStream := ctxutil.HandleStreamFnFromContext(ctx); handleStream != nil {
 			opts = append(opts, ai.WithStreaming(handleStream))
 			_ = handleStream(ctx, &ai.ModelResponseChunk{
-				Content: []*ai.Part{ai.NewTextPart(fmt.Sprintf("Optimize sentence %q ...", in.Sentence))},
+				Content: []*ai.Part{ai.NewTextPart(prompt)},
 				Role:    ai.RoleUser,
 			})
 		}
 
-		resp, err := genkit.Generate(ctx, g, opts...)
+		ret, _, err := genkit.GenerateData[OptimizationOutput](ctx, g, opts...)
 		if err != nil {
 			return OptimizationOutput{}, err
 		}
 
-		return OptimizationOutput{
-			NewSentence: strings.TrimSpace(resp.Text()),
-		}, nil
+		return *ret, nil
 	}
 }
 
-// OptimizationPromptTpl 优化元 Prompt 模版
+// OptimizationPromptTpl 优化 Prompt 模版
 var OptimizationPromptTpl = template.Must(template.New("OptimizationPrompt").
-	Parse(`I'm trying to write a zero-shot prompt which consists of four parts.
-My current prompt is:
+	Parse(`You are building a prompt to address user requirement.Based on the given prompt, please reconstruct and optimize it. You can add, modify, or delete prompts. Please include a single modification in XML tags in your reply. During the optimization, you can incorporate any thinking models.
+This is a prompt that performed excellently in a previous iteration. You must make further optimizations and improvements based on this prompt. The modified prompt must differ from the provided example.
+
+{{- if .Requirements }}
+requirements:
+` + "```" + `
+{{ .Requirements }}
+` + "```" + `
+{{- end }}
+
+reference prompt:
 ` + "```" + `
 {{ .Prompt }}
 ` + "```" + `
 
-But it gets the following outputs that fail to match the expected outputs:
-{{ range .FailedCases -}}
-Input: {{ .Input }}
-Output: {{ .Actual }}
-Expected: {{ .Expected }}
+The execution result of this reference prompt is(some cases):
+{{- range .Answers }}
+` + "```" + `
+{{ . }}
+` + "```" + `
 
-{{ end -}}
+{{ end }}
 
-The sentence I want to revise is:
-` + "`" + `{{ .Sentence }}` + "`" + `
+Provide your analysis, optimization points, and the complete optimized prompt using the following JSON format:
 
-Comparing the wrong outputs with their corresponding expected answers under the same input, optimize the above sentence to help AI understand the task more comprehensively and accomplish this task better.
-Your response is the sentence ` + "`" + `{{ .Sentence }}` + "`" + ` should be revised to, without any explanation.
+` + "```" + `json
+{
+  "analysis": "Analyze what drawbacks exist in the results produced by the reference prompt and how to improve them.",
+  "modification": "Summarize the key points for improvement in one sentence",
+  "prompt": "Provide the complete optimized prompt"
+}
+` + "```" + `
 `))
 
-// OptimizationPrompt 获取优化元 Prompt
+// OptimizationPrompt 获取优化 Prompt
 func OptimizationPrompt(in OptimizationInput) (string, error) {
 	buf := &bytes.Buffer{}
 	if err := OptimizationPromptTpl.Execute(buf, in); err != nil {

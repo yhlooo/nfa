@@ -15,6 +15,7 @@ import (
 
 	"github.com/yhlooo/nfa/pkg/agents"
 	"github.com/yhlooo/nfa/pkg/apo/dualphase"
+	"github.com/yhlooo/nfa/pkg/apo/spo"
 	"github.com/yhlooo/nfa/pkg/ctxutil"
 )
 
@@ -136,6 +137,68 @@ func newInternalToolsAPOCommand() *cobra.Command {
 						fmt.Printf("----------------------- P%d -----------------------\n", i+1)
 						fmt.Printf("Accuracy: %.4f\n", curAccuracy)
 						fmt.Println(curPrompt.WithWeightColors())
+						fmt.Println("--------------------------------------------------")
+					}
+					if err != nil {
+						return fmt.Errorf("optimization error: %w", err)
+					}
+				}
+
+				return nil
+			},
+		},
+	)
+
+	cmd.AddCommand(
+		&cobra.Command{
+			Use:   "spo",
+			Short: "Self-Supervised Prompt Optimization (See https://arxiv.org/abs/2502.06855)",
+			RunE: func(cmd *cobra.Command, args []string) error {
+				ctx := cmd.Context()
+				cfg := ConfigFromContext(ctx)
+
+				if apoOpts.OptionsFile == "" {
+					return fmt.Errorf("options file is required")
+				}
+				optsContent, err := os.ReadFile(apoOpts.OptionsFile)
+				if err != nil {
+					return fmt.Errorf("read options file %q error: %w", apoOpts.OptionsFile, err)
+				}
+				opts := spo.Options{}
+				if err := json.Unmarshal(optsContent, &opts); err != nil {
+					return fmt.Errorf("unmarshal options file %q from json error: %w", apoOpts.OptionsFile, err)
+				}
+
+				g, modelNames := agents.NewGenkitWithModels(ctx, cfg.ModelProviders)
+				if len(modelNames) == 0 {
+					return fmt.Errorf("no available model found")
+				}
+
+				model := cfg.DefaultModel
+				if model == "" {
+					model = modelNames[0]
+				}
+				ctx = ctxutil.ContextWithModelName(ctx, model)
+				ctx = ctxutil.ContextWithHandleStreamFn(ctx, handleModelStream(os.Stdout))
+
+				optimizer := spo.NewOptimizer(g, opts)
+
+				fmt.Println("----------------------- P0 -----------------------")
+				fmt.Println(opts.P0)
+				fmt.Println("--------------------------------------------------")
+				fmt.Println("================= Initialization =================")
+				if err := optimizer.Initialize(ctx); err != nil {
+					return fmt.Errorf("initialization error: %w", err)
+				}
+				fmt.Println()
+
+				for i := 0; i < apoOpts.MaxTurns; i++ {
+					fmt.Println("================== Optimization ==================")
+					newPrompt, better, err := optimizer.Optimize(ctx)
+					if newPrompt != "" {
+						fmt.Printf("----------------------- P%d -----------------------\n", i+1)
+						fmt.Println(newPrompt)
+						fmt.Printf("Accepted: %t\n", better)
 						fmt.Println("--------------------------------------------------")
 					}
 					if err != nil {
