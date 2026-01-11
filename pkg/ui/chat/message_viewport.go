@@ -1,4 +1,4 @@
-package tty
+package chat
 
 import (
 	"encoding/json"

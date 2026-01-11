@@ -20,7 +20,7 @@ import (
 
 	"github.com/yhlooo/nfa/pkg/agents"
 	"github.com/yhlooo/nfa/pkg/configs"
-	uitty "github.com/yhlooo/nfa/pkg/ui/tty"
+	uitty "github.com/yhlooo/nfa/pkg/ui/chat"
 	"github.com/yhlooo/nfa/pkg/version"
 )
 

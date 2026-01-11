@@ -1,4 +1,4 @@
-package tty
+package chat
 
 import "github.com/coder/acp-go-sdk"
 
