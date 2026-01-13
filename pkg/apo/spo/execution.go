@@ -52,10 +52,6 @@ func ExecutionFlow(g *genkit.Genkit) core.Func[ExecutionInput, ExecutionOutput] 
 			}
 			if handleStream := ctxutil.HandleStreamFnFromContext(ctx); handleStream != nil {
 				opts = append(opts, ai.WithStreaming(handleStream))
-				_ = handleStream(ctx, &ai.ModelResponseChunk{
-					Content: []*ai.Part{ai.NewTextPart(prompt)},
-					Role:    ai.RoleUser,
-				})
 			}
 
 			resp, err := genkit.Generate(ctx, g, opts...)

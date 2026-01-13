@@ -53,13 +53,6 @@ func EvaluationFlow(g *genkit.Genkit) core.Func[EvaluationInput, EvaluationOutpu
 		if modelName, ok := ctxutil.ModelNameFromContext(ctx); ok {
 			opts = append(opts, ai.WithModelName(modelName))
 		}
-		if handleStream := ctxutil.HandleStreamFnFromContext(ctx); handleStream != nil {
-			opts = append(opts, ai.WithStreaming(handleStream))
-			_ = handleStream(ctx, &ai.ModelResponseChunk{
-				Content: []*ai.Part{ai.NewTextPart(prompt)},
-				Role:    ai.RoleUser,
-			})
-		}
 
 		for i := 0; i < 3; i++ {
 			var ret *EvaluationOutput

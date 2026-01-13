@@ -52,13 +52,6 @@ func OptimizationFlow(g *genkit.Genkit) core.Func[OptimizationInput, Optimizatio
 		if modelName, ok := ctxutil.ModelNameFromContext(ctx); ok {
 			opts = append(opts, ai.WithModelName(modelName))
 		}
-		if handleStream := ctxutil.HandleStreamFnFromContext(ctx); handleStream != nil {
-			opts = append(opts, ai.WithStreaming(handleStream))
-			_ = handleStream(ctx, &ai.ModelResponseChunk{
-				Content: []*ai.Part{ai.NewTextPart(prompt)},
-				Role:    ai.RoleUser,
-			})
-		}
 
 		ret, _, err := genkit.GenerateData[OptimizationOutput](ctx, g, opts...)
 		if err != nil {

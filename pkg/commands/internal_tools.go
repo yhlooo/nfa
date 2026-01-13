@@ -168,6 +168,7 @@ func newInternalToolsAPOCommand() *cobra.Command {
 				if err := json.Unmarshal(optsContent, &opts); err != nil {
 					return fmt.Errorf("unmarshal options file %q from json error: %w", apoOpts.OptionsFile, err)
 				}
+				opts.OutputWriter = os.Stdout
 
 				g, modelNames := agents.NewGenkitWithModels(ctx, cfg.ModelProviders)
 				if len(modelNames) == 0 {
@@ -183,24 +184,12 @@ func newInternalToolsAPOCommand() *cobra.Command {
 
 				optimizer := spo.NewOptimizer(g, opts)
 
-				fmt.Println("----------------------- P0 -----------------------")
-				fmt.Println(opts.P0)
-				fmt.Println("--------------------------------------------------")
-				fmt.Println("================= Initialization =================")
 				if err := optimizer.Initialize(ctx); err != nil {
 					return fmt.Errorf("initialization error: %w", err)
 				}
-				fmt.Println()
 
 				for i := 0; i < apoOpts.MaxTurns; i++ {
-					fmt.Println("================== Optimization ==================")
-					newPrompt, better, err := optimizer.Optimize(ctx)
-					if newPrompt != "" {
-						fmt.Printf("----------------------- P%d -----------------------\n", i+1)
-						fmt.Println(newPrompt)
-						fmt.Printf("Accepted: %t\n", better)
-						fmt.Println("--------------------------------------------------")
-					}
+					_, _, err := optimizer.Optimize(ctx)
 					if err != nil {
 						return fmt.Errorf("optimization error: %w", err)
 					}
