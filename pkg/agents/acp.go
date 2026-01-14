@@ -156,8 +156,10 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 			Update:    acp.UpdateAgentMessageText("The context has been cleared."),
 		})
 		messages = nil
+		return resp, finalErr
 	case "/summarize", "/summary":
 		finalErr = a.handleSummaryStream(ctx, params.SessionId, messages, &resp, handleStream)
+		return resp, finalErr
 	default:
 	}
 
