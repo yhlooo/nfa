@@ -157,84 +157,60 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 		})
 		messages = nil
 	case "/summarize", "/summary":
-		a.summarizeFlow.Stream(ctx, flows.SummarizeInput{
-			History: messages,
-		})(func(chunk *core.StreamingFlowValue[flows.SummarizeOutput, *ai.ModelResponseChunk], err error) bool {
-			if err != nil {
-				if errors.Is(err, context.Canceled) {
-					resp.StopReason = acp.StopReasonCancelled
-				} else {
-					resp.StopReason = acp.StopReasonRefusal
-					finalErr = err
-				}
-				return false
-			}
-
-			if chunk.Stream != nil {
-				if err := handleStream(ctx, chunk.Stream); err != nil {
-					resp.StopReason = acp.StopReasonRefusal
-					finalErr = err
-					return false
-				}
-			}
-			if chunk.Done {
-				content := fmt.Sprintf(`# %s
-
-%s
-
-## 过程概述
-
-%s`, chunk.Output.Title, chunk.Output.Description, chunk.Output.ProcessOverview)
-				content = strings.TrimRight(content, "\n")
-				if chunk.Output.MethodologySummary != "" {
-					content += fmt.Sprintf(`
-
-# 方法论
-
-%s`, chunk.Output.MethodologySummary)
-				}
-
-				if err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
-					SessionId: params.SessionId,
-					Update:    acp.UpdateAgentMessageText(content),
-				}); err != nil {
-					resp.StopReason = acp.StopReasonRefusal
-					finalErr = fmt.Errorf("session update error: %w", err)
-					return false
-				}
-			}
-
-			return !chunk.Done
-		})
+		finalErr = a.handleSummaryStream(ctx, params.SessionId, messages, &resp, handleStream)
 	default:
-		a.mainFlow.Stream(ctx, flows.ChatInput{
-			Prompt:  prompt,
-			History: messages,
-		})(func(chunk *core.StreamingFlowValue[flows.ChatOutput, *ai.ModelResponseChunk], err error) bool {
-			if err != nil {
-				if errors.Is(err, context.Canceled) {
-					resp.StopReason = acp.StopReasonCancelled
-				} else {
-					resp.StopReason = acp.StopReasonRefusal
-					finalErr = err
-				}
+	}
+
+	// 路由
+	routingRet, err := a.routingFlow.Run(ctx, flows.TopicRoutingInput{
+		Messages: append(messages, ai.NewUserTextMessage(prompt)),
+	})
+	if err != nil {
+		resp.StopReason = acp.StopReasonRefusal
+		finalErr = fmt.Errorf("topic routing error: %w", err)
+		return resp, finalErr
+	}
+
+	// TODO: ...
+	a.logger.Info(fmt.Sprintf("topic routing: %s", routingRet.Topic))
+	switch routingRet.Topic {
+	case flows.TopicContinue:
+	case flows.TopicQuery:
+	case flows.TopicStockAnalysis:
+	case flows.TopicPortfolioAnalysis:
+	case flows.TopicShortTermTrendForecast:
+	case flows.TopicBasic:
+	case flows.TopicComprehensive:
+	default:
+	}
+
+	a.mainFlow.Stream(ctx, flows.ChatInput{
+		Prompt:  prompt,
+		History: messages,
+	})(func(chunk *core.StreamingFlowValue[flows.ChatOutput, *ai.ModelResponseChunk], err error) bool {
+		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				resp.StopReason = acp.StopReasonCancelled
+			} else {
+				resp.StopReason = acp.StopReasonRefusal
+				finalErr = err
+			}
+			return false
+		}
+
+		if chunk.Stream != nil {
+			if err := handleStream(ctx, chunk.Stream); err != nil {
+				resp.StopReason = acp.StopReasonRefusal
+				finalErr = err
 				return false
 			}
+		}
+		if chunk.Done {
+			messages = append(messages, chunk.Output.Messages...)
+		}
 
-			if chunk.Stream != nil {
-				if err := handleStream(ctx, chunk.Stream); err != nil {
-					resp.StopReason = acp.StopReasonRefusal
-					finalErr = err
-					return false
-				}
-			}
-			if chunk.Done {
-				messages = append(messages, chunk.Output.Messages...)
-			}
-
-			return !chunk.Done
-		})
-	}
+		return !chunk.Done
+	})
 
 	return resp, finalErr
 }
@@ -363,4 +339,66 @@ func (a *NFAAgent) flushBufferText(
 	}
 
 	return nil
+}
+
+// handleSummaryStream 处理摘要输出流
+func (a *NFAAgent) handleSummaryStream(
+	ctx context.Context,
+	sessionID acp.SessionId,
+	messages []*ai.Message,
+	resp *acp.PromptResponse,
+	handleStream ai.ModelStreamCallback,
+) error {
+	var finalErr error
+	a.summarizeFlow.Stream(ctx, flows.SummarizeInput{
+		History: messages,
+	})(func(chunk *core.StreamingFlowValue[flows.SummarizeOutput, *ai.ModelResponseChunk], err error) bool {
+		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				resp.StopReason = acp.StopReasonCancelled
+			} else {
+				resp.StopReason = acp.StopReasonRefusal
+				finalErr = err
+			}
+			return false
+		}
+
+		if chunk.Stream != nil {
+			if err := handleStream(ctx, chunk.Stream); err != nil {
+				resp.StopReason = acp.StopReasonRefusal
+				finalErr = err
+				return false
+			}
+		}
+		if chunk.Done {
+			content := fmt.Sprintf(`# %s
+
+%s
+
+## 过程概述
+
+%s`, chunk.Output.Title, chunk.Output.Description, chunk.Output.ProcessOverview)
+			content = strings.TrimRight(content, "\n")
+			if chunk.Output.MethodologySummary != "" {
+				content += fmt.Sprintf(`
+
+# 方法论
+
+%s`, chunk.Output.MethodologySummary)
+			}
+
+			if err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
+				SessionId: sessionID,
+				Update:    acp.UpdateAgentMessageText(content),
+			}); err != nil {
+				resp.StopReason = acp.StopReasonRefusal
+				finalErr = fmt.Errorf("session update error: %w", err)
+				return false
+			}
+		}
+
+		return !chunk.Done
+	})
+
+	return finalErr
 }

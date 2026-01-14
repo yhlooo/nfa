@@ -68,6 +68,7 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	}
 
 	// 注册 flows
+	a.logger.Info("registing flows ...")
 	if a.singleAgent {
 		a.mainFlow = flows.DefineSimpleChatFlow(a.g, ChatFlowName, flows.FixedGenerateOptions(
 			ai.WithSystemFn(AllAroundAnalystSystemPrompt),
@@ -82,9 +83,8 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 		)
 		a.mainFlow = flows.DefineMultiAgentsChatFlow(a.g, ChatFlowName, mainAgent, subAgents)
 	}
-	a.logger.Info(fmt.Sprintf("registered main flow: %s", a.mainFlow.Name()))
 	a.summarizeFlow = flows.DefineSummarizeFlow(a.g)
-	a.logger.Info(fmt.Sprintf("registered summarize flow: %s", a.summarizeFlow.Name()))
+	a.routingFlow = flows.DefineTopicRoutingFlow(a.g)
 }
 
 // NewGenkitWithModels 创建 genkit 对象并注册模型

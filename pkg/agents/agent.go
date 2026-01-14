@@ -68,6 +68,7 @@ type NFAAgent struct {
 	technicalAnalysisTools     []ai.ToolRef
 
 	mainFlow      flows.ChatFlow
+	routingFlow   flows.TopicRoutingFlow
 	summarizeFlow flows.SummarizeFlow
 
 	sessions map[acp.SessionId]*Session
