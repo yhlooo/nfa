@@ -12,7 +12,6 @@ import (
 
 	"github.com/yhlooo/nfa/pkg/agents/flows"
 	"github.com/yhlooo/nfa/pkg/agents/models"
-	"github.com/yhlooo/nfa/pkg/agents/tools"
 	"github.com/yhlooo/nfa/pkg/genkitplugins/deepseek"
 )
 
@@ -56,12 +55,13 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 			a.allTools = append(a.allTools, allTools...)
 		}
 	}
-	webFetchTool := tools.DefineWebFetchTool(a.g)
-	a.comprehensiveAnalysisTools = append(a.comprehensiveAnalysisTools, webFetchTool)
-	a.macroeconomicAnalysisTools = append(a.macroeconomicAnalysisTools, webFetchTool)
-	a.fundamentalAnalysisTools = append(a.fundamentalAnalysisTools, webFetchTool)
-	a.technicalAnalysisTools = append(a.technicalAnalysisTools, webFetchTool)
-	a.allTools = append(a.allTools, webFetchTool)
+	// TODO: 暂时禁用网络请求工具，返回信息很容易超出上下文长度限制，需要精简
+	//webFetchTool := tools.DefineWebFetchTool(a.g)
+	//a.comprehensiveAnalysisTools = append(a.comprehensiveAnalysisTools, webFetchTool)
+	//a.macroeconomicAnalysisTools = append(a.macroeconomicAnalysisTools, webFetchTool)
+	//a.fundamentalAnalysisTools = append(a.fundamentalAnalysisTools, webFetchTool)
+	//a.technicalAnalysisTools = append(a.technicalAnalysisTools, webFetchTool)
+	//a.allTools = append(a.allTools, webFetchTool)
 
 	for _, t := range a.allTools {
 		a.logger.Info(fmt.Sprintf("registered tool: %s", t.Name()))
