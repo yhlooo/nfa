@@ -42,7 +42,7 @@ type TopicRoutingFlow = *core.Flow[TopicRoutingInput, TopicRoutingOutput, struct
 
 // DefineTopicRoutingFlow 定义话题分类流程
 func DefineTopicRoutingFlow(g *genkit.Genkit) TopicRoutingFlow {
-	return genkit.DefineFlow(g, "DefineTopicRouting", NewTopicRoutingFlow(g))
+	return genkit.DefineFlow(g, "TopicRouting", NewTopicRoutingFlow(g))
 }
 
 // NewTopicRoutingFlow 创建话题分类流程
@@ -55,8 +55,8 @@ func NewTopicRoutingFlow(g *genkit.Genkit) core.Func[TopicRoutingInput, TopicRou
 		opts := []ai.GenerateOption{
 			ai.WithPrompt(prompt),
 		}
-		if modelName, ok := ctxutil.ModelNameFromContext(ctx); ok {
-			opts = append(opts, ai.WithModelName(modelName))
+		if m, ok := ctxutil.ModelsFromContext(ctx); ok {
+			opts = append(opts, ai.WithModelName(m.GetFast()))
 		}
 
 		resp, err := genkit.Generate(ctx, g, opts...)

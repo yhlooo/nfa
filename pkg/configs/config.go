@@ -10,7 +10,7 @@ type Config struct {
 	// 模型提供商配置
 	ModelProviders []models.ModelProvider `json:"modelProviders,omitempty"`
 	// 默认模型
-	DefaultModel string `json:"defaultModel,omitempty"`
+	DefaultModels models.Models `json:"defaultModels,omitempty"`
 	// 数据提供商配置
 	DataProviders []dataproviders.DataProvider `json:"dataProviders,omitempty"`
 }

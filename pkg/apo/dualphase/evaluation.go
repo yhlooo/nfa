@@ -85,8 +85,8 @@ func BatchEvaluationFlow(g *genkit.Genkit) core.Func[BatchEvaluationInput, Batch
 					return nil
 				}),
 			}
-			if modelName, ok := ctxutil.ModelNameFromContext(ctx); ok {
-				opts = append(opts, ai.WithModelName(modelName))
+			if m, ok := ctxutil.ModelsFromContext(ctx); ok {
+				opts = append(opts, ai.WithModelName(m.GetMain()))
 			}
 
 			results, _, genErr = genkit.GenerateData[[]string](ctx, g, opts...)

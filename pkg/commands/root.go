@@ -53,19 +53,23 @@ func (o *GlobalOptions) AddPFlags(fs *pflag.FlagSet) {
 // NewOptions 创建默认 Options
 func NewOptions() Options {
 	return Options{
-		DefaultModel: "",
+		DefaultMainModel: "",
+		DefaultFastModel: "",
+		SingleAgent:      false,
 	}
 }
 
 // Options 运行选项
 type Options struct {
-	DefaultModel string
-	SingleAgent  bool
+	DefaultMainModel string
+	DefaultFastModel string
+	SingleAgent      bool
 }
 
 // AddPFlags 将选项绑定到命令行参数
 func (o *Options) AddPFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&o.DefaultModel, "model", o.DefaultModel, "Default model for the current session")
+	fs.StringVar(&o.DefaultMainModel, "model", o.DefaultMainModel, "Default main model for the current session")
+	fs.StringVar(&o.DefaultFastModel, "fast-model", o.DefaultFastModel, "Default fast model for the current session")
 	fs.BoolVar(&o.SingleAgent, "single-agent", o.SingleAgent, "Run in single agent mode")
 }
 
@@ -142,16 +146,19 @@ func NewCommand(name string) *cobra.Command {
 			cfg := ConfigFromContext(ctx)
 			logger := logr.FromContextOrDiscard(ctx)
 
-			defaultModel := opts.DefaultModel
-			if defaultModel == "" {
-				defaultModel = cfg.DefaultModel
+			m := cfg.DefaultModels
+			if opts.DefaultMainModel != "" {
+				m.Main = opts.DefaultMainModel
+			}
+			if opts.DefaultFastModel != "" {
+				m.Fast = opts.DefaultFastModel
 			}
 
 			agent := agents.NewNFA(agents.Options{
 				Logger:         logger,
 				ModelProviders: cfg.ModelProviders,
 				DataProviders:  cfg.DataProviders,
-				DefaultModel:   defaultModel,
+				DefaultModels:  m,
 				SingleAgent:    opts.SingleAgent,
 			})
 

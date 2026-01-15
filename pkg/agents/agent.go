@@ -21,7 +21,7 @@ type Options struct {
 	Logger         logr.Logger
 	ModelProviders []models.ModelProvider
 	DataProviders  []dataproviders.DataProvider
-	DefaultModel   string
+	DefaultModels  models.Models
 	SingleAgent    bool
 }
 
@@ -39,7 +39,7 @@ func NewNFA(opts Options) *NFAAgent {
 		logger:         opts.Logger.WithName(loggerName),
 		modelProviders: opts.ModelProviders,
 		dataProviders:  opts.DataProviders,
-		defaultModel:   opts.DefaultModel,
+		defaultModels:  opts.DefaultModels,
 		singleAgent:    opts.SingleAgent,
 
 		sessions: map[acp.SessionId]*Session{},
@@ -53,7 +53,7 @@ type NFAAgent struct {
 	logger         logr.Logger
 	modelProviders []models.ModelProvider
 	dataProviders  []dataproviders.DataProvider
-	defaultModel   string
+	defaultModels  models.Models
 	singleAgent    bool
 
 	conn *acp.AgentSideConnection

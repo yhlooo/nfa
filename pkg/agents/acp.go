@@ -50,7 +50,7 @@ func (a *NFAAgent) Initialize(ctx context.Context, _ acp.InitializeRequest) (acp
 	return acp.InitializeResponse{
 		Meta: map[string]any{
 			MetaKeyAvailableModels: a.availableModels,
-			MetaKeyDefaultModel:    a.defaultModel,
+			MetaKeyDefaultModel:    a.defaultModels.GetMain(),
 		},
 		AgentCapabilities: acp.AgentCapabilities{},
 		AgentInfo: &acp.Implementation{
@@ -120,11 +120,11 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	}()
 	session.lock.Unlock()
 
-	modelName := GetMetaStringValue(params.Meta, MetaKeyModelName)
-	if modelName == "" {
-		modelName = a.defaultModel
+	m := a.defaultModels
+	if modelName := GetMetaStringValue(params.Meta, MetaKeyModelName); modelName != "" {
+		m.Main = modelName
 	}
-	if modelName == "" {
+	if m.Main == "" {
 		return acp.PromptResponse{StopReason: acp.StopReasonRefusal}, fmt.Errorf("no available model")
 	}
 
@@ -139,7 +139,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	if prompt == "" {
 		return acp.PromptResponse{StopReason: acp.StopReasonEndTurn}, nil
 	}
-	ctx = ctxutil.ContextWithModelName(ctx, modelName)
+	ctx = ctxutil.ContextWithModels(ctx, m)
 	ctx = logr.NewContext(ctx, a.logger)
 
 	a.logger.Info("prompt turn start")
@@ -196,6 +196,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 			} else {
 				resp.StopReason = acp.StopReasonRefusal
 				finalErr = err
+				messages = append(messages, ai.NewModelTextMessage("Error: "+err.Error()))
 			}
 			return false
 		}

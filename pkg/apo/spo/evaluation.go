@@ -50,8 +50,8 @@ func EvaluationFlow(g *genkit.Genkit) core.Func[EvaluationInput, EvaluationOutpu
 		opts := []ai.GenerateOption{
 			ai.WithPrompt(prompt),
 		}
-		if modelName, ok := ctxutil.ModelNameFromContext(ctx); ok {
-			opts = append(opts, ai.WithModelName(modelName))
+		if m, ok := ctxutil.ModelsFromContext(ctx); ok {
+			opts = append(opts, ai.WithModelName(m.GetMain()))
 		}
 
 		for i := 0; i < 3; i++ {

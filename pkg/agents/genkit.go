@@ -27,8 +27,8 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 
 	a.g, a.availableModels = NewGenkitWithModels(ctx, a.modelProviders)
 
-	if a.defaultModel == "" && len(a.availableModels) > 0 {
-		a.defaultModel = a.availableModels[0]
+	if a.defaultModels.Main == "" && len(a.availableModels) > 0 {
+		a.defaultModels.Main = a.availableModels[0]
 	}
 
 	for _, m := range a.availableModels {

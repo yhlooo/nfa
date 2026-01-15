@@ -44,8 +44,8 @@ func DefineSummarizeFlow(g *genkit.Genkit) SummarizeFlow {
 `),
 				ai.WithPrompt("总结以上对话"),
 			}
-			if modelName, ok := ctxutil.ModelNameFromContext(ctx); ok {
-				opts = append(opts, ai.WithModelName(modelName))
+			if m, ok := ctxutil.ModelsFromContext(ctx); ok {
+				opts = append(opts, ai.WithModelName(m.GetMain()))
 			}
 			if handleStream != nil {
 				opts = append(opts, ai.WithStreaming(handleTextStream(handleStream, true, false)))

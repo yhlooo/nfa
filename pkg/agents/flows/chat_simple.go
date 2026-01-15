@@ -24,8 +24,8 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptions
 			opts := []ai.GenerateOption{
 				ai.WithReturnToolRequests(true),
 			}
-			if modelName, ok := ctxutil.ModelNameFromContext(ctx); ok {
-				opts = append(opts, ai.WithModelName(modelName))
+			if m, ok := ctxutil.ModelsFromContext(ctx); ok {
+				opts = append(opts, ai.WithModelName(m.GetMain()))
 			}
 			if handleStream != nil {
 				ctx = ctxutil.ContextWithHandleStreamFn(ctx, handleStream)
@@ -42,11 +42,11 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptions
 					return output, err
 				}
 				messages = append(messages, resp.Message)
-				output.Messages = append(output.Messages, resp.Message)
 
 				toolRequests := resp.ToolRequests()
 				if len(toolRequests) == 0 {
 					// 结束一轮对话
+					output.Messages = append(output.Messages, ai.NewModelTextMessage(resp.Text()))
 					return output, nil
 				}
 
@@ -76,7 +76,6 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptions
 				}
 				toolRespMessage := ai.NewMessage(ai.RoleTool, nil, parts...)
 				messages = append(messages, toolRespMessage)
-				output.Messages = append(output.Messages, toolRespMessage)
 			}
 		},
 	)

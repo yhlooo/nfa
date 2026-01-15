@@ -100,11 +100,11 @@ func newInternalToolsAPOCommand() *cobra.Command {
 					return fmt.Errorf("no available model found")
 				}
 
-				model := cfg.DefaultModel
-				if model == "" {
-					model = modelNames[0]
+				m := cfg.DefaultModels
+				if m.Main == "" {
+					m.Main = modelNames[0]
 				}
-				ctx = ctxutil.ContextWithModelName(ctx, model)
+				ctx = ctxutil.ContextWithModels(ctx, m)
 				ctx = ctxutil.ContextWithHandleStreamFn(ctx, handleModelStream(os.Stdout))
 
 				optimizer := dualphase.NewOptimizer(g, opts)
@@ -175,11 +175,11 @@ func newInternalToolsAPOCommand() *cobra.Command {
 					return fmt.Errorf("no available model found")
 				}
 
-				model := cfg.DefaultModel
-				if model == "" {
-					model = modelNames[0]
+				m := cfg.DefaultModels
+				if m.Main == "" {
+					m.Main = modelNames[0]
 				}
-				ctx = ctxutil.ContextWithModelName(ctx, model)
+				ctx = ctxutil.ContextWithModels(ctx, m)
 				ctx = ctxutil.ContextWithHandleStreamFn(ctx, handleModelStream(os.Stdout))
 
 				optimizer := spo.NewOptimizer(g, opts)

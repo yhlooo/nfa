@@ -4,19 +4,21 @@ import (
 	"context"
 
 	"github.com/firebase/genkit/go/ai"
+
+	"github.com/yhlooo/nfa/pkg/agents/models"
 )
 
-type modelNameContextKey struct{}
+type modelsContextKey struct{}
 
-// ContextWithModelName 返回携带指定模型名的上下文
-func ContextWithModelName(ctx context.Context, name string) context.Context {
-	return context.WithValue(ctx, modelNameContextKey{}, name)
+// ContextWithModels 返回携带指定模型配置的上下文
+func ContextWithModels(ctx context.Context, m models.Models) context.Context {
+	return context.WithValue(ctx, modelsContextKey{}, m)
 }
 
-// ModelNameFromContext 从上下文获取模型名
-func ModelNameFromContext(ctx context.Context) (string, bool) {
-	name, ok := ctx.Value(modelNameContextKey{}).(string)
-	return name, ok
+// ModelsFromContext 从上下文获取模型名
+func ModelsFromContext(ctx context.Context) (models.Models, bool) {
+	m, ok := ctx.Value(modelsContextKey{}).(models.Models)
+	return m, ok
 }
 
 type handleStreamFnContextKey struct{}

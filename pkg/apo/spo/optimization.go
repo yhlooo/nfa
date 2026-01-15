@@ -49,8 +49,8 @@ func OptimizationFlow(g *genkit.Genkit) core.Func[OptimizationInput, Optimizatio
 		opts := []ai.GenerateOption{
 			ai.WithPrompt(prompt),
 		}
-		if modelName, ok := ctxutil.ModelNameFromContext(ctx); ok {
-			opts = append(opts, ai.WithModelName(modelName))
+		if m, ok := ctxutil.ModelsFromContext(ctx); ok {
+			opts = append(opts, ai.WithModelName(m.GetMain()))
 		}
 
 		ret, _, err := genkit.GenerateData[OptimizationOutput](ctx, g, opts...)
