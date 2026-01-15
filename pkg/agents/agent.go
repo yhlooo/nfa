@@ -81,5 +81,6 @@ type Session struct {
 	id           acp.SessionId
 	cancelPrompt context.CancelFunc
 
-	history []*ai.Message
+	history    []*ai.Message
+	modelUsage ai.GenerationUsage
 }

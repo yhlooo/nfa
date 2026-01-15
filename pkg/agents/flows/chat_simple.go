@@ -42,6 +42,7 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptions
 					return output, err
 				}
 				messages = append(messages, resp.Message)
+				ctxutil.AddModelUsageToContext(ctx, resp.Usage)
 
 				toolRequests := resp.ToolRequests()
 				if len(toolRequests) == 0 {

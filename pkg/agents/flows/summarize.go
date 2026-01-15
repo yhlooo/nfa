@@ -51,10 +51,11 @@ func DefineSummarizeFlow(g *genkit.Genkit) SummarizeFlow {
 				opts = append(opts, ai.WithStreaming(handleTextStream(handleStream, true, false)))
 			}
 
-			output, _, err := genkit.GenerateData[SummarizeOutput](ctx, g, opts...)
+			output, resp, err := genkit.GenerateData[SummarizeOutput](ctx, g, opts...)
 			if err != nil {
 				return SummarizeOutput{}, err
 			}
+			ctxutil.AddModelUsageToContext(ctx, resp.Usage)
 			return *output, nil
 		},
 	)

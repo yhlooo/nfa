@@ -63,6 +63,7 @@ func NewTopicRoutingFlow(g *genkit.Genkit) core.Func[TopicRoutingInput, TopicRou
 		if err != nil {
 			return TopicRoutingOutput{}, err
 		}
+		ctxutil.AddModelUsageToContext(ctx, resp.Usage)
 
 		return TopicRoutingOutput{Topic: Topic(strings.TrimSpace(resp.Text()))}, nil
 	}

@@ -140,12 +140,18 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 		return acp.PromptResponse{StopReason: acp.StopReasonEndTurn}, nil
 	}
 	ctx = ctxutil.ContextWithModels(ctx, m)
+	ctx = ctxutil.ContextWithModelUsage(ctx, session.modelUsage)
 	ctx = logr.NewContext(ctx, a.logger)
+	defer func() {
+		session.lock.Lock()
+		session.modelUsage = ctxutil.GetModelUsageFromContext(ctx)
+		session.lock.Unlock()
+	}()
 
 	a.logger.Info("prompt turn start")
 
 	handleStream := a.handleStreamChunk(params.SessionId)
-	resp := acp.PromptResponse{StopReason: acp.StopReasonEndTurn}
+	resp := acp.PromptResponse{Meta: map[string]any{}, StopReason: acp.StopReasonEndTurn}
 	var finalErr error
 
 	// 斜杠命令
@@ -159,6 +165,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 		return resp, finalErr
 	case "/summarize", "/summary":
 		finalErr = a.handleSummaryStream(ctx, params.SessionId, messages, &resp, handleStream)
+		SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
 		return resp, finalErr
 	default:
 	}
@@ -170,6 +177,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	if err != nil {
 		resp.StopReason = acp.StopReasonRefusal
 		finalErr = fmt.Errorf("topic routing error: %w", err)
+		SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
 		return resp, finalErr
 	}
 
@@ -215,6 +223,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 		return !chunk.Done
 	})
 
+	SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
 	return resp, finalErr
 }
 
@@ -274,7 +283,10 @@ func (a *NFAAgent) handleStreamChunk(sessionID acp.SessionId) ai.ModelStreamCall
 				}
 
 				inputRaw, _ := json.Marshal(part.ToolRequest.Input)
+				meta := make(map[string]any)
+				SetMetaCurrentModelUsage(meta, ctxutil.GetModelUsageFromContext(ctx))
 				if err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
+					Meta:      meta,
 					SessionId: sessionID,
 					Update: acp.StartToolCall(
 						acp.ToolCallId(part.ToolRequest.Ref), part.ToolRequest.Name,
@@ -295,7 +307,10 @@ func (a *NFAAgent) handleStreamChunk(sessionID acp.SessionId) ai.ModelStreamCall
 					return err
 				}
 				outputRaw, _ := json.Marshal(part.ToolResponse.Output)
+				meta := make(map[string]any)
+				SetMetaCurrentModelUsage(meta, ctxutil.GetModelUsageFromContext(ctx))
 				if err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
+					Meta:      meta,
 					SessionId: sessionID,
 					Update: acp.UpdateToolCall(
 						acp.ToolCallId(part.ToolResponse.Ref),
@@ -332,7 +347,10 @@ func (a *NFAAgent) flushBufferText(
 		return nil
 	}
 
+	meta := make(map[string]any)
+	SetMetaCurrentModelUsage(meta, ctxutil.GetModelUsageFromContext(ctx))
 	err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
+		Meta:      meta,
 		SessionId: sessionID,
 		Update:    buildUpdateFn(buff.String()),
 	})
@@ -390,7 +408,10 @@ func (a *NFAAgent) handleSummaryStream(
 %s`, chunk.Output.MethodologySummary)
 			}
 
+			meta := make(map[string]any)
+			SetMetaCurrentModelUsage(meta, ctxutil.GetModelUsageFromContext(ctx))
 			if err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
+				Meta:      meta,
 				SessionId: sessionID,
 				Update:    acp.UpdateAgentMessageText(content),
 			}); err != nil {

@@ -4,14 +4,18 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/coder/acp-go-sdk"
+	"github.com/firebase/genkit/go/ai"
 	"github.com/go-logr/logr"
 
 	"github.com/yhlooo/nfa/pkg/acputil"
+	"github.com/yhlooo/nfa/pkg/agents"
 )
 
 // Options UI 运行选项
@@ -22,7 +26,9 @@ type Options struct {
 
 // NewChatUI 创建对话 UI
 func NewChatUI(opts Options) *ChatUI {
-	ui := &ChatUI{}
+	ui := &ChatUI{
+		modelUsageStyle: lipgloss.NewStyle().Faint(true).Align(lipgloss.Right).PaddingRight(2),
+	}
 	ui.conn = acp.NewClientSideConnection(ui, opts.AgentClientOut, opts.AgentClientIn)
 	return ui
 }
@@ -38,12 +44,14 @@ type ChatUI struct {
 
 	acputil.NopFS
 	acputil.NopTerminal
+	modelUsageStyle lipgloss.Style
 
 	conn            *acp.ClientSideConnection
 	cwd             string
 	sessionID       acp.SessionId
 	defaultModel    string
 	availableModels []string
+	modelUsage      ai.GenerationUsage
 }
 
 var _ tea.Model = (*ChatUI)(nil)
@@ -97,6 +105,7 @@ func (ui *ChatUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch typedMsg := msg.(type) {
 	case tea.WindowSizeMsg:
+		ui.modelUsageStyle = ui.modelUsageStyle.Width(typedMsg.Width)
 		ui.logger.Info(fmt.Sprintf("resize message: width: %d, height: %d", typedMsg.Width, typedMsg.Height))
 
 	case tea.KeyMsg:
@@ -128,7 +137,13 @@ func (ui *ChatUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, ui.cancelPrompt)
 		}
 
-	case acp.PromptRequest, acp.PromptResponse, acp.SessionNotification:
+	case acp.PromptResponse:
+		ui.modelUsage = agents.GetMetaCurrentModelUsageValue(typedMsg.Meta)
+		cmds = append(cmds, ui.vp.Flush())
+	case acp.SessionNotification:
+		ui.modelUsage = agents.GetMetaCurrentModelUsageValue(typedMsg.Meta)
+		cmds = append(cmds, ui.vp.Flush())
+	case acp.PromptRequest:
 		cmds = append(cmds, ui.vp.Flush())
 
 	case QuitError:
@@ -166,12 +181,31 @@ func (ui *ChatUI) View() string {
 	if vpView != "" {
 		vpView += "\n"
 	}
+
+	inputView := ""
+	if ui.input.Focused() {
+		inputView = ui.input.View()
+	}
+
+	modelUsageView := ""
+	if ui.modelUsage.InputTokens != 0 {
+		modelUsageView += fmt.Sprintf("↑ %s", intWithSeparator(ui.modelUsage.InputTokens))
+	}
+	if out := ui.modelUsage.ThoughtsTokens + ui.modelUsage.ThoughtsTokens; out != 0 {
+		modelUsageView += fmt.Sprintf(" | ↓ %s", intWithSeparator(out))
+	}
+	if modelUsageView != "" {
+		modelUsageView = "Token Usage: " + strings.TrimPrefix(modelUsageView, " | ")
+	}
+
 	return fmt.Sprintf(
 		`%s
-%s
+%s%s
+
 `,
 		vpView,
-		ui.input.View(),
+		inputView,
+		ui.modelUsageStyle.Render(modelUsageView),
 	)
 }
 
@@ -191,4 +225,31 @@ func (ui *ChatUI) printHello() tea.Cmd {
 ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
 `, ui.defaultModel, ui.sessionID)()
 	}
+}
+
+// intWithSeparator 每 step 位带分隔符 sep 的表示整数的字符串
+func intWithSeparator(v int) string {
+	vStr := strconv.FormatInt(int64(v), 10)
+
+	// 暂时去除负号
+	sign := ""
+	if v < 0 {
+		sign = "-"
+		vStr = vStr[1:]
+	}
+
+	divided := make([]string, (len(vStr)+2)/3)
+
+	j := len(divided) - 1
+	for i := len(vStr); i > 0; i -= 3 {
+		start := i - 3
+		if start < 0 {
+			start = 0
+		}
+
+		divided[j] = vStr[start:i]
+		j--
+	}
+
+	return sign + strings.Join(divided, ",")
 }
