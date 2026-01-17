@@ -36,18 +36,19 @@ var (
 
 // WithWeightColors 转为带颜色表示权重的文本形式
 func (p PromptSentences) WithWeightColors() string {
-	minWeight := 0.
-	maxWeight := 0.
+	minWeight := math.Inf(1)
+	maxWeight := math.Inf(-1)
 	for _, s := range p {
 		if s.Ignore {
 			continue
 		}
 
-		if s.Weight > maxWeight {
-			maxWeight = s.Weight
+		weightExp := math.Exp(s.Weight)
+		if weightExp > maxWeight {
+			maxWeight = weightExp
 		}
-		if s.Weight < minWeight {
-			minWeight = s.Weight
+		if weightExp < minWeight {
+			minWeight = weightExp
 		}
 	}
 	step := (maxWeight - minWeight) / float64(len(weightColors))
@@ -59,7 +60,8 @@ func (p PromptSentences) WithWeightColors() string {
 			continue
 		}
 
-		colorI := int((s.Weight - minWeight) / step)
+		weightExp := math.Exp(s.Weight)
+		colorI := int((weightExp - minWeight) / step)
 		if colorI < 0 {
 			colorI = 0
 		}
@@ -108,12 +110,12 @@ func (p PromptSentences) Sample() (int, WeightedSentence) {
 // UpdateWeight 更新权重
 //
 // 参考文章中 Eq. 9
-func (p PromptSentences) UpdateWeight(mixedEvalResult, learningRate float64) {
-	pr := p.SampleProbability()
-
-	for i, s := range p {
-		p[i].Weight = s.Weight * math.Exp((learningRate*mixedEvalResult)/(pr[i]*float64(len(p))))
+func (p PromptSentences) UpdateWeight(i int, mixedEvalResult, learningRate float64) {
+	if i < 0 || i >= len(p) {
+		return
 	}
+	pr := p.SampleProbability()
+	p[i].Weight = p[i].Weight * math.Exp((learningRate*mixedEvalResult)/(pr[i]*float64(len(p))))
 }
 
 // SampleProbability 根据每个句子权重计算当前被采样概率

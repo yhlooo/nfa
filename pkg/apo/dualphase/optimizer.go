@@ -173,7 +173,7 @@ func (o *Optimizer) Optimize(ctx context.Context) (PromptSentences, float64, err
 	sentenceI, sentence := o.curPrompt.Sample()
 	newPrompt := o.curPrompt.Copy()
 	var undesiredSentences []string
-	for i := 0; i < 6; i++ {
+	for i := 0; i < 10; i++ {
 		// 优化
 		out, err := o.optFlow.Run(ctx, OptimizationInput{
 			Prompt:      o.curPrompt.String(),
@@ -251,7 +251,7 @@ func (o *Optimizer) Optimize(ctx context.Context) (PromptSentences, float64, err
 		// 新 Prompt 在验证集和失败集上的综合效果
 		accuracyMixed := accuracyV*o.opts.Optimization.MixingRate + (1-o.opts.Optimization.MixingRate)*accuracyF
 		// 更新句子权重
-		newPrompt.UpdateWeight(accuracyMixed, o.opts.Optimization.LearningRate)
+		newPrompt.UpdateWeight(sentenceI, accuracyMixed, o.opts.Optimization.LearningRate)
 
 		weights := make([]float64, len(newPrompt))
 		for j, p := range newPrompt {

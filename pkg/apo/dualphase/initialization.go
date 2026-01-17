@@ -143,10 +143,13 @@ func DefineDivideToSentencesFlow(
 // DivideToSentencesFlow 将 Prompt 按句子分割流程
 func DivideToSentencesFlow(g *genkit.Genkit) core.Func[DivideToSentencesInput, DivideToSentencesOutput] {
 	return func(ctx context.Context, in DivideToSentencesInput) (DivideToSentencesOutput, error) {
-		prompt := `将以下内容按句子分割，输出分割后的句子列表。每个句子包含：
+		prompt := `将以下 Markdown 格式内容按句子分割，输出分割后的句子列表。每个句子包含：
 - content: 包含结束标点的句子内容
 - suffix: 可选的后缀。句子后到下一个句子前任何无意义内容都属于后缀，包括换行符、空格等。
-注意：将分割后的句子列表中所有 content 和 suffix 首尾相接后必须可以还原成原始输入内容。
+
+注意：
+- 将分割后的句子列表中所有 content 和 suffix 首尾相接后必须可以还原成原始输入内容。
+- 列表的每一项至少是一个句子
 
 输入：
 ` + fmt.Sprintf("```\n%s\n```\n", in.Content)
