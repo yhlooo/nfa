@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/firebase/genkit/go/ai"
 	"github.com/go-logr/logr"
@@ -95,7 +96,7 @@ func newInternalToolsAPOCommand() *cobra.Command {
 					}
 				}
 
-				g, modelNames := agents.NewGenkitWithModels(ctx, cfg.ModelProviders)
+				g, modelNames := agents.NewGenkitWithModels(ctx, cfg.ModelProviders, cfg.DefaultModels)
 				if len(modelNames) == 0 {
 					return fmt.Errorf("no available model found")
 				}
@@ -170,7 +171,7 @@ func newInternalToolsAPOCommand() *cobra.Command {
 				}
 				opts.OutputWriter = os.Stdout
 
-				g, modelNames := agents.NewGenkitWithModels(ctx, cfg.ModelProviders)
+				g, modelNames := agents.NewGenkitWithModels(ctx, cfg.ModelProviders, cfg.DefaultModels)
 				if len(modelNames) == 0 {
 					return fmt.Errorf("no available model found")
 				}
@@ -183,6 +184,7 @@ func newInternalToolsAPOCommand() *cobra.Command {
 				ctx = ctxutil.ContextWithHandleStreamFn(ctx, handleModelStream(os.Stdout))
 
 				optimizer := spo.NewOptimizer(g, opts)
+				time.Sleep(300 * time.Second)
 
 				if err := optimizer.Initialize(ctx); err != nil {
 					return fmt.Errorf("initialization error: %w", err)

@@ -25,7 +25,7 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 		return
 	}
 
-	a.g, a.availableModels = NewGenkitWithModels(ctx, a.modelProviders)
+	a.g, a.availableModels = NewGenkitWithModels(ctx, a.modelProviders, a.defaultModels)
 
 	if a.defaultModels.Main == "" && len(a.availableModels) > 0 {
 		a.defaultModels.Main = a.availableModels[0]
@@ -88,7 +88,11 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 }
 
 // NewGenkitWithModels 创建 genkit 对象并注册模型
-func NewGenkitWithModels(ctx context.Context, providers []models.ModelProvider) (*genkit.Genkit, []string) {
+func NewGenkitWithModels(
+	ctx context.Context,
+	providers []models.ModelProvider,
+	defaultModels models.Models,
+) (*genkit.Genkit, []string) {
 	logger := logr.FromContextOrDiscard(ctx)
 
 	// 确定插件
@@ -119,7 +123,13 @@ func NewGenkitWithModels(ctx context.Context, providers []models.ModelProvider) 
 		}
 	}
 
-	g := genkit.Init(ctx, genkit.WithPlugins(plugins...))
+	genkitOpts := []genkit.GenkitOption{
+		genkit.WithPlugins(plugins...),
+	}
+	if defaultModels.GetMain() != "" {
+		genkitOpts = append(genkitOpts, genkit.WithDefaultModel(defaultModels.GetMain()))
+	}
+	g := genkit.Init(ctx, genkitOpts...)
 
 	// 注册模型
 	for _, p := range providers {
