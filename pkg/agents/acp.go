@@ -181,22 +181,29 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 		return resp, finalErr
 	}
 
-	// TODO: ...
-	a.logger.Info(fmt.Sprintf("topic routing: %s", routingRet.Topic))
-	switch routingRet.Topic {
-	case flows.TopicContinue:
-	case flows.TopicQuery:
-	case flows.TopicStockAnalysis:
-	case flows.TopicPortfolioAnalysis:
-	case flows.TopicShortTermTrendForecast:
-	case flows.TopicBasic:
-	case flows.TopicComprehensive:
-	default:
+	history := make([]*ai.Message, len(messages))
+	copy(history, messages)
+	messages = append(messages, ai.NewUserTextMessage(prompt))
+
+	// 根据话题套模版
+	a.logger.Info(fmt.Sprintf("topic routing: continue: %t, topic: %s", routingRet.Continue, routingRet.Topic))
+	if !routingRet.Continue {
+		switch routingRet.Topic {
+		case flows.TopicContinue:
+		case flows.TopicQuery:
+		case flows.TopicStockAnalysis:
+		case flows.TopicPortfolioAnalysis:
+		case flows.TopicShortTermTrendForecast:
+			prompt = ShortTermTrendForecastPrompt(prompt)
+		case flows.TopicBasic:
+		case flows.TopicComprehensive:
+		default:
+		}
 	}
 
 	a.mainFlow.Stream(ctx, flows.ChatInput{
 		Prompt:  prompt,
-		History: messages,
+		History: history,
 	})(func(chunk *core.StreamingFlowValue[flows.ChatOutput, *ai.ModelResponseChunk], err error) bool {
 		if err != nil {
 			if errors.Is(err, context.Canceled) {

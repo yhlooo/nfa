@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/coder/acp-go-sdk v0.6.3
-	github.com/firebase/genkit/go v1.2.0
+	github.com/firebase/genkit/go v1.4.0
 	github.com/go-logr/logr v1.4.3
 	github.com/google/uuid v1.6.0
 	github.com/openai/openai-go v1.8.2

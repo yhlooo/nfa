@@ -30,10 +30,7 @@ func (opts *AlphaVantageOptions) RegisterTools(ctx context.Context, g *genkit.Ge
 	client, err := mcp.NewGenkitMCPClient(mcp.MCPClientOptions{
 		Name: "alpha-vantage",
 		StreamableHTTP: &mcp.StreamableHTTPConfig{
-			BaseURL: AlphaVantageMCPBaseURL,
-			Headers: map[string]string{
-				"Authorization": "Bearer " + opts.APIKey,
-			},
+			BaseURL: AlphaVantageMCPBaseURL + "?apikey=" + opts.APIKey,
 		},
 	})
 	if err != nil {
@@ -47,16 +44,15 @@ func (opts *AlphaVantageOptions) RegisterTools(ctx context.Context, g *genkit.Ge
 
 	for _, tool := range tools {
 		desc := tool.Definition()
+		var toolOpts []ai.ToolOption
 		if len(desc.InputSchema) > 0 {
-			genkit.DefineToolWithInputSchema(g, desc.Name, desc.Description, desc.InputSchema, MCPToolFn(tool.RunRaw))
-		} else {
-			genkit.DefineTool(g, desc.Name, desc.Description, MCPToolFn(tool.RunRaw))
+			toolOpts = append(toolOpts, ai.WithInputSchema(desc.InputSchema))
 		}
+		genkit.DefineTool(g, desc.Name, desc.Description, MCPToolFn(tool.RunRaw), toolOpts...)
 
 		allTools = append(allTools, tool)
 
 		switch desc.Name {
-		case "alpha-vantage_":
 		case "alpha-vantage_WTI", // WTI 原油价格
 			"alpha-vantage_BRENT",           // 布伦特原油价格
 			"alpha-vantage_NATURAL_GAS",     // 亨利中心天然气现货价格

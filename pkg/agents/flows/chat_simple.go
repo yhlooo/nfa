@@ -19,7 +19,6 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptions
 			messages := slices.Clone(in.History)
 			promptMsg := ai.NewUserTextMessage(in.Prompt)
 			messages = append(messages, promptMsg)
-			output.Messages = append(output.Messages, promptMsg)
 
 			opts := []ai.GenerateOption{
 				ai.WithReturnToolRequests(true),

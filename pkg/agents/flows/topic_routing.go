@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"strings"
 	"text/template"
 
 	"github.com/firebase/genkit/go/ai"
@@ -21,7 +20,8 @@ type TopicRoutingInput struct {
 
 // TopicRoutingOutput 话题分类输出
 type TopicRoutingOutput struct {
-	Topic Topic `json:"topic"`
+	Continue bool  `json:"continue"`
+	Topic    Topic `json:"topic,omitempty"`
 }
 
 // Topic 话题
@@ -59,29 +59,33 @@ func NewTopicRoutingFlow(g *genkit.Genkit) core.Func[TopicRoutingInput, TopicRou
 			opts = append(opts, ai.WithModelName(m.GetFast()))
 		}
 
-		resp, err := genkit.Generate(ctx, g, opts...)
+		ret, resp, err := genkit.GenerateData[TopicRoutingOutput](ctx, g, opts...)
 		if err != nil {
 			return TopicRoutingOutput{}, err
 		}
 		ctxutil.AddModelUsageToContext(ctx, resp.Usage)
+		if ret == nil {
+			return TopicRoutingOutput{Continue: true}, nil
+		}
 
-		return TopicRoutingOutput{Topic: Topic(strings.TrimSpace(resp.Text()))}, nil
+		return *ret, nil
 	}
 }
 
 // TopicRoutingPromptTpl 话题分类 Prompt 模版
 var TopicRoutingPromptTpl = template.Must(template.New("TopicRoutingPrompt").
-	Parse(`根据对话判断 user 当前是延续之前话题还是要讨论新话题以及新话题类型，可输出以下类型之一：
-- ` + "`" + `Continue` + "`" + `: 继续之前的话题，之前正在讨论问题的延续、继续追问、补充说明等
-- ` + "`" + `Query` + "`" + `: 信息查询，单纯查询股票价格、资讯等信息，不需要分析
-- ` + "`" + `StockAnalysis` + "`" + `: 个股分析，针对单个股票的技术面、基本面等进行分析
-- ` + "`" + `PortfolioAnalysis` + "`" + `: 投资组合分析，针对投资组合进行分析
-- ` + "`" + `ShortTermTrendForecast` + "`" + `: 短期趋势预测，根据技术面分析、基本面分析、市场资讯、情绪等预测股票近期（一个月内）涨跌趋势
-- ` + "`" + `Basic` + "`" + `: 基础咨询，对一般性的基本的金融知识的咨询
-- ` + "`" + `Comprehensive` + "`" + `: 综合问题，较复杂的综合性问题，需要结合多种分析模式才能解答的问题
+	Parse(`根据对话判断 user 当前是否延续之前话题以及当前讨论的话题类型
 
 ## 输出格式
-输出判断的话题类型，不带其它任何内容
+输出为 JSON 格式，包含以下字段
+- **continue** (bool) 是否继续之前的话题，当前问题是之前正在讨论问题的延续、继续追问、补充说明等
+- **topic** (string) 当前讨论的话题，可选以下值
+  - ` + "`" + `Query` + "`" + `: 信息查询，单纯查询股票价格、资讯等信息，不需要分析
+  - ` + "`" + `StockAnalysis` + "`" + `: 个股分析，针对单个股票的技术面、基本面等进行分析
+  - ` + "`" + `PortfolioAnalysis` + "`" + `: 投资组合分析，针对投资组合进行分析
+  - ` + "`" + `ShortTermTrendForecast` + "`" + `: 短期趋势预测，根据技术面分析、基本面分析、市场资讯、情绪等预测股票近期（一个月内）涨跌趋势
+  - ` + "`" + `Basic` + "`" + `: 基础咨询，对一般性的基本的金融知识的咨询
+  - ` + "`" + `Comprehensive` + "`" + `: 综合问题，较复杂的综合性问题，需要结合多种分析模式才能解答的问题
 
 ## 对话
 以下是需要判断话题的对话过程：
