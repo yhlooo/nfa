@@ -62,6 +62,7 @@ type NFAAgent struct {
 	availableModels []string
 
 	allTools                   []ai.ToolRef
+	commonTools                []ai.ToolRef
 	comprehensiveAnalysisTools []ai.ToolRef
 	macroeconomicAnalysisTools []ai.ToolRef
 	fundamentalAnalysisTools   []ai.ToolRef

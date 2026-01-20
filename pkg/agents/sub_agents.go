@@ -13,6 +13,7 @@ import (
 
 // NewDefaultAgents 创建默认 Agent 列表
 func NewDefaultAgents(
+	commonTools []ai.ToolRef,
 	comprehensiveAnalysisTools []ai.ToolRef,
 	macroeconomicAnalysisTools []ai.ToolRef,
 	fundamentalAnalysisTools []ai.ToolRef,
@@ -22,25 +23,25 @@ func NewDefaultAgents(
 			Name:         "ComprehensiveAnalyst", // 全能分析师
 			Description:  "具有均衡的金融分析能力，对所有经济、金融问题都有一定的认识，适合处理一般性的问题咨询，具有更综合的分析视角",
 			SystemPrompt: ComprehensiveAnalystSystemPrompt,
-			Tools:        comprehensiveAnalysisTools,
+			Tools:        append(comprehensiveAnalysisTools, commonTools...),
 		}, []flows.AgentOptions{
 			{
 				Name:         "MacroeconomicAnalyst", // 宏观经济分析师
 				Description:  "精通于对宏观经济进行分析，适合处理宏观经济分析任务",
 				SystemPrompt: MacroeconomicAnalystSystemPrompt,
-				Tools:        macroeconomicAnalysisTools,
+				Tools:        append(macroeconomicAnalysisTools, commonTools...),
 			},
 			{
 				Name:         "FundamentalAnalyst", // 基本面分析师
 				Description:  "精通于对公司基本面数据进行分析，适合处理基本面分析任务",
 				SystemPrompt: FundamentalAnalystSystemPrompt,
-				Tools:        fundamentalAnalysisTools,
+				Tools:        append(fundamentalAnalysisTools, commonTools...),
 			},
 			{
 				Name:         "TechnicalAnalyst", // 技术面分析师
 				Description:  "精通于对近期市场交易情况进行技术面分析，适合处理技术面分析任务",
 				SystemPrompt: TechnicalAnalystSystemPrompt,
-				Tools:        technicalAnalysisTools,
+				Tools:        append(technicalAnalysisTools, commonTools...),
 			},
 		}
 }

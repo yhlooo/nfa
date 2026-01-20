@@ -53,14 +53,19 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 			a.fundamentalAnalysisTools = append(a.fundamentalAnalysisTools, fundamentalAnalysisTools...)
 			a.technicalAnalysisTools = append(a.technicalAnalysisTools, technicalAnalysisTools...)
 			a.allTools = append(a.allTools, allTools...)
+		case p.TencentCloudWSA != nil:
+			searchTool, err := p.TencentCloudWSA.RegisterTool(ctx, a.g)
+			if err != nil {
+				a.logger.Error(err, "register tencent cloud wsa search tool error")
+				continue
+			}
+			a.commonTools = append(a.commonTools, searchTool)
+			a.allTools = append(a.allTools, searchTool)
 		}
 	}
-	// TODO: 暂时禁用网络请求工具，返回信息很容易超出上下文长度限制，需要精简
+	// TODO: 返回信息很容易超出上下文长度限制，需要精简
 	//webFetchTool := tools.DefineWebFetchTool(a.g)
-	//a.comprehensiveAnalysisTools = append(a.comprehensiveAnalysisTools, webFetchTool)
-	//a.macroeconomicAnalysisTools = append(a.macroeconomicAnalysisTools, webFetchTool)
-	//a.fundamentalAnalysisTools = append(a.fundamentalAnalysisTools, webFetchTool)
-	//a.technicalAnalysisTools = append(a.technicalAnalysisTools, webFetchTool)
+	//a.commonTools = append(a.commonTools, webFetchTool)
 	//a.allTools = append(a.allTools, webFetchTool)
 
 	for _, t := range a.allTools {
@@ -69,13 +74,16 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 
 	// 注册 flows
 	a.logger.Info("registing flows ...")
-	if a.singleAgent {
+	if a.singleAgent || len(a.allTools) < 20 {
+		a.logger.Info("using single agent mode")
 		a.mainFlow = flows.DefineSimpleChatFlow(a.g, ChatFlowName, flows.FixedGenerateOptions(
 			ai.WithSystemFn(AllAroundAnalystSystemPrompt),
 			ai.WithTools(a.allTools...),
 		))
 	} else {
+		a.logger.Info("using multi agent mode")
 		mainAgent, subAgents := NewDefaultAgents(
+			a.commonTools,
 			a.comprehensiveAnalysisTools,
 			a.macroeconomicAnalysisTools,
 			a.fundamentalAnalysisTools,

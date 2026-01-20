@@ -8,7 +8,8 @@ import (
 
 // DataProvider 数据供应商配置
 type DataProvider struct {
-	AlphaVantage *AlphaVantageOptions `json:"alphaVantage,omitempty"`
+	AlphaVantage    *AlphaVantageOptions    `json:"alphaVantage,omitempty"`
+	TencentCloudWSA *TencentCloudWSAOptions `json:"tcloudWSA,omitempty"`
 }
 
 // MCPToolFn MCP 工具方法

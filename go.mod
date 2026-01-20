@@ -16,6 +16,8 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.10.0
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.3.34
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/wsa v1.3.34
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
