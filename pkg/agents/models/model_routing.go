@@ -6,6 +6,8 @@ type Models struct {
 	Main string `json:"main,omitempty"`
 	// 快速模型，用于处理简单事务。为空时使用主模型
 	Fast string `json:"fast,omitempty"`
+	// 视觉模型，用于处理图片理解任务
+	Vision string `json:"vision,omitempty"`
 }
 
 // GetMain 获取主模型
@@ -19,4 +21,9 @@ func (m Models) GetFast() string {
 		return m.Fast
 	}
 	return m.Main
+}
+
+// GetVision 获取视觉模型
+func (m Models) GetVision() string {
+	return m.Vision
 }

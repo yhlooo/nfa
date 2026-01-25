@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/bombsimon/logrusr/v4"
+	"github.com/chromedp/chromedp"
 	"github.com/go-logr/logr"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -143,6 +144,7 @@ func NewCommand(name string) *cobra.Command {
 
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
+
 			cfg := ConfigFromContext(ctx)
 			logger := logr.FromContextOrDiscard(ctx)
 
@@ -174,6 +176,9 @@ func NewCommand(name string) *cobra.Command {
 			if err := agent.Connect(agentIn, agentOut); err != nil {
 				return fmt.Errorf("create agent side connection error: %w", err)
 			}
+
+			ctx, cancel := chromedp.NewContext(ctx)
+			defer cancel()
 
 			return uitty.NewChatUI(uitty.Options{
 				AgentClientIn:  clientIn,

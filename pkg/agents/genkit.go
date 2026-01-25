@@ -13,6 +13,7 @@ import (
 	"github.com/yhlooo/nfa/pkg/agents/flows"
 	"github.com/yhlooo/nfa/pkg/agents/models"
 	"github.com/yhlooo/nfa/pkg/genkitplugins/deepseek"
+	"github.com/yhlooo/nfa/pkg/tools/webbrowse"
 )
 
 const ChatFlowName = "Chat"
@@ -67,6 +68,12 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	//webFetchTool := tools.DefineWebFetchTool(a.g)
 	//a.commonTools = append(a.commonTools, webFetchTool)
 	//a.allTools = append(a.allTools, webFetchTool)
+
+	// 网页浏览工具
+	wb := webbrowse.NewWebBrowser()
+	webBrowseTool := wb.DefineBrowseTool(a.g)
+	a.commonTools = append(a.commonTools, webBrowseTool)
+	a.allTools = append(a.allTools, webBrowseTool)
 
 	for _, t := range a.allTools {
 		a.logger.Info(fmt.Sprintf("registered tool: %s", t.Name()))
