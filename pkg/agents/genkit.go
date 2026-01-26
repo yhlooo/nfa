@@ -11,8 +11,8 @@ import (
 	"github.com/go-logr/logr"
 
 	"github.com/yhlooo/nfa/pkg/agents/flows"
-	"github.com/yhlooo/nfa/pkg/agents/models"
 	"github.com/yhlooo/nfa/pkg/genkitplugins/deepseek"
+	"github.com/yhlooo/nfa/pkg/models"
 	"github.com/yhlooo/nfa/pkg/tools/webbrowse"
 )
 
@@ -64,10 +64,6 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 			a.allTools = append(a.allTools, searchTool)
 		}
 	}
-	// TODO: 返回信息很容易超出上下文长度限制，需要精简
-	//webFetchTool := tools.DefineWebFetchTool(a.g)
-	//a.commonTools = append(a.commonTools, webFetchTool)
-	//a.allTools = append(a.allTools, webFetchTool)
 
 	// 网页浏览工具
 	wb := webbrowse.NewWebBrowser()

@@ -1,8 +1,8 @@
 package configs
 
 import (
-	"github.com/yhlooo/nfa/pkg/agents/dataproviders"
-	"github.com/yhlooo/nfa/pkg/agents/models"
+	"github.com/yhlooo/nfa/pkg/agents"
+	"github.com/yhlooo/nfa/pkg/models"
 )
 
 // Config 配置
@@ -12,5 +12,5 @@ type Config struct {
 	// 默认模型
 	DefaultModels models.Models `json:"defaultModels,omitempty"`
 	// 数据提供商配置
-	DataProviders []dataproviders.DataProvider `json:"dataProviders,omitempty"`
+	DataProviders []agents.DataProvider `json:"dataProviders,omitempty"`
 }

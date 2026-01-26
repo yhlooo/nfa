@@ -5,7 +5,7 @@ import (
 
 	"github.com/firebase/genkit/go/ai"
 
-	"github.com/yhlooo/nfa/pkg/agents/models"
+	"github.com/yhlooo/nfa/pkg/models"
 )
 
 type modelsContextKey struct{}

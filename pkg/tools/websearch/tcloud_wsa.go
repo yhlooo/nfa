@@ -1,4 +1,4 @@
-package dataproviders
+package websearch
 
 import (
 	"context"
@@ -21,7 +21,7 @@ type TencentCloudWSAOptions struct {
 }
 
 // RegisterTool 注册工具
-func (opts *TencentCloudWSAOptions) RegisterTool(_ context.Context, g *genkit.Genkit) (WebSearchTool, error) {
+func (opts *TencentCloudWSAOptions) RegisterTool(_ context.Context, g *genkit.Genkit) (SearchTool, error) {
 	cred := common.NewCredential(opts.SecretID, opts.SecretKey)
 	p := profile.NewClientProfile()
 	if opts.Endpoint != "" {
@@ -32,39 +32,39 @@ func (opts *TencentCloudWSAOptions) RegisterTool(_ context.Context, g *genkit.Ge
 		return nil, fmt.Errorf("new tencent cloud wsa client error: %s", err)
 	}
 
-	return DefineTencentCloudWSAWebSearchTool(g, client), nil
+	return DefineTencentCloudWSASearchTool(g, client), nil
 }
 
-// DefineTencentCloudWSAWebSearchTool 定义腾讯云 WSA 搜索工具
-func DefineTencentCloudWSAWebSearchTool(
+// DefineTencentCloudWSASearchTool 定义腾讯云 WSA 搜索工具
+func DefineTencentCloudWSASearchTool(
 	g *genkit.Genkit,
 	client *wsa.Client,
-) WebSearchTool {
-	return genkit.DefineTool(g, WebSearchToolName, WebSearchDesc,
-		func(ctx *ai.ToolContext, in WebSearchInput) (WebSearchOutput, error) {
+) SearchTool {
+	return genkit.DefineTool(g, SearchToolName, SearchDesc,
+		func(ctx *ai.ToolContext, in SearchInput) (SearchOutput, error) {
 			req := wsa.NewSearchProRequest()
 			req.Query = &in.Query
 			resp, err := client.SearchProWithContext(ctx, req)
 			if err != nil {
-				return WebSearchOutput{}, err
+				return SearchOutput{}, err
 			}
 			if resp == nil || resp.Response == nil {
-				return WebSearchOutput{}, nil
+				return SearchOutput{}, nil
 			}
-			ret := &WebSearchOutput{}
+			ret := &SearchOutput{}
 			for _, page := range resp.Response.Pages {
 				if page == nil {
 					continue
 				}
 				data := wsaPage{}
 				if err := json.Unmarshal([]byte(*page), &data); err != nil {
-					ret.Items = append(ret.Items, WebSearchResultItem{
+					ret.Items = append(ret.Items, SearchResultItem{
 						Description: *page,
 					})
 					continue
 				}
 				date, _ := time.Parse(time.DateTime, data.Date)
-				ret.Items = append(ret.Items, WebSearchResultItem{
+				ret.Items = append(ret.Items, SearchResultItem{
 					Title:       data.Title,
 					Description: data.Passage,
 					Date:        date,

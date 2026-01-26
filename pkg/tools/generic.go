@@ -1,16 +1,10 @@
-package dataproviders
+package tools
 
 import (
 	"context"
 
 	"github.com/firebase/genkit/go/ai"
 )
-
-// DataProvider 数据供应商配置
-type DataProvider struct {
-	AlphaVantage    *AlphaVantageOptions    `json:"alphaVantage,omitempty"`
-	TencentCloudWSA *TencentCloudWSAOptions `json:"tcloudWSA,omitempty"`
-}
 
 // MCPToolFn MCP 工具方法
 func MCPToolFn[In any, Out any](fn func(ctx context.Context, input In) (Out, error)) ai.ToolFunc[In, Out] {

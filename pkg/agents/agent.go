@@ -9,9 +9,10 @@ import (
 	"github.com/firebase/genkit/go/genkit"
 	"github.com/go-logr/logr"
 
-	"github.com/yhlooo/nfa/pkg/agents/dataproviders"
 	"github.com/yhlooo/nfa/pkg/agents/flows"
-	"github.com/yhlooo/nfa/pkg/agents/models"
+	"github.com/yhlooo/nfa/pkg/models"
+	"github.com/yhlooo/nfa/pkg/tools/alphavantage"
+	"github.com/yhlooo/nfa/pkg/tools/websearch"
 )
 
 const loggerName = "agent"
@@ -20,9 +21,15 @@ const loggerName = "agent"
 type Options struct {
 	Logger         logr.Logger
 	ModelProviders []models.ModelProvider
-	DataProviders  []dataproviders.DataProvider
+	DataProviders  []DataProvider
 	DefaultModels  models.Models
 	SingleAgent    bool
+}
+
+// DataProvider 数据供应商配置
+type DataProvider struct {
+	AlphaVantage    *alphavantage.Options             `json:"alphaVantage,omitempty"`
+	TencentCloudWSA *websearch.TencentCloudWSAOptions `json:"tcloudWSA,omitempty"`
 }
 
 // Complete 使用默认值补全选项
@@ -52,7 +59,7 @@ type NFAAgent struct {
 
 	logger         logr.Logger
 	modelProviders []models.ModelProvider
-	dataProviders  []dataproviders.DataProvider
+	dataProviders  []DataProvider
 	defaultModels  models.Models
 	singleAgent    bool
 

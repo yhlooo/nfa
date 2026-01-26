@@ -1,25 +1,28 @@
-package dataproviders
+package alphavantage
 
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/genkit"
 	"github.com/firebase/genkit/go/plugins/mcp"
+
+	"github.com/yhlooo/nfa/pkg/tools"
 )
 
 const (
-	AlphaVantageMCPBaseURL = "https://mcp.alphavantage.co/mcp"
+	BaseURL = "https://mcp.alphavantage.co/mcp"
 )
 
-// AlphaVantageOptions AlphaVantage 选项
-type AlphaVantageOptions struct {
+// Options AlphaVantage 选项
+type Options struct {
 	APIKey string `json:"apiKey"`
 }
 
 // RegisterTools 注册工具
-func (opts *AlphaVantageOptions) RegisterTools(ctx context.Context, g *genkit.Genkit) (
+func (opts *Options) RegisterTools(ctx context.Context, g *genkit.Genkit) (
 	comprehensiveAnalysisTools []ai.ToolRef,
 	macroeconomicAnalysisTools []ai.ToolRef,
 	fundamentalAnalysisTools []ai.ToolRef,
@@ -27,28 +30,32 @@ func (opts *AlphaVantageOptions) RegisterTools(ctx context.Context, g *genkit.Ge
 	allTools []ai.ToolRef,
 	err error,
 ) {
+	if opts.APIKey == "" {
+		return nil, nil, nil, nil, nil, fmt.Errorf(".apiKey is required")
+	}
+
 	client, err := mcp.NewGenkitMCPClient(mcp.MCPClientOptions{
 		Name: "alpha-vantage",
 		StreamableHTTP: &mcp.StreamableHTTPConfig{
-			BaseURL: AlphaVantageMCPBaseURL + "?apikey=" + opts.APIKey,
+			BaseURL: BaseURL + "?apikey=" + url.QueryEscape(opts.APIKey),
 		},
 	})
 	if err != nil {
 		return nil, nil, nil, nil, nil, fmt.Errorf("init alpha vantage mcp client error: %w", err)
 	}
 
-	tools, err := client.GetActiveTools(ctx, g)
+	toolList, err := client.GetActiveTools(ctx, g)
 	if err != nil {
 		return nil, nil, nil, nil, nil, fmt.Errorf("get active tools error: %w", err)
 	}
 
-	for _, tool := range tools {
+	for _, tool := range toolList {
 		desc := tool.Definition()
 		var toolOpts []ai.ToolOption
 		if len(desc.InputSchema) > 0 {
 			toolOpts = append(toolOpts, ai.WithInputSchema(desc.InputSchema))
 		}
-		genkit.DefineTool(g, desc.Name, desc.Description, MCPToolFn(tool.RunRaw), toolOpts...)
+		genkit.DefineTool(g, desc.Name, desc.Description, tools.MCPToolFn(tool.RunRaw), toolOpts...)
 
 		allTools = append(allTools, tool)
 
