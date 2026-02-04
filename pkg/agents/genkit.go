@@ -57,7 +57,7 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	}
 	// 网页浏览工具
 	wb := webbrowse.NewWebBrowser()
-	a.availableTools = append(a.availableTools, wb.DefineBrowseTool(a.g))
+	a.availableTools = append(a.availableTools, wb.RegisterTools(a.g)...)
 
 	for _, t := range a.availableTools {
 		a.logger.Info(fmt.Sprintf("registered tool: %s", t.Name()))

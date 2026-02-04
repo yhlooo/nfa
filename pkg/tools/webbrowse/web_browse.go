@@ -58,6 +58,15 @@ type BrowseOutput struct {
 	Answer string `json:"answer,omitempty"`
 }
 
+// RegisterTools 注册工具
+func (wb *WebBrowser) RegisterTools(g *genkit.Genkit) []ai.ToolRef {
+	// TODO: 检测有无视觉模型、有无浏览器
+	return []ai.ToolRef{
+		wb.DefineBrowseTool(g),
+		wb.DefineFetchTool(g),
+	}
+}
+
 // DefineBrowseTool 定义浏览网页工具
 func (wb *WebBrowser) DefineBrowseTool(g *genkit.Genkit) ai.ToolRef {
 	return genkit.DefineTool(g, BrowseToolName, `浏览网页内容返回网页中文本内容或根据网页内容回答问题
