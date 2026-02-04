@@ -56,7 +56,6 @@ func NewOptions() Options {
 	return Options{
 		DefaultMainModel: "",
 		DefaultFastModel: "",
-		SingleAgent:      false,
 	}
 }
 
@@ -64,14 +63,12 @@ func NewOptions() Options {
 type Options struct {
 	DefaultMainModel string
 	DefaultFastModel string
-	SingleAgent      bool
 }
 
 // AddPFlags 将选项绑定到命令行参数
 func (o *Options) AddPFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.DefaultMainModel, "model", o.DefaultMainModel, "Default main model for the current session")
 	fs.StringVar(&o.DefaultFastModel, "fast-model", o.DefaultFastModel, "Default fast model for the current session")
-	fs.BoolVar(&o.SingleAgent, "single-agent", o.SingleAgent, "Run in single agent mode")
 }
 
 // NewCommand 创建根命令
@@ -161,7 +158,6 @@ func NewCommand(name string) *cobra.Command {
 				ModelProviders: cfg.ModelProviders,
 				DataProviders:  cfg.DataProviders,
 				DefaultModels:  m,
-				SingleAgent:    opts.SingleAgent,
 			})
 
 			agentIn, clientOut := io.Pipe()

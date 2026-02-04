@@ -40,60 +40,34 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	for _, p := range a.dataProviders {
 		switch {
 		case p.AlphaVantage != nil:
-			comprehensiveAnalysisTools,
-				macroeconomicAnalysisTools,
-				fundamentalAnalysisTools,
-				technicalAnalysisTools,
-				allTools, err := p.AlphaVantage.RegisterTools(ctx, a.g)
+			alphaVantageTools, err := p.AlphaVantage.RegisterTools(ctx, a.g)
 			if err != nil {
 				a.logger.Error(err, "register alpha vantage tools error")
 				continue
 			}
-			a.comprehensiveAnalysisTools = append(a.comprehensiveAnalysisTools, comprehensiveAnalysisTools...)
-			a.macroeconomicAnalysisTools = append(a.macroeconomicAnalysisTools, macroeconomicAnalysisTools...)
-			a.fundamentalAnalysisTools = append(a.fundamentalAnalysisTools, fundamentalAnalysisTools...)
-			a.technicalAnalysisTools = append(a.technicalAnalysisTools, technicalAnalysisTools...)
-			a.allTools = append(a.allTools, allTools...)
+			a.availableTools = append(a.availableTools, alphaVantageTools...)
 		case p.TencentCloudWSA != nil:
 			searchTool, err := p.TencentCloudWSA.RegisterTool(ctx, a.g)
 			if err != nil {
 				a.logger.Error(err, "register tencent cloud wsa search tool error")
 				continue
 			}
-			a.commonTools = append(a.commonTools, searchTool)
-			a.allTools = append(a.allTools, searchTool)
+			a.availableTools = append(a.availableTools, searchTool)
 		}
 	}
-
 	// 网页浏览工具
 	wb := webbrowse.NewWebBrowser()
-	webBrowseTool := wb.DefineBrowseTool(a.g)
-	a.commonTools = append(a.commonTools, webBrowseTool)
-	a.allTools = append(a.allTools, webBrowseTool)
+	a.availableTools = append(a.availableTools, wb.DefineBrowseTool(a.g))
 
-	for _, t := range a.allTools {
+	for _, t := range a.availableTools {
 		a.logger.Info(fmt.Sprintf("registered tool: %s", t.Name()))
 	}
 
 	// 注册 flows
-	a.logger.Info("registing flows ...")
-	if a.singleAgent || len(a.allTools) < 20 {
-		a.logger.Info("using single agent mode")
-		a.mainFlow = flows.DefineSimpleChatFlow(a.g, ChatFlowName, flows.FixedGenerateOptions(
-			ai.WithSystemFn(AllAroundAnalystSystemPrompt),
-			ai.WithTools(a.allTools...),
-		))
-	} else {
-		a.logger.Info("using multi agent mode")
-		mainAgent, subAgents := NewDefaultAgents(
-			a.commonTools,
-			a.comprehensiveAnalysisTools,
-			a.macroeconomicAnalysisTools,
-			a.fundamentalAnalysisTools,
-			a.technicalAnalysisTools,
-		)
-		a.mainFlow = flows.DefineMultiAgentsChatFlow(a.g, ChatFlowName, mainAgent, subAgents)
-	}
+	a.chatFlow = flows.DefineSimpleChatFlow(a.g, ChatFlowName, flows.FixedGenerateOptions(
+		ai.WithSystemFn(AnalystSystemPrompt),
+		ai.WithTools(a.availableTools...),
+	))
 	a.summarizeFlow = flows.DefineSummarizeFlow(a.g)
 	a.routingFlow = flows.DefineTopicRoutingFlow(a.g)
 }

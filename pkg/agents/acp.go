@@ -201,7 +201,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 		}
 	}
 
-	a.mainFlow.Stream(ctx, flows.ChatInput{
+	a.chatFlow.Stream(ctx, flows.ChatInput{
 		Prompt:  prompt,
 		History: history,
 	})(func(chunk *core.StreamingFlowValue[flows.ChatOutput, *ai.ModelResponseChunk], err error) bool {

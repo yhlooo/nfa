@@ -23,7 +23,6 @@ type Options struct {
 	ModelProviders []models.ModelProvider
 	DataProviders  []DataProvider
 	DefaultModels  models.Models
-	SingleAgent    bool
 }
 
 // DataProvider 数据供应商配置
@@ -47,7 +46,6 @@ func NewNFA(opts Options) *NFAAgent {
 		modelProviders: opts.ModelProviders,
 		dataProviders:  opts.DataProviders,
 		defaultModels:  opts.DefaultModels,
-		singleAgent:    opts.SingleAgent,
 
 		sessions: map[acp.SessionId]*Session{},
 	}
@@ -61,21 +59,14 @@ type NFAAgent struct {
 	modelProviders []models.ModelProvider
 	dataProviders  []DataProvider
 	defaultModels  models.Models
-	singleAgent    bool
 
 	conn *acp.AgentSideConnection
 	g    *genkit.Genkit
 
 	availableModels []string
+	availableTools  []ai.ToolRef
 
-	allTools                   []ai.ToolRef
-	commonTools                []ai.ToolRef
-	comprehensiveAnalysisTools []ai.ToolRef
-	macroeconomicAnalysisTools []ai.ToolRef
-	fundamentalAnalysisTools   []ai.ToolRef
-	technicalAnalysisTools     []ai.ToolRef
-
-	mainFlow      flows.ChatFlow
+	chatFlow      flows.ChatFlow
 	routingFlow   flows.TopicRoutingFlow
 	summarizeFlow flows.SummarizeFlow
 
