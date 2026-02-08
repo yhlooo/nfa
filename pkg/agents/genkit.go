@@ -3,6 +3,7 @@ package agents
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/core/api"
@@ -13,6 +14,7 @@ import (
 	"github.com/yhlooo/nfa/pkg/agents/flows"
 	"github.com/yhlooo/nfa/pkg/genkitplugins/deepseek"
 	"github.com/yhlooo/nfa/pkg/models"
+	"github.com/yhlooo/nfa/pkg/skills"
 	"github.com/yhlooo/nfa/pkg/tools/webbrowse"
 )
 
@@ -34,6 +36,15 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 
 	for _, m := range a.availableModels {
 		a.logger.Info(fmt.Sprintf("registered model: %s", m))
+	}
+
+	// 初始化技能加载器并加载技能
+	if a.dataRoot != "" {
+		skillsDir := filepath.Join(a.dataRoot, "skills")
+		a.skillLoader = skills.NewSkillLoaderWithDir(a.logger, skillsDir)
+		if err := a.skillLoader.Load(); err != nil {
+			a.logger.Error(err, "load skills error")
+		}
 	}
 
 	// 注册工具
@@ -59,13 +70,19 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	wb := webbrowse.NewWebBrowser()
 	a.availableTools = append(a.availableTools, wb.RegisterTools(a.g)...)
 
+	// 注册 Skill 工具
+	if a.skillLoader != nil {
+		skillTool := skills.DefineSkillTool(a.g, a.skillLoader)
+		a.availableTools = append(a.availableTools, skillTool)
+	}
+
 	for _, t := range a.availableTools {
 		a.logger.Info(fmt.Sprintf("registered tool: %s", t.Name()))
 	}
 
 	// 注册 flows
 	a.chatFlow = flows.DefineSimpleChatFlow(a.g, ChatFlowName, flows.FixedGenerateOptions(
-		ai.WithSystemFn(AnalystSystemPrompt),
+		ai.WithSystemFn(AnalystSystemPromptWithSkills(a.skillLoader)),
 		ai.WithTools(a.availableTools...),
 	))
 	a.summarizeFlow = flows.DefineSummarizeFlow(a.g)

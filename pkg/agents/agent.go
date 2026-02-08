@@ -2,6 +2,8 @@ package agents
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/coder/acp-go-sdk"
@@ -11,6 +13,7 @@ import (
 
 	"github.com/yhlooo/nfa/pkg/agents/flows"
 	"github.com/yhlooo/nfa/pkg/models"
+	"github.com/yhlooo/nfa/pkg/skills"
 	"github.com/yhlooo/nfa/pkg/tools/alphavantage"
 	"github.com/yhlooo/nfa/pkg/tools/websearch"
 )
@@ -23,6 +26,7 @@ type Options struct {
 	ModelProviders []models.ModelProvider
 	DataProviders  []DataProvider
 	DefaultModels  models.Models
+	DataRoot       string // nfa 数据目录，默认 ~/.nfa
 }
 
 // DataProvider 数据供应商配置
@@ -36,6 +40,12 @@ func (opts *Options) Complete() {
 	if len(opts.ModelProviders) == 0 {
 		opts.ModelProviders = append(opts.ModelProviders, models.ModelProvider{Ollama: &models.OllamaOptions{}})
 	}
+	if opts.DataRoot == "" {
+		homeDir, err := os.UserHomeDir()
+		if err == nil {
+			opts.DataRoot = filepath.Join(homeDir, ".nfa")
+		}
+	}
 }
 
 // NewNFA 创建 NFA Agent
@@ -46,6 +56,7 @@ func NewNFA(opts Options) *NFAAgent {
 		modelProviders: opts.ModelProviders,
 		dataProviders:  opts.DataProviders,
 		defaultModels:  opts.DefaultModels,
+		dataRoot:       opts.DataRoot,
 
 		sessions: map[acp.SessionId]*Session{},
 	}
@@ -59,9 +70,11 @@ type NFAAgent struct {
 	modelProviders []models.ModelProvider
 	dataProviders  []DataProvider
 	defaultModels  models.Models
+	dataRoot       string // nfa 数据目录
 
-	conn *acp.AgentSideConnection
-	g    *genkit.Genkit
+	conn        *acp.AgentSideConnection
+	g           *genkit.Genkit
+	skillLoader *skills.SkillLoader
 
 	availableModels []string
 	availableTools  []ai.ToolRef
