@@ -4,20 +4,12 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-
-	"github.com/go-logr/logr"
 )
 
 // TestSkillTool_Success tests successful skill retrieval
 func TestSkillTool_Success(t *testing.T) {
 	tmpDir := t.TempDir()
-	loader := NewSkillLoader(logr.Discard(), tmpDir)
-
-	// 创建测试技能
-	skillDir := filepath.Join(loader.SkillsDir(), "get-price")
-	if err := os.MkdirAll(skillDir, 0755); err != nil {
-		t.Fatal(err)
-	}
+	loader := NewSkillLoader(tmpDir)
 
 	skillContent := `---
 name: get-price
@@ -27,12 +19,15 @@ description: Get asset prices
 1. Confirm code
 2. Query prices
 `
-	if err := os.WriteFile(filepath.Join(skillDir, SkillFileName), []byte(skillContent), 0644); err != nil {
+	if err := os.Mkdir(filepath.Join(tmpDir, "get-price"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(tmpDir, "get-price", SkillFileName), []byte(skillContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	// 加载技能
-	if err := loader.Load(); err != nil {
+	if err := loader.Load(t.Context()); err != nil {
 		t.Fatal(err)
 	}
 
@@ -50,10 +45,10 @@ description: Get asset prices
 // TestSkillTool_SkillNotFound tests retrieving a non-existent skill
 func TestSkillTool_SkillNotFound(t *testing.T) {
 	tmpDir := t.TempDir()
-	loader := NewSkillLoader(logr.Discard(), tmpDir)
+	loader := NewSkillLoader(tmpDir)
 
 	// 加载技能（空）
-	if err := loader.Load(); err != nil {
+	if err := loader.Load(t.Context()); err != nil {
 		t.Fatal(err)
 	}
 
@@ -72,7 +67,7 @@ func TestSkillTool_SkillNotFound(t *testing.T) {
 // TestSkillTool_MultipleSkills tests retrieving multiple skills
 func TestSkillTool_MultipleSkills(t *testing.T) {
 	tmpDir := t.TempDir()
-	loader := NewSkillLoader(logr.Discard(), tmpDir)
+	loader := NewSkillLoader(tmpDir)
 
 	// 创建多个技能
 	skills := map[string]string{
@@ -103,7 +98,7 @@ description: Send analysis report
 	}
 
 	for name, content := range skills {
-		skillDir := filepath.Join(loader.SkillsDir(), name)
+		skillDir := filepath.Join(tmpDir, name)
 		if err := os.MkdirAll(skillDir, 0755); err != nil {
 			t.Fatal(err)
 		}
@@ -113,7 +108,7 @@ description: Send analysis report
 	}
 
 	// 加载技能
-	if err := loader.Load(); err != nil {
+	if err := loader.Load(t.Context()); err != nil {
 		t.Fatal(err)
 	}
 
@@ -133,10 +128,10 @@ description: Send analysis report
 // TestSkillTool_MetadataError tests skill with invalid metadata
 func TestSkillTool_MetadataError(t *testing.T) {
 	tmpDir := t.TempDir()
-	loader := NewSkillLoader(logr.Discard(), tmpDir)
+	loader := NewSkillLoader(tmpDir)
 
 	// 创建没有必需字段的技能
-	skillDir := filepath.Join(loader.SkillsDir(), "invalid-skill")
+	skillDir := filepath.Join(tmpDir, "invalid-skill")
 	if err := os.MkdirAll(skillDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -152,7 +147,7 @@ Content
 	}
 
 	// 加载技能（应该跳过无效技能）
-	if err := loader.Load(); err != nil {
+	if err := loader.Load(t.Context()); err != nil {
 		t.Fatal(err)
 	}
 

@@ -41,8 +41,8 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	// 初始化技能加载器并加载技能
 	if a.dataRoot != "" {
 		skillsDir := filepath.Join(a.dataRoot, "skills")
-		a.skillLoader = skills.NewSkillLoaderWithDir(a.logger, skillsDir)
-		if err := a.skillLoader.Load(); err != nil {
+		a.skillLoader = skills.NewSkillLoader(skillsDir)
+		if err := a.skillLoader.Load(ctx); err != nil {
 			a.logger.Error(err, "load skills error")
 		}
 	}

@@ -1,6 +1,7 @@
 package skills
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,8 +11,6 @@ import (
 )
 
 const (
-	// SkillsDirName skills 目录名
-	SkillsDirName = ".nfa/skills"
 	// SkillFileName skill 文件名
 	SkillFileName = "SKILL.md"
 )
@@ -20,7 +19,6 @@ const (
 type SkillLoader struct {
 	lock sync.RWMutex
 
-	logger     logr.Logger
 	skillsDir  string
 	skills     map[string]*Skill
 	skillNames []string
@@ -33,33 +31,27 @@ type Skill struct {
 	Path        string
 }
 
-// NewSkillLoader 创建技能加载器（使用 homeDir）
-func NewSkillLoader(logger logr.Logger, homeDir string) *SkillLoader {
-	return NewSkillLoaderWithDir(logger, filepath.Join(homeDir, SkillsDirName))
-}
-
-// NewSkillLoaderWithDir 创建技能加载器（直接指定 skills 目录）
-func NewSkillLoaderWithDir(logger logr.Logger, skillsDir string) *SkillLoader {
+// NewSkillLoader 创建技能加载器
+func NewSkillLoader(skillsDir string) *SkillLoader {
 	return &SkillLoader{
-		logger:    logger.WithName("skill_loader"),
 		skillsDir: skillsDir,
 		skills:    make(map[string]*Skill),
 	}
 }
 
 // Load 加载所有技能
-func (sl *SkillLoader) Load() error {
+func (sl *SkillLoader) Load(ctx context.Context) error {
 	sl.lock.Lock()
 	defer sl.lock.Unlock()
 
-	// 创建 skills 目录（如果不存在）
-	if err := os.MkdirAll(sl.skillsDir, 0755); err != nil {
-		return fmt.Errorf("create skills directory error: %w", err)
-	}
+	logger := logr.FromContextOrDiscard(ctx)
 
 	// 扫描技能目录
 	entries, err := os.ReadDir(sl.skillsDir)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
 		return fmt.Errorf("read skills directory error: %w", err)
 	}
 
@@ -79,14 +71,14 @@ func (sl *SkillLoader) Load() error {
 
 		// 检查 SKILL.md 是否存在
 		if _, err := os.Stat(skillPath); os.IsNotExist(err) {
-			sl.logger.Info(fmt.Sprintf("skill '%s' does not have %s file, skipping", skillName, SkillFileName))
+			logger.Info(fmt.Sprintf("skill '%s' does not have %s file, skipping", skillName, SkillFileName))
 			continue
 		}
 
 		// 验证 SKILL.md 格式
 		_, err := ParseSkillFile(skillPath)
 		if err != nil {
-			sl.logger.Info(fmt.Sprintf("skill '%s' has invalid format (%v), skipping", skillName, err))
+			logger.Info(fmt.Sprintf("skill '%s' has invalid format (%v), skipping", skillName, err))
 			continue
 		}
 
@@ -96,44 +88,11 @@ func (sl *SkillLoader) Load() error {
 			Path: skillPath,
 		}
 		sl.skillNames = append(sl.skillNames, skillName)
-		sl.logger.Info(fmt.Sprintf("loaded skill: %s", skillName))
+		logger.Info(fmt.Sprintf("loaded skill: %s", skillName))
 	}
 
-	sl.logger.Info(fmt.Sprintf("loaded %d skills", len(sl.skills)))
+	logger.Info(fmt.Sprintf("loaded %d skills", len(sl.skills)))
 	return nil
-}
-
-// Discover 发现技能（返回技能名称列表）
-func (sl *SkillLoader) Discover() ([]string, error) {
-	// 创建 skills 目录（如果不存在）
-	if err := os.MkdirAll(sl.skillsDir, 0755); err != nil {
-		return nil, fmt.Errorf("create skills directory error: %w", err)
-	}
-
-	// 扫描技能目录
-	entries, err := os.ReadDir(sl.skillsDir)
-	if err != nil {
-		return nil, fmt.Errorf("read skills directory error: %w", err)
-	}
-
-	var skillNames []string
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			continue
-		}
-
-		skillName := entry.Name()
-		skillPath := filepath.Join(sl.skillsDir, skillName, SkillFileName)
-
-		// 检查 SKILL.md 是否存在
-		if _, err := os.Stat(skillPath); os.IsNotExist(err) {
-			continue
-		}
-
-		skillNames = append(skillNames, skillName)
-	}
-
-	return skillNames, nil
 }
 
 // Get 获取技能
@@ -149,20 +108,4 @@ func (sl *SkillLoader) List() []string {
 	sl.lock.RLock()
 	defer sl.lock.RUnlock()
 	return sl.skillNames
-}
-
-// GetAll 获取所有技能
-func (sl *SkillLoader) GetAll() map[string]*Skill {
-	sl.lock.RLock()
-	defer sl.lock.RUnlock()
-	ret := make(map[string]*Skill, len(sl.skills))
-	for k, v := range sl.skills {
-		ret[k] = v
-	}
-	return ret
-}
-
-// SkillsDir 获取技能目录路径
-func (sl *SkillLoader) SkillsDir() string {
-	return sl.skillsDir
 }
