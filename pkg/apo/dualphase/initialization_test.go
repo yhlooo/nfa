@@ -18,6 +18,7 @@ func TestInitializationPrompt(t *testing.T) {
 	a.NoError(err)
 	a.Contains(ret, `Here are some correct input-output pairs which strictly meet all your requirements:
 
+###Input-Output Pairs###
 Input: input1
 Output: output1
 
@@ -27,6 +28,7 @@ The instruction given contains the following parts.`)
 	a.NoError(err)
 	a.Contains(ret, `Here are some correct input-output pairs which strictly meet all your requirements:
 
+###Input-Output Pairs###
 The instruction given contains the following parts.`)
 
 	ret, err = InitializationPrompt(InitializationInput{
@@ -38,6 +40,7 @@ The instruction given contains the following parts.`)
 	a.NoError(err)
 	a.Contains(ret, `Here are some correct input-output pairs which strictly meet all your requirements:
 
+###Input-Output Pairs###
 Input: input1
 Output: output1
 

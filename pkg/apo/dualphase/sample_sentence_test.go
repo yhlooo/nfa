@@ -13,19 +13,19 @@ func TestPromptSentences_WithWeightColors(t *testing.T) {
 	expectedRet := "\x1b[48;5;17m###Task type###\x1b[0m\n" +
 		"\x1b[48;5;17mTask type: This is a basic arithmetic calculation task.\x1b[0m\n\n" +
 		"\x1b[48;5;17m###Task detailed description###\x1b[0m\n" +
-		"\x1b[48;5;18mTask detailed description: Given a simple arithmetic expression involving two " +
+		"\x1b[48;5;17mTask detailed description: Given a simple arithmetic expression involving two " +
 		"numbers and one of the four basic operators (+, -, *, /), calculate the result.\x1b[0m\n\n" +
-		"\x1b[48;5;18m###Your output must satisfy the following format and constraints###\x1b[0m\n" +
-		"\x1b[48;5;21mOutput format(type): A single integer or decimal number.\x1b[0m\n" +
-		"\x1b[48;5;20mOutput constraints: The output must be the exact numerical result of the calculation.\x1b[0m " +
-		"\x1b[48;5;18mDo not include any additional text, symbols, or explanations.\x1b[0m\n\n" +
-		"\x1b[48;5;18m###You must follow the reasoning process###\x1b[0m\n\x1b[48;5;20m1. Identify the two " +
+		"\x1b[48;5;17m###Your output must satisfy the following format and constraints###\x1b[0m\n" +
+		"\x1b[48;5;18mOutput format(type): A single integer or decimal number.\x1b[0m\n" +
+		"\x1b[48;5;17mOutput constraints: The output must be the exact numerical result of the calculation.\x1b[0m " +
+		"\x1b[48;5;17mDo not include any additional text, symbols, or explanations.\x1b[0m\n\n" +
+		"\x1b[48;5;17m###You must follow the reasoning process###\x1b[0m\n\x1b[48;5;17m1. Identify the two " +
 		"numbers and the operator in the input expression.\x1b[0m\n" +
 		"\x1b[48;5;21m2. Perform the corresponding arithmetic operation (addition, subtraction, multiplication, " +
-		"or division) on the two numbers.\x1b[0m\n\x1b[48;5;21m3. Output the final result as a number.\x1b[0m\n\n" +
-		"\x1b[48;5;19m###Tips###\x1b[0m\n\x1b[48;5;18m- Ensure you handle integer and decimal results " +
-		"correctly.\x1b[0m\n\x1b[48;5;21m- For division, provide the exact quotient (e.g., 4/2 outputs 2, " +
-		"5/2 outputs 2.5).\x1b[0m\n\x1b[48;5;20m- The input will always be a valid, simple expression with " +
+		"or division) on the two numbers.\x1b[0m\n\x1b[48;5;17m3. Output the final result as a number.\x1b[0m\n\n" +
+		"\x1b[48;5;17m###Tips###\x1b[0m\n\x1b[48;5;17m- Ensure you handle integer and decimal results " +
+		"correctly.\x1b[0m\n\x1b[48;5;17m- For division, provide the exact quotient (e.g., 4/2 outputs 2, " +
+		"5/2 outputs 2.5).\x1b[0m\n\x1b[48;5;17m- The input will always be a valid, simple expression with " +
 		"two operands and one operator.\x1b[0m\n"
 	ret := PromptSentences{
 		{Sentence: Sentence{Content: "###Task type###", Suffix: "\n"}, Weight: 0},
