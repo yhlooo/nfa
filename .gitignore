@@ -35,3 +35,6 @@ go.work
 
 # Genkit
 .genkit/
+
+# Claude
+.claude/settings.local.json
