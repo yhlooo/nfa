@@ -56,6 +56,7 @@ func NewOptions() Options {
 	return Options{
 		DefaultMainModel: "",
 		DefaultFastModel: "",
+		PrintAndExit:     false,
 	}
 }
 
@@ -63,12 +64,14 @@ func NewOptions() Options {
 type Options struct {
 	DefaultMainModel string
 	DefaultFastModel string
+	PrintAndExit     bool
 }
 
 // AddPFlags 将选项绑定到命令行参数
 func (o *Options) AddPFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.DefaultMainModel, "model", o.DefaultMainModel, "Default main model for the current session")
 	fs.StringVar(&o.DefaultFastModel, "fast-model", o.DefaultFastModel, "Default fast model for the current session")
+	fs.BoolVarP(&o.PrintAndExit, "print", "p", o.PrintAndExit, "Print answer and exit after responding")
 }
 
 // NewCommand 创建根命令
@@ -78,8 +81,9 @@ func NewCommand(name string) *cobra.Command {
 
 	var keylog *os.File
 	cmd := &cobra.Command{
-		Use:           fmt.Sprintf("%s", name),
+		Use:           fmt.Sprintf("%s [PROMPT]", name),
 		Short:         "Financial Trading LLM AI Agent. **This is Not Financial Advice.**",
+		Args:          cobra.MaximumNArgs(1),
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		Version:       version.Version,
@@ -176,9 +180,17 @@ func NewCommand(name string) *cobra.Command {
 			ctx, cancel := chromedp.NewContext(ctx)
 			defer cancel()
 
+			// 处理三种模式
+			var initialPrompt string
+			if len(args) > 0 {
+				initialPrompt = args[0]
+			}
+
 			return uitty.NewChatUI(uitty.Options{
-				AgentClientIn:  clientIn,
-				AgentClientOut: clientOut,
+				AgentClientIn:         clientIn,
+				AgentClientOut:        clientOut,
+				InitialPrompt:         initialPrompt,
+				AutoExitAfterResponse: opts.PrintAndExit,
 			}).Run(ctx)
 		},
 

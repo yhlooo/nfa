@@ -20,14 +20,18 @@ import (
 
 // Options UI 运行选项
 type Options struct {
-	AgentClientIn  io.Reader
-	AgentClientOut io.Writer
+	AgentClientIn         io.Reader
+	AgentClientOut        io.Writer
+	InitialPrompt         string
+	AutoExitAfterResponse bool
 }
 
 // NewChatUI 创建对话 UI
 func NewChatUI(opts Options) *ChatUI {
 	ui := &ChatUI{
-		modelUsageStyle: lipgloss.NewStyle().Faint(true).Align(lipgloss.Right).PaddingRight(2),
+		modelUsageStyle:       lipgloss.NewStyle().Faint(true).Align(lipgloss.Right).PaddingRight(2),
+		initialPrompt:         opts.InitialPrompt,
+		autoExitAfterResponse: opts.AutoExitAfterResponse,
 	}
 	ui.conn = acp.NewClientSideConnection(ui, opts.AgentClientOut, opts.AgentClientIn)
 	return ui
@@ -46,12 +50,14 @@ type ChatUI struct {
 	acputil.NopTerminal
 	modelUsageStyle lipgloss.Style
 
-	conn            *acp.ClientSideConnection
-	cwd             string
-	sessionID       acp.SessionId
-	defaultModel    string
-	availableModels []string
-	modelUsage      ai.GenerationUsage
+	conn                  *acp.ClientSideConnection
+	cwd                   string
+	sessionID             acp.SessionId
+	defaultModel          string
+	availableModels       []string
+	modelUsage            ai.GenerationUsage
+	initialPrompt         string
+	autoExitAfterResponse bool
 }
 
 var _ tea.Model = (*ChatUI)(nil)
@@ -85,11 +91,16 @@ func (ui *ChatUI) Run(ctx context.Context) error {
 
 // Init 开始运行 UI 的第一个操作
 func (ui *ChatUI) Init() tea.Cmd {
-	return tea.Sequence(
+	cmds := []tea.Cmd{
 		ui.newSession,
 		ui.printHello(),
 		textarea.Blink,
-	)
+	}
+	if ui.initialPrompt != "" {
+		// 在 session 创建后发送初始 prompt
+		cmds = append(cmds, ui.newPrompt(ui.initialPrompt))
+	}
+	return tea.Sequence(cmds...)
 }
 
 // Update 处理更新事件
@@ -140,6 +151,9 @@ func (ui *ChatUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case acp.PromptResponse:
 		ui.modelUsage = agents.GetMetaCurrentModelUsageValue(typedMsg.Meta)
 		cmds = append(cmds, ui.vp.Flush())
+		if ui.autoExitAfterResponse {
+			cmds = append(cmds, tea.Quit)
+		}
 	case acp.SessionNotification:
 		ui.modelUsage = agents.GetMetaCurrentModelUsageValue(typedMsg.Meta)
 		cmds = append(cmds, ui.vp.Flush())
