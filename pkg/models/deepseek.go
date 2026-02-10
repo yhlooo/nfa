@@ -1,7 +1,15 @@
 package models
 
 import (
-	"github.com/yhlooo/nfa/pkg/genkitplugins/deepseek"
+	"github.com/firebase/genkit/go/ai"
+	"github.com/firebase/genkit/go/genkit"
+
+	"github.com/yhlooo/nfa/pkg/genkitplugins/oai"
+)
+
+const (
+	DeepseekProviderName = "deepseek"
+	DeepseekBaseURL      = "https://api.deepseek.com"
 )
 
 // DeepseekOptions Deepseek 选项
@@ -13,21 +21,40 @@ type DeepseekOptions struct {
 }
 
 // DeepseekPlugin 基于选项创建 Deepseek 插件
-func (opts *DeepseekOptions) DeepseekPlugin() *deepseek.Deepseek {
-	return &deepseek.Deepseek{
-		APIKey: opts.APIKey,
-		Models: modelConfigsToStrings(opts.Models),
+func (opts *DeepseekOptions) DeepseekPlugin() *oai.OpenAICompatible {
+	return &oai.OpenAICompatible{
+		Provider: DeepseekProviderName,
+		BaseURL:  DeepseekBaseURL,
+		APIKey:   opts.APIKey,
 	}
 }
 
-// modelConfigsToStrings 转换模型配置列表为字符串列表
-func modelConfigsToStrings(configs []ModelConfig) []string {
-	if len(configs) == 0 {
-		return nil
+// RegisterModels 注册模型
+func (opts *DeepseekOptions) RegisterModels(
+	g *genkit.Genkit,
+	plugin *oai.OpenAICompatible,
+) ([]string, error) {
+	var definedModels []string
+	for _, cfg := range opts.Models {
+		m := plugin.DefineModel(g, oai.ModelOptions{
+			ModelOptions: ai.ModelOptions{
+				Label: cfg.Name,
+				Supports: &ai.ModelSupports{
+					Multiturn:  true,
+					Tools:      true,
+					SystemRole: true,
+					Media:      true,
+					ToolChoice: true,
+				},
+			},
+			Reasoning: cfg.Reasoning,
+			ReasoningExtraFields: map[string]any{
+				"thinking": map[string]any{"type": "enabled"},
+			},
+			ReasoningContentField: "reasoning_content",
+		})
+		definedModels = append(definedModels, m.Name())
 	}
-	names := make([]string, len(configs))
-	for i, cfg := range configs {
-		names[i] = cfg.Name
-	}
-	return names
+
+	return definedModels, nil
 }

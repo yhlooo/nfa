@@ -12,7 +12,7 @@ import (
 	"github.com/go-logr/logr"
 
 	"github.com/yhlooo/nfa/pkg/agents/flows"
-	"github.com/yhlooo/nfa/pkg/genkitplugins/deepseek"
+	"github.com/yhlooo/nfa/pkg/genkitplugins/oai"
 	"github.com/yhlooo/nfa/pkg/models"
 	"github.com/yhlooo/nfa/pkg/skills"
 	"github.com/yhlooo/nfa/pkg/tools/webbrowse"
@@ -100,11 +100,12 @@ func NewGenkitWithModels(
 	// 确定插件
 	var (
 		ollamaPlugin   = &ollama.Ollama{}
-		deepseekPlugin = &deepseek.Deepseek{}
+		deepseekPlugin = &oai.OpenAICompatible{}
+		oaiPlugins     = map[int]*oai.OpenAICompatible{}
 		plugins        []api.Plugin
 		modelNames     []string
 	)
-	for _, p := range providers {
+	for i, p := range providers {
 		switch {
 		case p.Ollama != nil:
 			ollamaPlugin = p.Ollama.OllamaPlugin()
@@ -114,12 +115,8 @@ func NewGenkitWithModels(
 			plugins = append(plugins, deepseekPlugin)
 		case p.OpenAICompatible != nil:
 			plugin := p.OpenAICompatible.OpenAICompatiblePlugin()
-			// 注册插件后自动注册模型，这里仅获取模型名
 			plugins = append(plugins, plugin)
-			// 使用配置的模型列表
-			for _, modelConfig := range p.OpenAICompatible.Models {
-				modelNames = append(modelNames, api.NewName(p.OpenAICompatible.Name, modelConfig.Name))
-			}
+			oaiPlugins[i] = plugin
 		}
 	}
 
@@ -132,22 +129,29 @@ func NewGenkitWithModels(
 	g := genkit.Init(ctx, genkitOpts...)
 
 	// 注册模型
-	for _, p := range providers {
+	for i, p := range providers {
 		switch {
 		case p.Ollama != nil:
-			ollamaModelNames, err := p.Ollama.RegisterModels(ctx, g, ollamaPlugin)
+			ollamaModelNames, err := p.Ollama.RegisterModels(g, ollamaPlugin)
 			if err != nil {
 				logger.Error(err, "define ollama models error")
 				continue
 			}
 			modelNames = append(modelNames, ollamaModelNames...)
 		case p.Deepseek != nil:
-			dsModelNames, err := deepseekPlugin.RegisterModels(g)
+			dsModelNames, err := p.Deepseek.RegisterModels(g, deepseekPlugin)
 			if err != nil {
 				logger.Error(err, "define deepseek models error")
 				continue
 			}
 			modelNames = append(modelNames, dsModelNames...)
+		case p.OpenAICompatible != nil:
+			oaiModelNames, err := p.OpenAICompatible.RegisterModels(g, oaiPlugins[i])
+			if err != nil {
+				logger.Error(err, "define openai compatible models error")
+				continue
+			}
+			modelNames = append(modelNames, oaiModelNames...)
 		}
 	}
 

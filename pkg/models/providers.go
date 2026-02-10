@@ -9,27 +9,26 @@ type ModelProvider struct {
 
 // ModelConfig 模型配置
 type ModelConfig struct {
-	// 模型名称（必需）
+	// 模型名称
 	Name string `json:"name"`
 
-	// 是否支持推理/思考模式（预留）
+	// 是否支持推理、思考模式
 	Reasoning bool `json:"reasoning,omitempty"`
-
-	// 是否支持视觉/图片理解（预留）
+	// 是否支持视觉、图片理解
 	Vision bool `json:"vision,omitempty"`
 
-	// 价格信息（预留），单位：元/千Token
+	// 价格信息
 	Cost ModelCost `json:"cost,omitempty"`
-
-	// 上下文窗口大小（预留）
-	ContextWindow int `json:"contextWindow,omitempty"`
-
-	// 最大输出 Token 数（预留）
-	MaxOutputTokens int `json:"maxOutputTokens,omitempty"`
+	// 上下文窗口大小
+	ContextWindow int64 `json:"contextWindow,omitempty"`
+	// 最大输出 Token 数
+	MaxOutputTokens int64 `json:"maxOutputTokens,omitempty"`
 }
 
 // ModelCost 价格信息
 type ModelCost struct {
-	Input  float64 `json:"input,omitempty"`
+	// 每千输入 Token 价格
+	Input float64 `json:"input,omitempty"`
+	// 每千输出 Token 价格
 	Output float64 `json:"output,omitempty"`
 }

@@ -1,8 +1,6 @@
 package models
 
 import (
-	"context"
-
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/genkit"
 	"github.com/firebase/genkit/go/plugins/ollama"
@@ -43,14 +41,9 @@ func (opts *OllamaOptions) OllamaPlugin() *ollama.Ollama {
 
 // RegisterModels 注册模型
 func (opts *OllamaOptions) RegisterModels(
-	ctx context.Context,
 	g *genkit.Genkit,
 	plugin *ollama.Ollama,
 ) ([]string, error) {
-	if len(opts.Models) == 0 {
-		return nil, nil // 空配置不注册任何模型
-	}
-
 	var definedModels []string
 	for _, modelConfig := range opts.Models {
 		m := plugin.DefineModel(g, ollama.ModelDefinition{
