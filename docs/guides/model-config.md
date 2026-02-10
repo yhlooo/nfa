@@ -53,6 +53,8 @@ NFA 支持多种模型提供商，通过灵活的配置实现不同场景下的�
 
 Ollama 是本地模型运行平台，适合需要隐私保护或离线使用的场景。
 
+> **BREAKING CHANGE**: 配置格式已更新！请参考下方的迁移指南。
+
 **配置示例**:
 ```json
 {
@@ -61,7 +63,11 @@ Ollama 是本地模型运行平台，适合需要隐私保护或离线使用的�
       "ollama": {
         "serverAddress": "http://localhost:11434",
         "timeout": 300,
-        "models": ["llama2", "mistral", "codellama"]
+        "models": [
+          {"name": "llama2"},
+          {"name": "mistral"},
+          {"name": "codellama"}
+        ]
       }
     }
   ],
@@ -73,13 +79,44 @@ Ollama 是本地模型运行平台，适合需要隐私保护或离线使用的�
 }
 ```
 
+**完整模型配置示例**（所有可选字段）:
+```json
+{
+  "ollama": {
+    "serverAddress": "http://localhost:11434",
+    "timeout": 300,
+    "models": [
+      {
+        "name": "llama2",
+        "reasoning": false,
+        "vision": false,
+        "cost": {"input": 0, "output": 0},
+        "contextWindow": 4096,
+        "maxOutputTokens": 2048
+      }
+    ]
+  }
+}
+```
+
 **配置参数**:
 
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | `serverAddress` | string | `http://localhost:11434` | Ollama 服务地址 |
 | `timeout` | int | `300` | 请求超时时间（秒） |
-| `models` | array | `[]` | 模型名称列表，空列表表示使用所有已下载模型 |
+| `models` | array | `[]` | 模型配置列表，空列表表示不注册任何模型 |
+
+**模型配置字段 (ModelConfig)**:
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `name` | string | 是 | 模型名称 |
+| `reasoning` | bool | 否 | 是否支持推理/思考模式（预留） |
+| `vision` | bool | 否 | 是否支持视觉（预留） |
+| `cost` | object | 否 | 价格信息，包含 `input` 和 `output` 字段（预留） |
+| `contextWindow` | int | 否 | 上下文窗口大小（预留） |
+| `maxOutputTokens` | int | 否 | 最大输出 Token 数（预留） |
 
 **使用场景**:
 - 需要本地运行，保护数据隐私
@@ -101,7 +138,12 @@ Deepseek 提供高性价比的中文大模型服务。
   "modelProviders": [
     {
       "deepseek": {
-        "apiKey": "your-deepseek-api-key"
+        "apiKey": "your-deepseek-api-key",
+        "models": [
+          {"name": "deepseek-chat"},
+          {"name": "deepseek-coder"},
+          {"name": "deepseek-reasoner", "reasoning": true}
+        ]
       }
     }
   ],
@@ -118,6 +160,7 @@ Deepseek 提供高性价比的中文大模型服务。
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | `apiKey` | string | 是 | Deepseek API 密钥 |
+| `models` | array | 否 | 模型配置列表，空列表表示不注册任何模型 |
 
 **支持模型**:
 - `deepseek-chat` - 通用对话模型
@@ -141,7 +184,24 @@ Deepseek 提供高性价比的中文大模型服务。
       "openaiCompatible": {
         "name": "aliyun",
         "baseURL": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "apiKey": "your-aliyun-api-key"
+        "apiKey": "your-aliyun-api-key",
+        "models": [
+          {
+            "name": "qwen-max",
+            "reasoning": true,
+            "vision": false,
+            "cost": {"input": 0.001, "output": 0.01},
+            "contextWindow": 262144,
+            "maxOutputTokens": 32768
+          },
+          {
+            "name": "qwen-turbo"
+          },
+          {
+            "name": "qwen-vl-plus",
+            "vision": true
+          }
+        ]
       }
     }
   ],
@@ -160,6 +220,7 @@ Deepseek 提供高性价比的中文大模型服务。
 | `name` | string | 是 | 提供商名称，用于模型命名 |
 | `baseURL` | string | 是 | API 基础地址 |
 | `apiKey` | string | 是 | API 密钥 |
+| `models` | array | 否 | 模型配置列表，空列表表示不注册任何模型 |
 
 **模型命名规则**:
 模型名称使用 `provider/model-name` 格式，如 `aliyun/qwen-max`。
@@ -212,19 +273,29 @@ nfa --model "deepseek-chat" --fast-model "ollama/mistral" "问题内容"
       "ollama": {
         "serverAddress": "http://localhost:11434",
         "timeout": 300,
-        "models": ["mistral", "llama2"]
+        "models": [
+          {"name": "mistral"},
+          {"name": "llama2"}
+        ]
       }
     },
     {
       "deepseek": {
-        "apiKey": "your-deepseek-api-key"
+        "apiKey": "your-deepseek-api-key",
+        "models": [
+          {"name": "deepseek-chat"},
+          {"name": "deepseek-reasoner", "reasoning": true}
+        ]
       }
     },
     {
       "openaiCompatible": {
         "name": "openai",
         "baseURL": "https://api.openai.com/v1",
-        "apiKey": "your-openai-api-key"
+        "apiKey": "your-openai-api-key",
+        "models": [
+          {"name": "gpt-4-vision-preview", "vision": true}
+        ]
       }
     }
   ],
@@ -240,6 +311,47 @@ nfa --model "deepseek-chat" --fast-model "ollama/mistral" "问题内容"
 - 主任务用 Deepseek（质量高）
 - 快速任务用 Ollama Mistral（本地免费）
 - 视觉任务用 GPT-4 Vision（能力最强）
+
+## 迁移指南
+
+### Ollama 配置迁移
+
+**旧格式**（不再支持）:
+```json
+{
+  "ollama": {
+    "models": ["llama2", "mistral"]
+  }
+}
+```
+
+**新格式**:
+```json
+{
+  "ollama": {
+    "models": [
+      {"name": "llama2"},
+      {"name": "mistral"}
+    ]
+  }
+}
+```
+
+### 迁移步骤
+
+1. **备份现有配置**:
+   ```bash
+   cp ~/.nfa/nfa.json ~/.nfa/nfa.json.backup
+   ```
+
+2. **更新配置文件**:
+   - 将 Ollama 的 `models` 字段从字符串数组改为对象数组
+   - 为每个模型创建 `{"name": "模型名"}` 对象
+
+3. **验证配置**:
+   ```bash
+   nfa models list
+   ```
 
 ## 最佳实践
 
@@ -263,14 +375,21 @@ nfa --model "deepseek-chat" --fast-model "ollama/mistral" "问题内容"
 }
 ```
 
-### 3. 明确指定模型列表
+### 3. 配置模型元数据（预留字段）
 
-避免 Ollama 扫描所有模型：
+虽然当前版本中 `reasoning`、`vision`、`cost` 等字段预留供日后使用，但建议在配置时声明这些信息，以便未来的智能路由功能使用：
+
 ```json
 {
-  "ollama": {
-    "models": ["llama2", "mistral"]  // 只注册常用的
-  }
+  "models": [
+    {
+      "name": "qwen-max",
+      "reasoning": true,
+      "vision": false,
+      "cost": {"input": 0.001, "output": 0.01},
+      "contextWindow": 262144
+    }
+  ]
 }
 ```
 
@@ -302,6 +421,18 @@ nfa --model "new-model-name" "测试一下"
    ```bash
    tail -f ~/.nfa/nfa.log
    ```
+
+### 没有模型被注册
+
+如果配置了 `models` 字段但仍然显示 "no models configured"：
+
+1. **检查 models 数组格式**
+   - 确保是对象数组而不是字符串数组
+   - 每个对象必须包含 `name` 字段
+
+2. **检查 provider 是否启用**
+   - 确认配置在 `modelProviders` 数组中
+   - 确认 provider 名称拼写正确
 
 ### Ollama 连接失败
 
