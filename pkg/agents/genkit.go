@@ -115,13 +115,11 @@ func NewGenkitWithModels(
 		case p.OpenAICompatible != nil:
 			plugin := p.OpenAICompatible.OpenAICompatiblePlugin()
 			// 注册插件后自动注册模型，这里仅获取模型名
-			oaiModelNames, err := models.ListOpenAICompatibleModels(ctx, plugin)
-			if err != nil {
-				logger.Error(err, fmt.Sprintf("list %s models error", p.OpenAICompatible.Name))
-				continue
-			}
-			modelNames = append(modelNames, oaiModelNames...)
 			plugins = append(plugins, plugin)
+			// 使用配置的模型列表
+			for _, modelConfig := range p.OpenAICompatible.Models {
+				modelNames = append(modelNames, api.NewName(p.OpenAICompatible.Name, modelConfig.Name))
+			}
 		}
 	}
 
@@ -144,13 +142,18 @@ func NewGenkitWithModels(
 			}
 			modelNames = append(modelNames, ollamaModelNames...)
 		case p.Deepseek != nil:
-			dsModelNames, err := deepseekPlugin.RegisterModels(ctx, g)
+			dsModelNames, err := deepseekPlugin.RegisterModels(g)
 			if err != nil {
 				logger.Error(err, "define deepseek models error")
 				continue
 			}
 			modelNames = append(modelNames, dsModelNames...)
 		}
+	}
+
+	// 警告：如果没有配置任何模型
+	if len(modelNames) == 0 {
+		logger.Info("no models configured, please configure models in your config file")
 	}
 
 	return g, modelNames

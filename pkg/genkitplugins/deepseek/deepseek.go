@@ -2,7 +2,6 @@ package deepseek
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"sync"
 
@@ -19,6 +18,7 @@ type Deepseek struct {
 	Provider string
 	BaseURL  string
 	APIKey   string
+	Models   []string // 配置的模型名称列表
 
 	lock    sync.Mutex
 	initted bool
@@ -74,18 +74,18 @@ func (d *Deepseek) Init(_ context.Context) []api.Action {
 }
 
 // RegisterModels 注册模型
-func (d *Deepseek) RegisterModels(ctx context.Context, g *genkit.Genkit) ([]string, error) {
+func (d *Deepseek) RegisterModels(g *genkit.Genkit) ([]string, error) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
-	models, err := d.client.Models.List(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("list models error: %w", err)
+	// 使用配置的模型列表
+	if len(d.Models) == 0 {
+		return nil, nil // 空配置不注册任何模型
 	}
 
-	for _, m := range models.Data {
+	for _, modelName := range d.Models {
 		opts := ai.ModelOptions{
-			Label: m.ID,
+			Label: modelName,
 			Supports: &ai.ModelSupports{
 				Multiturn:  true,
 				Tools:      true,
@@ -94,7 +94,7 @@ func (d *Deepseek) RegisterModels(ctx context.Context, g *genkit.Genkit) ([]stri
 				ToolChoice: true,
 			},
 		}
-		model := d.defineModel(m.ID, opts, m.ID == "deepseek-reasoner")
+		model := d.defineModel(modelName, opts, modelName == "deepseek-reasoner")
 		genkit.DefineModel(g, model.Name(), &opts, model.Generate)
 		d.models = append(d.models, model.Name())
 	}

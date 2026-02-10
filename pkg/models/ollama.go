@@ -2,11 +2,6 @@ package models
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"time"
 
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/genkit"
@@ -23,10 +18,8 @@ type OllamaOptions struct {
 	//
 	// 默认 300
 	Timeout int `json:"timeout,omitempty"`
-	// 模型名列表
-	//
-	// 空表示使用 Ollama 已下载的所有模型
-	Models []string `json:"models,omitempty"`
+	// 模型列表
+	Models []ModelConfig `json:"models,omitempty"`
 }
 
 // Complete 使用默认值补全选项
@@ -55,23 +48,16 @@ func (opts *OllamaOptions) RegisterModels(
 	plugin *ollama.Ollama,
 ) ([]string, error) {
 	if len(opts.Models) == 0 {
-		models, err := opts.ListModels(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("list ollama models error: %w", err)
-		}
-		opts.Models = make([]string, len(models))
-		for i, model := range models {
-			opts.Models[i] = model.Name
-		}
+		return nil, nil // 空配置不注册任何模型
 	}
 
 	var definedModels []string
-	for _, model := range opts.Models {
+	for _, modelConfig := range opts.Models {
 		m := plugin.DefineModel(g, ollama.ModelDefinition{
-			Name: model,
+			Name: modelConfig.Name,
 			Type: "chat",
 		}, &ai.ModelOptions{
-			Label: model,
+			Label: modelConfig.Name,
 			Supports: &ai.ModelSupports{
 				Multiturn:  true,
 				SystemRole: true,
@@ -82,60 +68,4 @@ func (opts *OllamaOptions) RegisterModels(
 	}
 
 	return definedModels, nil
-}
-
-// ListOllamaTagsResponse 获取 Ollama tags 列表响应
-type ListOllamaTagsResponse struct {
-	Models []OllamaModel `json:"models,omitempty"`
-}
-
-// OllamaModel Ollama 模型
-type OllamaModel struct {
-	Name  string `json:"name"`
-	Model string `json:"model"`
-
-	ModifiedAt time.Time          `json:"modified_at,omitempty"`
-	Size       int64              `json:"size,omitempty"`
-	Digest     string             `json:"digest,omitempty"`
-	Details    OllamaModelDetails `json:"details,omitempty"`
-}
-
-// OllamaModelDetails Ollama 模型详情
-type OllamaModelDetails struct {
-	ParentModel       string   `json:"parent_model,omitempty"`
-	Format            string   `json:"format,omitempty"`
-	Family            string   `json:"family,omitempty"`
-	Families          []string `json:"families,omitempty"`
-	ParameterSize     string   `json:"parameter_size,omitempty"`
-	QuantizationLevel string   `json:"quantization_level,omitempty"`
-}
-
-// ListModels 列出模型
-func (opts *OllamaOptions) ListModels(ctx context.Context) ([]OllamaModel, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, opts.ServerAddress+"/api/tags", nil)
-	if err != nil {
-		return nil, fmt.Errorf("make request error: %w", err)
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("send request error: %w", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
-	if err != nil {
-		return nil, fmt.Errorf("read response body error: %w", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d (!=200), body: %s", resp.StatusCode, string(body))
-	}
-
-	respData := &ListOllamaTagsResponse{}
-	if err := json.Unmarshal(body, respData); err != nil {
-		return nil, fmt.Errorf("unmarshal response body error: %w, body: %s", err, string(body))
-	}
-
-	return respData.Models, nil
 }
