@@ -131,8 +131,11 @@ func (opts *DashScopeOptions) RegisterModels(
 				},
 			},
 			Reasoning: cfg.Reasoning,
-			ReasoningExtraFields: map[string]any{
+			EnableReasoningExtraFields: map[string]any{
 				"enable_thinking": true,
+			},
+			DisableReasoningExtraFields: map[string]any{
+				"enable_thinking": false,
 			},
 			ReasoningContentField: "reasoning_content",
 		})

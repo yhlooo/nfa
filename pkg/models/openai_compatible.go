@@ -47,8 +47,11 @@ func (opts *OpenAICompatibleOptions) RegisterModels(
 				},
 			},
 			Reasoning: cfg.Reasoning,
-			ReasoningExtraFields: map[string]any{
+			EnableReasoningExtraFields: map[string]any{
 				"thinking": map[string]any{"type": "enabled"},
+			},
+			DisableReasoningExtraFields: map[string]any{
+				"thinking": map[string]any{"type": "disabled"},
 			},
 			ReasoningContentField: "reasoning_content",
 		})

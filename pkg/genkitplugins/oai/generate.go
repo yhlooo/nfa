@@ -24,7 +24,9 @@ func NewModelGenerator(client *openai.Client, req *ai.ModelRequest, opts ModelOp
 	cfg, hasCfg := req.Config.(gencfg.GenerateConfig)
 
 	if opts.Reasoning && (!hasCfg || cfg.Reasoning) {
-		rawReq.SetExtraFields(opts.ReasoningExtraFields)
+		rawReq.SetExtraFields(opts.EnableReasoningExtraFields)
+	} else {
+		rawReq.SetExtraFields(opts.DisableReasoningExtraFields)
 	}
 
 	return &ModelGenerator{

@@ -67,16 +67,23 @@ type ModelOptions struct {
 	// 是否开启思考模式
 	Reasoning bool
 	// 开启思考模式的参数
-	ReasoningExtraFields map[string]any
+	EnableReasoningExtraFields map[string]any
+	// 关闭思考模式的参数
+	DisableReasoningExtraFields map[string]any
 	// 思考内容字段
 	ReasoningContentField string
 }
 
 // Complete 使用默认值补全参数
 func (opts *ModelOptions) Complete() {
-	if opts.Reasoning && opts.ReasoningExtraFields == nil {
-		opts.ReasoningExtraFields = map[string]any{
+	if opts.Reasoning && opts.EnableReasoningExtraFields == nil {
+		opts.EnableReasoningExtraFields = map[string]any{
 			"thinking": map[string]any{"type": "enabled"},
+		}
+	}
+	if !opts.Reasoning && opts.DisableReasoningExtraFields == nil {
+		opts.EnableReasoningExtraFields = map[string]any{
+			"thinking": map[string]any{"type": "disabled"},
 		}
 	}
 	if opts.ReasoningContentField == "" {
