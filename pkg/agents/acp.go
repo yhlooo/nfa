@@ -195,6 +195,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 			prompt = ShortTermTrendForecastPrompt(prompt)
 		case flows.TopicBasic:
 		case flows.TopicComprehensive:
+		case flows.TopicOthers:
 		default:
 		}
 	}

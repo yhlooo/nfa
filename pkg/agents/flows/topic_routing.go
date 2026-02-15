@@ -10,6 +10,7 @@ import (
 	"github.com/firebase/genkit/go/core"
 	"github.com/firebase/genkit/go/genkit"
 
+	"github.com/yhlooo/nfa/pkg/agents/gencfg"
 	"github.com/yhlooo/nfa/pkg/ctxutil"
 )
 
@@ -35,6 +36,7 @@ const (
 	TopicShortTermTrendForecast Topic = "ShortTermTrendForecast"
 	TopicBasic                  Topic = "Basic"
 	TopicComprehensive          Topic = "Comprehensive"
+	TopicOthers                 Topic = "Others"
 )
 
 // TopicRoutingFlow 话题路由流程
@@ -54,6 +56,9 @@ func NewTopicRoutingFlow(g *genkit.Genkit) core.Func[TopicRoutingInput, TopicRou
 		}
 		opts := []ai.GenerateOption{
 			ai.WithPrompt(prompt),
+			ai.WithConfig(gencfg.GenerateConfig{
+				Reasoning: false, // 关闭思考
+			}),
 		}
 		if m, ok := ctxutil.ModelsFromContext(ctx); ok {
 			opts = append(opts, ai.WithModelName(m.GetFast()))
@@ -89,6 +94,7 @@ var TopicRoutingPromptTpl = template.Must(template.New("TopicRoutingPrompt").
   - ` + "`" + `ShortTermTrendForecast` + "`" + `: 短期趋势预测，根据技术面分析、基本面分析、市场资讯、情绪等预测股票近期（一个月内）涨跌趋势
   - ` + "`" + `Basic` + "`" + `: 基础咨询，对一般性的基本的金融知识的咨询
   - ` + "`" + `Comprehensive` + "`" + `: 综合问题，较复杂的综合性问题，需要结合多种分析模式才能解答的问题
+  - ` + "`" + `Others` + "`" + `: 其它。不符合以上类型的其它类型话题
 
 ## 对话
 以下是需要判断话题的对话过程：

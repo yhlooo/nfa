@@ -106,7 +106,7 @@ func (d *OpenAICompatible) defineModel(opts ModelOptions) ai.Model {
 		req *ai.ModelRequest,
 		cb core.StreamCallback[*ai.ModelResponseChunk],
 	) (*ai.ModelResponse, error) {
-		generator := NewModelGenerator(d.client, opts).
+		generator := NewModelGenerator(d.client, req, opts).
 			WithMessages(req.Messages).
 			WithTools(req.Tools)
 

@@ -11,21 +11,26 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/packages/param"
 	"github.com/openai/openai-go/shared"
+
+	"github.com/yhlooo/nfa/pkg/agents/gencfg"
 )
 
 // NewModelGenerator 创建模型生成器
-func NewModelGenerator(client *openai.Client, opts ModelOptions) *ModelGenerator {
-	req := &openai.ChatCompletionNewParams{
+func NewModelGenerator(client *openai.Client, req *ai.ModelRequest, opts ModelOptions) *ModelGenerator {
+	rawReq := &openai.ChatCompletionNewParams{
 		Model: opts.Label,
 	}
-	if opts.Reasoning {
-		req.SetExtraFields(opts.ReasoningExtraFields)
+
+	cfg, hasCfg := req.Config.(gencfg.GenerateConfig)
+
+	if opts.Reasoning && (!hasCfg || cfg.Reasoning) {
+		rawReq.SetExtraFields(opts.ReasoningExtraFields)
 	}
 
 	return &ModelGenerator{
 		client:                client,
 		modelName:             opts.Label,
-		request:               req,
+		request:               rawReq,
 		reasoningContentField: opts.ReasoningContentField,
 	}
 }

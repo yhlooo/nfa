@@ -7,6 +7,7 @@ import (
 	"github.com/firebase/genkit/go/core"
 	"github.com/firebase/genkit/go/genkit"
 
+	"github.com/yhlooo/nfa/pkg/agents/gencfg"
 	"github.com/yhlooo/nfa/pkg/ctxutil"
 )
 
@@ -43,6 +44,9 @@ func DefineSummarizeFlow(g *genkit.Genkit) SummarizeFlow {
 - **methodologySummary** (optional) 方法论总结。在这个对话中能提炼出什么什么解决某类问题的方法论。
 `),
 				ai.WithPrompt("总结以上对话"),
+				ai.WithConfig(gencfg.GenerateConfig{
+					Reasoning: false, // 关闭思考
+				}),
 			}
 			if m, ok := ctxutil.ModelsFromContext(ctx); ok {
 				opts = append(opts, ai.WithModelName(m.GetMain()))
