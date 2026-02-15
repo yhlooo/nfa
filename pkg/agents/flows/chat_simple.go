@@ -42,12 +42,12 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptions
 					return output, err
 				}
 				messages = append(messages, resp.Message)
+				output.Messages = append(output.Messages, pruneReasoning(resp.Message))
 				ctxutil.AddModelUsageToContext(ctx, resp.Usage)
 
 				toolRequests := resp.ToolRequests()
 				if len(toolRequests) == 0 {
 					// 结束一轮对话
-					output.Messages = append(output.Messages, ai.NewModelTextMessage(resp.Text()))
 					return output, nil
 				}
 
@@ -77,6 +77,7 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptions
 				}
 				toolRespMessage := ai.NewMessage(ai.RoleTool, nil, parts...)
 				messages = append(messages, toolRespMessage)
+				output.Messages = append(output.Messages, toolRespMessage)
 			}
 		},
 	)
@@ -127,4 +128,21 @@ func handleToolCall(ctx context.Context, g *genkit.Genkit, req *ai.ToolRequest) 
 		Ref:    req.Ref,
 		Output: output,
 	})
+}
+
+// pruneReasoning 去除消息中的思考过程
+func pruneReasoning(msg *ai.Message) *ai.Message {
+	parts := make([]*ai.Part, 0, len(msg.Content))
+	for _, part := range msg.Content {
+		if part.IsReasoning() {
+			continue
+		}
+		parts = append(parts, part)
+	}
+
+	return &ai.Message{
+		Content:  parts,
+		Metadata: msg.Metadata,
+		Role:     msg.Role,
+	}
 }

@@ -86,7 +86,10 @@ var TopicRoutingPromptTpl = template.Must(template.New("TopicRoutingPrompt").
 
 ## 输出格式
 输出为 JSON 格式，包含以下字段
-- **continue** (bool) 是否继续之前的话题，当前问题是之前正在讨论问题的延续、继续追问、补充说明等
+- **continue** (bool) 是否继续之前的话题，当前问题是否是之前正在讨论话题的延续、简单追问、补充说明等。
+  澄清几种易混淆情况：
+  - 话题类型改变时不属于继续
+  - 话题类型没有改变但是讨论的对象发生了改变也不属于继续
 - **topic** (string) 当前讨论的话题，可选以下值
   - ` + "`" + `Query` + "`" + `: 信息查询，单纯查询股票价格、资讯等信息，不需要分析
   - ` + "`" + `StockAnalysis` + "`" + `: 个股分析，针对单个股票的技术面、基本面等进行分析
@@ -100,7 +103,11 @@ var TopicRoutingPromptTpl = template.Must(template.New("TopicRoutingPrompt").
 以下是需要判断话题的对话过程：
 ` + "```" + `
 {{- range .Messages }}
-{{ .Role }}: {{ .Text }}
+{{- if .Text }} 
+{{ .Role }}:
+{{ .Text }}
+{{- end }}
+
 {{- end }}
 ` + "```" + `
 `))
