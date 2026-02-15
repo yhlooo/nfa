@@ -10,7 +10,6 @@ import (
 
 	"github.com/coder/acp-go-sdk"
 	"github.com/firebase/genkit/go/ai"
-	"github.com/firebase/genkit/go/core"
 	"github.com/go-logr/logr"
 	"github.com/google/uuid"
 
@@ -150,9 +149,8 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 
 	a.logger.Info("prompt turn start")
 
-	handleStream := a.handleStreamChunk(params.SessionId)
+	ctx = ctxutil.ContextWithHandleStreamFn(ctx, a.handleStreamChunk(params.SessionId))
 	resp := acp.PromptResponse{Meta: map[string]any{}, StopReason: acp.StopReasonEndTurn}
-	var finalErr error
 
 	// 斜杠命令
 	switch strings.TrimSpace(prompt) {
@@ -162,11 +160,11 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 			Update:    acp.UpdateAgentMessageText("The context has been cleared."),
 		})
 		messages = nil
-		return resp, finalErr
+		return resp, nil
 	case "/summarize", "/summary":
-		finalErr = a.handleSummaryStream(ctx, params.SessionId, messages, &resp, handleStream)
+		err := a.handleSummary(ctx, params.SessionId, messages, &resp)
 		SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
-		return resp, finalErr
+		return resp, err
 	default:
 	}
 
@@ -176,9 +174,9 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	})
 	if err != nil {
 		resp.StopReason = acp.StopReasonRefusal
-		finalErr = fmt.Errorf("topic routing error: %w", err)
+		err = fmt.Errorf("topic routing error: %w", err)
 		SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
-		return resp, finalErr
+		return resp, err
 	}
 
 	history := make([]*ai.Message, len(messages))
@@ -201,37 +199,25 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 		}
 	}
 
-	a.chatFlow.Stream(ctx, flows.ChatInput{
+	chatOut, err := a.chatFlow.Run(ctx, flows.ChatInput{
 		Prompt:  prompt,
 		History: history,
-	})(func(chunk *core.StreamingFlowValue[flows.ChatOutput, *ai.ModelResponseChunk], err error) bool {
-		if err != nil {
-			if errors.Is(err, context.Canceled) {
-				resp.StopReason = acp.StopReasonCancelled
-			} else {
-				resp.StopReason = acp.StopReasonRefusal
-				finalErr = err
-				messages = append(messages, ai.NewModelTextMessage("Error: "+err.Error()))
-			}
-			return false
-		}
-
-		if chunk.Stream != nil {
-			if err := handleStream(ctx, chunk.Stream); err != nil {
-				resp.StopReason = acp.StopReasonRefusal
-				finalErr = err
-				return false
-			}
-		}
-		if chunk.Done {
-			messages = append(messages, chunk.Output.Messages...)
-		}
-
-		return !chunk.Done
 	})
+	if err != nil {
+		if errors.Is(err, context.Canceled) {
+			resp.StopReason = acp.StopReasonCancelled
+			err = nil
+		} else {
+			resp.StopReason = acp.StopReasonRefusal
+			messages = append(messages, ai.NewModelTextMessage("Error: "+err.Error()))
+		}
+		SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
+		return resp, err
+	}
 
+	messages = append(messages, chatOut.Messages...)
 	SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
-	return resp, finalErr
+	return resp, nil
 }
 
 // Cancel 取消
@@ -369,67 +355,49 @@ func (a *NFAAgent) flushBufferText(
 	return nil
 }
 
-// handleSummaryStream 处理摘要输出流
-func (a *NFAAgent) handleSummaryStream(
+// handleSummary 处理摘要
+func (a *NFAAgent) handleSummary(
 	ctx context.Context,
 	sessionID acp.SessionId,
 	messages []*ai.Message,
 	resp *acp.PromptResponse,
-	handleStream ai.ModelStreamCallback,
 ) error {
-	var finalErr error
-	a.summarizeFlow.Stream(ctx, flows.SummarizeInput{
-		History: messages,
-	})(func(chunk *core.StreamingFlowValue[flows.SummarizeOutput, *ai.ModelResponseChunk], err error) bool {
-		if err != nil {
-			if errors.Is(err, context.Canceled) {
-				resp.StopReason = acp.StopReasonCancelled
-			} else {
-				resp.StopReason = acp.StopReasonRefusal
-				finalErr = err
-			}
-			return false
+	ret, err := a.summarizeFlow.Run(ctx, flows.SummarizeInput{History: messages})
+	if err != nil {
+		if errors.Is(err, context.Canceled) {
+			resp.StopReason = acp.StopReasonCancelled
+			return nil
 		}
+		resp.StopReason = acp.StopReasonRefusal
+		return err
+	}
 
-		if chunk.Stream != nil {
-			if err := handleStream(ctx, chunk.Stream); err != nil {
-				resp.StopReason = acp.StopReasonRefusal
-				finalErr = err
-				return false
-			}
-		}
-		if chunk.Done {
-			content := fmt.Sprintf(`# %s
+	content := fmt.Sprintf(`# %s
 
 %s
 
 ## 过程概述
 
-%s`, chunk.Output.Title, chunk.Output.Description, chunk.Output.ProcessOverview)
-			content = strings.TrimRight(content, "\n")
-			if chunk.Output.MethodologySummary != "" {
-				content += fmt.Sprintf(`
+%s`, ret.Title, ret.Description, ret.ProcessOverview)
+	content = strings.TrimRight(content, "\n")
+	if ret.MethodologySummary != "" {
+		content += fmt.Sprintf(`
 
 # 方法论
 
-%s`, chunk.Output.MethodologySummary)
-			}
+%s`, ret.MethodologySummary)
+	}
 
-			meta := make(map[string]any)
-			SetMetaCurrentModelUsage(meta, ctxutil.GetModelUsageFromContext(ctx))
-			if err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
-				Meta:      meta,
-				SessionId: sessionID,
-				Update:    acp.UpdateAgentMessageText(content),
-			}); err != nil {
-				resp.StopReason = acp.StopReasonRefusal
-				finalErr = fmt.Errorf("session update error: %w", err)
-				return false
-			}
-		}
+	meta := make(map[string]any)
+	SetMetaCurrentModelUsage(meta, ctxutil.GetModelUsageFromContext(ctx))
+	if err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
+		Meta:      meta,
+		SessionId: sessionID,
+		Update:    acp.UpdateAgentMessageText(content),
+	}); err != nil {
+		resp.StopReason = acp.StopReasonRefusal
+		return fmt.Errorf("session update error: %w", err)
+	}
 
-		return !chunk.Done
-	})
-
-	return finalErr
+	return nil
 }

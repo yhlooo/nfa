@@ -99,20 +99,28 @@ func NewGenkitWithModels(
 
 	// 确定插件
 	var (
-		ollamaPlugin   = &ollama.Ollama{}
-		deepseekPlugin = &oai.OpenAICompatible{}
-		oaiPlugins     = map[int]*oai.OpenAICompatible{}
-		plugins        []api.Plugin
-		modelNames     []string
+		ollamaPlugin = &ollama.Ollama{}
+		oaiPlugins   = map[int]*oai.OpenAICompatible{}
+		plugins      []api.Plugin
+		modelNames   []string
 	)
 	for i, p := range providers {
 		switch {
 		case p.Ollama != nil:
 			ollamaPlugin = p.Ollama.OllamaPlugin()
 			plugins = append(plugins, ollamaPlugin)
+		case p.Zhipu != nil:
+			plugin := p.Zhipu.Plugin()
+			plugins = append(plugins, plugin)
+			oaiPlugins[i] = plugin
+		case p.Aliyun != nil:
+			plugin := p.Aliyun.Plugin()
+			plugins = append(plugins, plugin)
+			oaiPlugins[i] = plugin
 		case p.Deepseek != nil:
-			deepseekPlugin = p.Deepseek.DeepseekPlugin()
-			plugins = append(plugins, deepseekPlugin)
+			plugin := p.Deepseek.Plugin()
+			plugins = append(plugins, plugin)
+			oaiPlugins[i] = plugin
 		case p.OpenAICompatible != nil:
 			plugin := p.OpenAICompatible.OpenAICompatiblePlugin()
 			plugins = append(plugins, plugin)
@@ -132,26 +140,40 @@ func NewGenkitWithModels(
 	for i, p := range providers {
 		switch {
 		case p.Ollama != nil:
-			ollamaModelNames, err := p.Ollama.RegisterModels(g, ollamaPlugin)
+			newModelNames, err := p.Ollama.RegisterModels(g, ollamaPlugin)
 			if err != nil {
 				logger.Error(err, "define ollama models error")
 				continue
 			}
-			modelNames = append(modelNames, ollamaModelNames...)
+			modelNames = append(modelNames, newModelNames...)
+		case p.Zhipu != nil:
+			newModelNames, err := p.Zhipu.RegisterModels(g, oaiPlugins[i])
+			if err != nil {
+				logger.Error(err, "define zhipu models error")
+				continue
+			}
+			modelNames = append(modelNames, newModelNames...)
+		case p.Aliyun != nil:
+			newModelNames, err := p.Aliyun.RegisterModels(g, oaiPlugins[i])
+			if err != nil {
+				logger.Error(err, "define aliyun models error")
+				continue
+			}
+			modelNames = append(modelNames, newModelNames...)
 		case p.Deepseek != nil:
-			dsModelNames, err := p.Deepseek.RegisterModels(g, deepseekPlugin)
+			newModelNames, err := p.Deepseek.RegisterModels(g, oaiPlugins[i])
 			if err != nil {
 				logger.Error(err, "define deepseek models error")
 				continue
 			}
-			modelNames = append(modelNames, dsModelNames...)
+			modelNames = append(modelNames, newModelNames...)
 		case p.OpenAICompatible != nil:
-			oaiModelNames, err := p.OpenAICompatible.RegisterModels(g, oaiPlugins[i])
+			newModelNames, err := p.OpenAICompatible.RegisterModels(g, oaiPlugins[i])
 			if err != nil {
 				logger.Error(err, "define openai compatible models error")
 				continue
 			}
-			modelNames = append(modelNames, oaiModelNames...)
+			modelNames = append(modelNames, newModelNames...)
 		}
 	}
 

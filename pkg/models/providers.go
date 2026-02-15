@@ -3,6 +3,8 @@ package models
 // ModelProvider 模型供应商配置
 type ModelProvider struct {
 	Ollama           *OllamaOptions           `json:"ollama,omitempty"`
+	Zhipu            *BigModelOptions         `json:"zhipu,omitempty"`
+	Aliyun           *DashScopeOptions        `json:"aliyun,omitempty"`
 	Deepseek         *DeepseekOptions         `json:"deepseek,omitempty"`
 	OpenAICompatible *OpenAICompatibleOptions `json:"openaiCompatible,omitempty"`
 }
@@ -31,4 +33,6 @@ type ModelCost struct {
 	Input float64 `json:"input,omitempty"`
 	// 每千输出 Token 价格
 	Output float64 `json:"output,omitempty"`
+	// 每千缓存 Token 价格
+	Cached float64 `json:"cached,omitempty"`
 }

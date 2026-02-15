@@ -26,12 +26,12 @@ type SummarizeOutput struct {
 	MethodologySummary string `json:"methodologySummary,omitempty"`
 }
 
-type SummarizeFlow = *core.Flow[SummarizeInput, SummarizeOutput, *ai.ModelResponseChunk]
+type SummarizeFlow = *core.Flow[SummarizeInput, SummarizeOutput, struct{}]
 
 // DefineSummarizeFlow 定义总结工作流
 func DefineSummarizeFlow(g *genkit.Genkit) SummarizeFlow {
-	return genkit.DefineStreamingFlow(g, SummarizeFlowName,
-		func(ctx context.Context, in SummarizeInput, handleStream ai.ModelStreamCallback) (SummarizeOutput, error) {
+	return genkit.DefineFlow(g, SummarizeFlowName,
+		func(ctx context.Context, in SummarizeInput) (SummarizeOutput, error) {
 			opts := []ai.GenerateOption{
 				ai.WithMessages(in.History...),
 				ai.WithSystem(`你是一个金融领域的客户信息归档员，负责归档与用户的对话记录。
@@ -47,7 +47,7 @@ func DefineSummarizeFlow(g *genkit.Genkit) SummarizeFlow {
 			if m, ok := ctxutil.ModelsFromContext(ctx); ok {
 				opts = append(opts, ai.WithModelName(m.GetMain()))
 			}
-			if handleStream != nil {
+			if handleStream := ctxutil.HandleStreamFnFromContext(ctx); handleStream != nil {
 				opts = append(opts, ai.WithStreaming(handleTextStream(handleStream, true, false)))
 			}
 

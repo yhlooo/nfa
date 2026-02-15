@@ -13,8 +13,8 @@ import (
 
 // DefineSimpleChatFlow 定义简单对话流程
 func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptionsFn) ChatFlow {
-	return genkit.DefineStreamingFlow(g, name,
-		func(ctx context.Context, in ChatInput, handleStream ai.ModelStreamCallback) (ChatOutput, error) {
+	return genkit.DefineFlow(g, name,
+		func(ctx context.Context, in ChatInput) (ChatOutput, error) {
 			output := ChatOutput{}
 			messages := slices.Clone(in.History)
 			promptMsg := ai.NewUserTextMessage(in.Prompt)
@@ -26,6 +26,7 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptions
 			if m, ok := ctxutil.ModelsFromContext(ctx); ok {
 				opts = append(opts, ai.WithModelName(m.GetMain()))
 			}
+			handleStream := ctxutil.HandleStreamFnFromContext(ctx)
 			if handleStream != nil {
 				ctx = ctxutil.ContextWithHandleStreamFn(ctx, handleStream)
 				opts = append(opts, ai.WithStreaming(handleTextStream(handleStream, true, true)))

@@ -17,7 +17,7 @@ type ChatOutput struct {
 }
 
 // ChatFlow 对话流程
-type ChatFlow = *core.Flow[ChatInput, ChatOutput, *ai.ModelResponseChunk]
+type ChatFlow = *core.Flow[ChatInput, ChatOutput, struct{}]
 
 // ToolCallError 工具调用错误
 type ToolCallError struct {

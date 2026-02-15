@@ -4,10 +4,7 @@ import (
 	"fmt"
 
 	"github.com/firebase/genkit/go/ai"
-	"github.com/firebase/genkit/go/core"
 	"github.com/firebase/genkit/go/genkit"
-
-	"github.com/yhlooo/nfa/pkg/ctxutil"
 )
 
 // AgentOptions Agent 选项
@@ -20,7 +17,12 @@ type AgentOptions struct {
 }
 
 // DefineMultiAgentsChatFlow 定义多 Agent 对话流程
-func DefineMultiAgentsChatFlow(g *genkit.Genkit, name string, mainAgent AgentOptions, subAgents []AgentOptions) ChatFlow {
+func DefineMultiAgentsChatFlow(
+	g *genkit.Genkit,
+	name string,
+	mainAgent AgentOptions,
+	subAgents []AgentOptions,
+) ChatFlow {
 	callAgentTool := DefineCallSubAgentTool(g, name+"_CallSubAgent", subAgents)
 	return DefineSimpleChatFlow(g, name, FixedGenerateOptions(
 		ai.WithSystemFn(mainAgent.SystemPrompt),
@@ -64,31 +66,13 @@ func DefineCallSubAgentTool(g *genkit.Genkit, name string, agents []AgentOptions
 		if !ok {
 			return CallSubAgentOutput{Error: fmt.Sprintf("agent %q not found", input.Name)}, nil
 		}
-
-		output := CallSubAgentOutput{}
-		handleStream := ctxutil.HandleStreamFnFromContext(ctx)
-		agentChatFlow.Stream(
+		subAgentChatOut, err := agentChatFlow.Run(
 			ctx,
 			ChatInput{Prompt: input.Prompt},
-		)(func(chunk *core.StreamingFlowValue[ChatOutput, *ai.ModelResponseChunk], err error) bool {
-			if err != nil {
-				output.Error = err.Error()
-				return false
-			}
-
-			if chunk.Stream != nil && handleStream != nil {
-				if err := handleStream(ctx, chunk.Stream); err != nil {
-					output.Error = err.Error()
-					return false
-				}
-			}
-			if chunk.Done {
-				output.Messages = chunk.Output.Messages
-			}
-
-			return !chunk.Done
-		})
-
-		return output, nil
+		)
+		if err != nil {
+			return CallSubAgentOutput{Error: err.Error()}, nil
+		}
+		return CallSubAgentOutput{Messages: subAgentChatOut.Messages}, nil
 	})
 }
