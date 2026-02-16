@@ -14,14 +14,7 @@ import (
 // NewMessageViewport 创建消息视窗
 func NewMessageViewport() MessageViewport {
 	return MessageViewport{
-		flushStyle:                lipgloss.NewStyle().BorderStyle(lipgloss.HiddenBorder()).BorderLeft(true),
-		viewStyle:                 lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder()).BorderLeft(true),
-		UserStyle:                 lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("2")),
-		AgentStyle:                lipgloss.NewStyle(),
-		AgentThoughtStyle:         lipgloss.NewStyle().Faint(true),
-		AgentToolCallStyle:        lipgloss.NewStyle().Foreground(lipgloss.Color("4")),
-		AgentToolCallContentStyle: lipgloss.NewStyle().Faint(true),
-		ErrorStyle:                lipgloss.NewStyle().Foreground(lipgloss.Color("1")),
+		viewStyle: lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder()).BorderLeft(true),
 	}
 }
 
@@ -31,14 +24,7 @@ type MessageViewport struct {
 
 	messages MessagesList
 
-	flushStyle                lipgloss.Style
-	viewStyle                 lipgloss.Style
-	UserStyle                 lipgloss.Style
-	AgentStyle                lipgloss.Style
-	AgentThoughtStyle         lipgloss.Style
-	AgentToolCallStyle        lipgloss.Style
-	AgentToolCallContentStyle lipgloss.Style
-	ErrorStyle                lipgloss.Style
+	viewStyle lipgloss.Style
 }
 
 // AgentProcessing 返回是否 Agent 处理中
@@ -128,20 +114,20 @@ func (vp MessageViewport) viewMessages(messages MessagesList) string {
 		switch msg.Type {
 		case MessageTypeUser:
 			if strings.HasPrefix(msg.Text, "/") {
-				ret.WriteString("👉 " + vp.UserStyle.Render(withIndent(msg.Text, 2)) + "\n")
+				ret.WriteString("👉 \033[1;32m" + withIndent(msg.Text, 2) + "\033[0m\n")
 			} else {
-				ret.WriteString("☝️ " + vp.UserStyle.Render(withIndent(msg.Text, 2)) + "\n")
+				ret.WriteString("☝️ \033[1;32m" + withIndent(msg.Text, 2) + "\033[0m\n")
 			}
 		case MessageTypeAgent:
-			ret.WriteString(vp.AgentStyle.Render(msg.Text) + "\n")
+			ret.WriteString(msg.Text + "\n")
 		case MessageTypeAgentThought:
-			ret.WriteString("🧠 " + vp.AgentThoughtStyle.Render(withIndent(msg.Text, 2)) + "\n")
+			ret.WriteString("🧠 \033[2m" + withIndent(msg.Text, 2) + "\033[0m\n")
 		case MessageTypeToolCall:
-			ret.WriteString("🔧 " + vp.AgentToolCallStyle.Render(withIndent(msg.Text, 2)) + "\n")
+			ret.WriteString("🔧 \033[34m" + withIndent(msg.Text, 2) + "\033[0m\n")
 		case MessageTypeToolCallUpdate:
-			ret.WriteString("  " + vp.AgentToolCallStyle.Render(withIndent(msg.Text, 2)) + "\n")
+			ret.WriteString("  \033[34m" + withIndent(msg.Text, 2) + "\033[0m\n")
 		case MessageTypeError:
-			ret.WriteString("❌ " + vp.ErrorStyle.Render(withIndent(msg.Text, 2)) + "\n")
+			ret.WriteString("❌ \033[31m" + withIndent(msg.Text, 2) + "\033[0m\n")
 		case MessageTypeUnknown:
 			ret.WriteString(msg.Text + "\n")
 		}
@@ -161,7 +147,7 @@ func (vp *MessageViewport) Flush() tea.Cmd {
 		return nil
 	}
 
-	content := vp.flushStyle.Render(vp.viewMessages(vp.messages[:n]))
+	content := vp.viewMessages(vp.messages[:n])
 	vp.messages = vp.messages[n:]
 
 	return tea.Println(content)
@@ -180,9 +166,9 @@ func (vp *MessageViewport) Reset() {
 //goland:noinspection GoMixedReceiverTypes
 func (vp MessageViewport) renderAgentToolCallStartMessage(msg *acp.SessionUpdateToolCall) string {
 	return fmt.Sprintf(
-		"ToolCall: %s %s",
+		"ToolCall: %s \033[2m%s\033[22m",
 		msg.Title,
-		vp.AgentToolCallContentStyle.Render(withIndent(renderAgentToolCallContent(msg.Content), 11+len(msg.Title))),
+		withIndent(renderAgentToolCallContent(msg.Content), 11+len(msg.Title)),
 	)
 }
 
@@ -195,12 +181,12 @@ func (vp MessageViewport) renderAgentToolCallUpdateMessage(msg *acp.SessionToolC
 		status = *msg.Status
 	}
 	if status == acp.ToolCallStatusFailed {
-		status = acp.ToolCallStatus(vp.ErrorStyle.Render(string(status)))
+		status = "\033[31m" + status + "\033[39m"
 	}
 	return fmt.Sprintf(
-		"          %s %s",
+		"          %s \033[2m%s\033[22m",
 		status,
-		vp.AgentToolCallContentStyle.Render(withIndent(renderAgentToolCallContent(msg.Content), 11+len(status))),
+		withIndent(renderAgentToolCallContent(msg.Content), 11+len(status)),
 	)
 }
 
