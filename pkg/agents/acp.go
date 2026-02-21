@@ -49,7 +49,7 @@ func (a *NFAAgent) Initialize(ctx context.Context, _ acp.InitializeRequest) (acp
 	return acp.InitializeResponse{
 		Meta: map[string]any{
 			MetaKeyAvailableModels: a.availableModels,
-			MetaKeyDefaultModel:    a.defaultModels.GetMain(),
+			MetaKeyCurrentModels:   a.defaultModels,
 		},
 		AgentCapabilities: acp.AgentCapabilities{},
 		AgentInfo: &acp.Implementation{
@@ -119,9 +119,15 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	}()
 	session.lock.Unlock()
 
-	m := a.defaultModels
-	if modelName := GetMetaStringValue(params.Meta, MetaKeyModelName); modelName != "" {
-		m.Main = modelName
+	m := GetMetaCurrentModelsValue(params.Meta)
+	if m.Main == "" {
+		m.Main = a.defaultModels.Main
+	}
+	if m.Fast == "" {
+		m.Fast = a.defaultModels.Fast
+	}
+	if m.Vision == "" {
+		m.Vision = a.defaultModels.Vision
 	}
 	if m.Main == "" {
 		return acp.PromptResponse{StopReason: acp.StopReasonRefusal}, fmt.Errorf("no available model")

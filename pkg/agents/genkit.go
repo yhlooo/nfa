@@ -31,11 +31,11 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	a.g, a.availableModels = NewGenkitWithModels(ctx, a.modelProviders, a.defaultModels)
 
 	if a.defaultModels.Main == "" && len(a.availableModels) > 0 {
-		a.defaultModels.Main = a.availableModels[0]
+		a.defaultModels.Main = a.availableModels[0].Name
 	}
 
 	for _, m := range a.availableModels {
-		a.logger.Info(fmt.Sprintf("registered model: %s", m))
+		a.logger.Info(fmt.Sprintf("registered model: %s", m.Name))
 	}
 
 	// 初始化技能加载器并加载技能
@@ -94,7 +94,7 @@ func NewGenkitWithModels(
 	ctx context.Context,
 	providers []models.ModelProvider,
 	defaultModels models.Models,
-) (*genkit.Genkit, []string) {
+) (*genkit.Genkit, []models.ModelConfig) {
 	logger := logr.FromContextOrDiscard(ctx)
 
 	// 确定插件
@@ -102,7 +102,7 @@ func NewGenkitWithModels(
 		ollamaPlugin = &ollama.Ollama{}
 		oaiPlugins   = map[int]*oai.OpenAICompatible{}
 		plugins      []api.Plugin
-		modelNames   []string
+		modelConfigs []models.ModelConfig
 	)
 	for i, p := range providers {
 		switch {
@@ -140,58 +140,58 @@ func NewGenkitWithModels(
 	for i, p := range providers {
 		switch {
 		case p.Ollama != nil:
-			newModelNames, err := p.Ollama.RegisterModels(g, ollamaPlugin)
+			registeredModels, err := p.Ollama.RegisterModels(g, ollamaPlugin)
 			if err != nil {
 				logger.Error(err, "define ollama models error")
 				continue
 			}
-			modelNames = append(modelNames, newModelNames...)
+			modelConfigs = append(modelConfigs, registeredModels...)
 		case p.Zhipu != nil:
-			newModelNames, err := p.Zhipu.RegisterModels(g, oaiPlugins[i])
+			registeredModels, err := p.Zhipu.RegisterModels(g, oaiPlugins[i])
 			if err != nil {
 				logger.Error(err, "define zhipu models error")
 				continue
 			}
-			modelNames = append(modelNames, newModelNames...)
+			modelConfigs = append(modelConfigs, registeredModels...)
 		case p.Aliyun != nil:
-			newModelNames, err := p.Aliyun.RegisterModels(g, oaiPlugins[i])
+			registeredModels, err := p.Aliyun.RegisterModels(g, oaiPlugins[i])
 			if err != nil {
 				logger.Error(err, "define aliyun models error")
 				continue
 			}
-			modelNames = append(modelNames, newModelNames...)
+			modelConfigs = append(modelConfigs, registeredModels...)
 		case p.Deepseek != nil:
-			newModelNames, err := p.Deepseek.RegisterModels(g, oaiPlugins[i])
+			registeredModels, err := p.Deepseek.RegisterModels(g, oaiPlugins[i])
 			if err != nil {
 				logger.Error(err, "define deepseek models error")
 				continue
 			}
-			modelNames = append(modelNames, newModelNames...)
+			modelConfigs = append(modelConfigs, registeredModels...)
 		case p.OpenAICompatible != nil:
-			newModelNames, err := p.OpenAICompatible.RegisterModels(g, oaiPlugins[i])
+			registeredModels, err := p.OpenAICompatible.RegisterModels(g, oaiPlugins[i])
 			if err != nil {
 				logger.Error(err, "define openai compatible models error")
 				continue
 			}
-			modelNames = append(modelNames, newModelNames...)
+			modelConfigs = append(modelConfigs, registeredModels...)
 		}
 	}
 
 	// 警告：如果没有配置任何模型
-	if len(modelNames) == 0 {
+	if len(modelConfigs) == 0 {
 		logger.Info("no models configured, please configure models in your config file")
 	}
 
-	return g, modelNames
+	return g, modelConfigs
 }
 
-// AvailableModels 获取可用模型名列表
-func (a *NFAAgent) AvailableModels() []string {
+// AvailableModels 获取可用模型列表
+func (a *NFAAgent) AvailableModels() []models.ModelConfig {
 	if len(a.availableModels) == 0 {
 		return nil
 	}
 
-	ret := make([]string, len(a.availableModels))
+	ret := make([]models.ModelConfig, len(a.availableModels))
 	copy(ret, a.availableModels)
 	return ret
 }

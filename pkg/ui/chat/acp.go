@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/coder/acp-go-sdk"
 
 	"github.com/yhlooo/nfa/pkg/agents"
+	"github.com/yhlooo/nfa/pkg/configs"
 	"github.com/yhlooo/nfa/pkg/version"
 )
 
@@ -25,8 +27,9 @@ func (ui *ChatUI) initAgent(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("initialize agent error: %w", err)
 	}
-	ui.defaultModel = agents.GetMetaStringValue(resp.Meta, agents.MetaKeyDefaultModel)
-	ui.availableModels = agents.GetMetaStringSliceValue(resp.Meta, agents.MetaKeyAvailableModels)
+	ui.curModels = agents.GetMetaCurrentModelsValue(resp.Meta)
+	ui.modelSelector.SetAvailableModels(agents.GetMetaAvailableModelsValue(resp.Meta))
+	ui.modelSelector.SetCurrentModels(ui.curModels)
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -56,6 +59,9 @@ func (ui *ChatUI) newPrompt(prompt string) tea.Cmd {
 	return func() tea.Msg {
 		req := acp.PromptRequest{
 			SessionId: ui.sessionID,
+			Meta: map[string]any{
+				agents.MetaKeyCurrentModels: ui.curModels,
+			},
 			Prompt: []acp.ContentBlock{
 				acp.TextBlock(prompt),
 			},
@@ -98,4 +104,71 @@ func (ui *ChatUI) RequestPermission(
 func (ui *ChatUI) SessionUpdate(_ context.Context, params acp.SessionNotification) error {
 	ui.p.Send(params)
 	return nil
+}
+
+// enterModelSelectMode 进入模型选择模式
+func (ui *ChatUI) enterModelSelectMode(t ModelType) tea.Cmd {
+	ui.modelSelector.SetModelType(t)
+	ui.viewState = viewStateModelSelect
+	return nil
+}
+
+// exitModelSelectMode 退出模型选择模式
+func (ui *ChatUI) exitModelSelectMode() tea.Cmd {
+	ui.viewState = viewStateInput
+	return nil
+}
+
+// handleDirectModelSet 处理直接设置模型的命令
+func (ui *ChatUI) handleDirectModelSet(content string) (modelType ModelType, modelName string, ok bool) {
+	parts := strings.Fields(content)
+	if len(parts) == 0 || parts[0] != "/model" {
+		return "", "", false
+	}
+
+	modelType = ModelTypeMain
+
+	switch len(parts) {
+	case 2:
+		// /model <provider>/<name>
+		modelName = parts[1]
+	case 3:
+		// /model :target <provider>/<name>
+		if !strings.HasPrefix(parts[1], ":") {
+			// 无效格式，不处理，让用户重新输入
+			return "", "", false
+		}
+		modelType = ModelType(strings.TrimPrefix(parts[1], ":"))
+		modelName = parts[2]
+	default:
+		// 无效格式，不处理
+		return "", "", false
+	}
+
+	if modelName == "" {
+		return "", "", false
+	}
+
+	// 应用模型并保存
+	switch modelType {
+	case ModelTypeMain:
+		ui.curModels.Main = modelName
+	case ModelTypeFast:
+		ui.curModels.Fast = modelName
+	case ModelTypeVision:
+		ui.curModels.Vision = modelName
+	default:
+		return "", "", false
+	}
+
+	ui.modelSelector.SetCurrentModels(ui.curModels)
+
+	// 只保存 defaultModels 字段到文件
+	if err := configs.SaveDefaultModels(ui.cfgPath, ui.curModels); err != nil {
+		// 保存失败，忽略错误
+		ui.logger.Error(err, "save default models error")
+		return modelType, modelName, true
+	}
+
+	return modelType, modelName, true
 }

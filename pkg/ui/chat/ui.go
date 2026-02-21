@@ -16,6 +16,23 @@ import (
 
 	"github.com/yhlooo/nfa/pkg/acputil"
 	"github.com/yhlooo/nfa/pkg/agents"
+	"github.com/yhlooo/nfa/pkg/configs"
+	"github.com/yhlooo/nfa/pkg/models"
+)
+
+type viewState string
+
+const (
+	viewStateInput       viewState = "input"
+	viewStateModelSelect viewState = "model_select"
+)
+
+type ModelType string
+
+const (
+	ModelTypeMain   ModelType = "main"
+	ModelTypeFast   ModelType = "fast"
+	ModelTypeVision ModelType = "vision"
 )
 
 // Options UI 运行选项
@@ -32,6 +49,7 @@ func NewChatUI(opts Options) *ChatUI {
 		modelUsageStyle:       lipgloss.NewStyle().Faint(true).Align(lipgloss.Right).PaddingRight(2),
 		initialPrompt:         opts.InitialPrompt,
 		autoExitAfterResponse: opts.AutoExitAfterResponse,
+		viewState:             viewStateInput,
 	}
 	ui.conn = acp.NewClientSideConnection(ui, opts.AgentClientOut, opts.AgentClientIn)
 	return ui
@@ -53,11 +71,15 @@ type ChatUI struct {
 	conn                  *acp.ClientSideConnection
 	cwd                   string
 	sessionID             acp.SessionId
-	defaultModel          string
-	availableModels       []string
+	curModels             models.Models
 	modelUsage            ai.GenerationUsage
 	initialPrompt         string
 	autoExitAfterResponse bool
+
+	// Model selection
+	cfgPath       string
+	viewState     viewState
+	modelSelector *ModelSelector
 }
 
 var _ tea.Model = (*ChatUI)(nil)
@@ -67,19 +89,23 @@ var _ acp.Client = (*ChatUI)(nil)
 func (ui *ChatUI) Run(ctx context.Context) error {
 	logger := logr.FromContextOrDiscard(ctx)
 
-	if err := ui.initAgent(ctx); err != nil {
-		return fmt.Errorf("initialize agent error: %w", err)
-	}
-
 	ui.ctx = ctx
 	ui.logger = logger
 
 	ui.vp = NewMessageViewport()
+	ui.modelSelector = NewModelSelector()
+
+	ui.cfgPath = configs.ConfigPathFromContext(ctx)
+
+	// 初始化 agent
+	if err := ui.initAgent(ctx); err != nil {
+		return fmt.Errorf("initialize agent error: %w", err)
+	}
 
 	ui.input = NewInputBox(ctx, []SelectorOption{
 		//{Name: "mcp", Description: "Manage MCP servers"},
 		{Name: "clear", Description: "Start a fresh conversation"},
-		//{Name: "model", Description: "Set the AI model for NFA"},
+		{Name: "model", Description: "Set the AI model for NFA"},
 		{Name: "exit", Description: "Exit the NFA"},
 	})
 
@@ -105,6 +131,18 @@ func (ui *ChatUI) Init() tea.Cmd {
 
 // Update 处理更新事件
 func (ui *ChatUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// 根据 viewState 路由消息
+	switch ui.viewState {
+	case viewStateInput:
+		return ui.updateInInputState(msg)
+	case viewStateModelSelect:
+		return ui.updateInModelSelectState(msg)
+	}
+	return ui, nil
+}
+
+// updateInInputState 处理输入状态
+func (ui *ChatUI) updateInInputState(msg tea.Msg) (tea.Model, tea.Cmd) {
 	logger := ui.logger
 
 	var inputCmd tea.Cmd
@@ -130,8 +168,22 @@ func (ui *ChatUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					switch content {
 					case "/exit":
 						return ui, tea.Quit
+					case "/model", "/model :main":
+						return ui, ui.enterModelSelectMode(ModelTypeMain)
+					case "/model :fast":
+						return ui, ui.enterModelSelectMode(ModelTypeFast)
+					case "/model :vision":
+						return ui, ui.enterModelSelectMode(ModelTypeVision)
 					default:
-						cmds = append(cmds, ui.newPrompt(content))
+						// 检查是否是 /model 开头的直接设置命令
+						if modelType, modelName, ok := ui.handleDirectModelSet(content); ok {
+							cmds = append(cmds, tea.Printf(
+								"\033[34m✓ set %s model: %s\033[0m",
+								modelType, modelName,
+							))
+						} else {
+							cmds = append(cmds, ui.newPrompt(content))
+						}
 					}
 				}
 			}
@@ -173,6 +225,43 @@ func (ui *ChatUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return ui, tea.Batch(cmds...)
 }
 
+// updateInModelSelectState 处理模型选择状态
+func (ui *ChatUI) updateInModelSelectState(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmds []tea.Cmd
+	var vpCmd tea.Cmd
+	ui.vp, vpCmd = ui.vp.Update(msg)
+	cmds = append(cmds, vpCmd)
+
+	var selectorCmd tea.Cmd
+	ui.modelSelector, selectorCmd = ui.modelSelector.Update(msg)
+	cmds = append(cmds, selectorCmd)
+
+	switch typedMsg := msg.(type) {
+	case tea.KeyMsg:
+		switch typedMsg.Type {
+		case tea.KeyEnter:
+			var modelType ModelType
+			modelName := ""
+			modelType, modelName, ui.curModels = ui.modelSelector.GetSelectedModels()
+			if err := configs.SaveDefaultModels(ui.cfgPath, ui.curModels); err != nil {
+				cmds = append(cmds, func() tea.Msg {
+					return fmt.Errorf("failed to save model: %w", err)
+				})
+			} else {
+				cmds = append(cmds, tea.Printf("\033[34m✓ set %s model: %s\033[0m", modelType, modelName))
+			}
+			cmds = append(cmds, ui.exitModelSelectMode())
+		case tea.KeyEsc:
+			// 取消选择
+			cmds = append(cmds, ui.exitModelSelectMode())
+		}
+	}
+
+	cmds = append(cmds, ui.updateComponents()...)
+
+	return ui, tea.Batch(cmds...)
+}
+
 // updateComponents 根据状态更新组件
 func (ui *ChatUI) updateComponents() []tea.Cmd {
 	var cmds []tea.Cmd
@@ -196,9 +285,14 @@ func (ui *ChatUI) View() string {
 		vpView += "\n"
 	}
 
-	inputView := ""
-	if ui.input.Focused() {
-		inputView = ui.input.View()
+	var bottomView string
+	switch ui.viewState {
+	case viewStateInput:
+		if ui.input.Focused() {
+			bottomView = ui.input.View()
+		}
+	case viewStateModelSelect:
+		bottomView = ui.modelSelector.View()
 	}
 
 	modelUsageView := ""
@@ -218,7 +312,7 @@ func (ui *ChatUI) View() string {
 
 `,
 		vpView,
-		inputView,
+		bottomView,
 		ui.modelUsageStyle.Render(modelUsageView),
 	)
 }
@@ -229,15 +323,24 @@ func (ui *ChatUI) printHello() tea.Cmd {
 		return tea.Printf(`
 ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
 │                                 │ `+"\033[1;32m"+`Tips:`+"\033[0m"+`                                                         │
+│                                 │ ...                                                           │
+│                                 │ ...                                                           │
 │`+"\033[1;34m"+`         _   __ ______ ___       `+"\033[0m"+`│ ...                                                           │
 │`+"\033[1;34m"+`        / | / // ____//   |      `+"\033[0m"+`│ ...                                                           │
 │`+"\033[1;34m"+`       /  |/ // /_   / /| |      `+"\033[0m"+`│                                                               │
 │`+"\033[1;34m"+`      / /|  // __/  / ___ |      `+"\033[0m"+`│ `+"\033[1;33m"+`NOTE: Any output should not be construed as financial advice.`+"\033[0m"+` │
 │`+"\033[1;34m"+`     /_/ |_//_/    /_/  |_|      `+"\033[0m"+`│ ───────────────────────────────────────────────────────────── │
 │                                 │ `+"\033[1;32m"+`Model`+"\033[0m"+`    %-52s │
+│                                 │          %-52s │
+│                                 │          %-52s │
 │                                 │ `+"\033[1;32m"+`Session`+"\033[0m"+`  %-52s │
 ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-`, ui.defaultModel, ui.sessionID)()
+`,
+			ui.curModels.Main+" (main)",
+			ui.curModels.Fast+" (fast)",
+			ui.curModels.Vision+" (vision)",
+			ui.sessionID,
+		)()
 	}
 }
 

@@ -43,8 +43,8 @@ func (opts *OllamaOptions) OllamaPlugin() *ollama.Ollama {
 func (opts *OllamaOptions) RegisterModels(
 	g *genkit.Genkit,
 	plugin *ollama.Ollama,
-) ([]string, error) {
-	var definedModels []string
+) ([]ModelConfig, error) {
+	var registeredModels []ModelConfig
 	for _, modelConfig := range opts.Models {
 		m := plugin.DefineModel(g, ollama.ModelDefinition{
 			Name: modelConfig.Name,
@@ -57,8 +57,11 @@ func (opts *OllamaOptions) RegisterModels(
 				Tools:      true,
 			},
 		})
-		definedModels = append(definedModels, m.Name())
+
+		registeredModel := modelConfig
+		registeredModel.Name = m.Name()
+		registeredModels = append(registeredModels, registeredModel)
 	}
 
-	return definedModels, nil
+	return registeredModels, nil
 }

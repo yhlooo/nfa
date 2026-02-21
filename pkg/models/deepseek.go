@@ -79,7 +79,7 @@ func (opts *DeepseekOptions) Plugin() *oai.OpenAICompatible {
 func (opts *DeepseekOptions) RegisterModels(
 	g *genkit.Genkit,
 	plugin *oai.OpenAICompatible,
-) ([]string, error) {
+) ([]ModelConfig, error) {
 	return (&OpenAICompatibleOptions{
 		Name:    DeepseekProviderName,
 		BaseURL: opts.BaseURL,

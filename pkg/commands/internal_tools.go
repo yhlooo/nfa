@@ -17,6 +17,7 @@ import (
 	"github.com/yhlooo/nfa/pkg/agents"
 	"github.com/yhlooo/nfa/pkg/apo/dualphase"
 	"github.com/yhlooo/nfa/pkg/apo/spo"
+	"github.com/yhlooo/nfa/pkg/configs"
 	"github.com/yhlooo/nfa/pkg/ctxutil"
 )
 
@@ -77,7 +78,7 @@ func newInternalToolsAPOCommand() *cobra.Command {
 			RunE: func(cmd *cobra.Command, args []string) error {
 				ctx := cmd.Context()
 				logger := logr.FromContextOrDiscard(ctx)
-				cfg := ConfigFromContext(ctx)
+				cfg := configs.ConfigFromContext(ctx)
 
 				opts := dualphase.Options{}
 				if apoOpts.OptionsFile == "" {
@@ -96,14 +97,14 @@ func newInternalToolsAPOCommand() *cobra.Command {
 					}
 				}
 
-				g, modelNames := agents.NewGenkitWithModels(ctx, cfg.ModelProviders, cfg.DefaultModels)
-				if len(modelNames) == 0 {
+				g, modelConfigs := agents.NewGenkitWithModels(ctx, cfg.ModelProviders, cfg.DefaultModels)
+				if len(modelConfigs) == 0 {
 					return fmt.Errorf("no available model found")
 				}
 
 				m := cfg.DefaultModels
 				if m.Main == "" {
-					m.Main = modelNames[0]
+					m.Main = modelConfigs[0].Name
 				}
 				ctx = ctxutil.ContextWithModels(ctx, m)
 				ctx = ctxutil.ContextWithHandleStreamFn(ctx, handleModelStream(os.Stdout))
@@ -156,7 +157,7 @@ func newInternalToolsAPOCommand() *cobra.Command {
 			Short: "Self-Supervised Prompt Optimization (See https://arxiv.org/abs/2502.06855)",
 			RunE: func(cmd *cobra.Command, args []string) error {
 				ctx := cmd.Context()
-				cfg := ConfigFromContext(ctx)
+				cfg := configs.ConfigFromContext(ctx)
 
 				if apoOpts.OptionsFile == "" {
 					return fmt.Errorf("options file is required")
@@ -171,14 +172,14 @@ func newInternalToolsAPOCommand() *cobra.Command {
 				}
 				opts.OutputWriter = os.Stdout
 
-				g, modelNames := agents.NewGenkitWithModels(ctx, cfg.ModelProviders, cfg.DefaultModels)
-				if len(modelNames) == 0 {
+				g, modelConfigs := agents.NewGenkitWithModels(ctx, cfg.ModelProviders, cfg.DefaultModels)
+				if len(modelConfigs) == 0 {
 					return fmt.Errorf("no available model found")
 				}
 
 				m := cfg.DefaultModels
 				if m.Main == "" {
-					m.Main = modelNames[0]
+					m.Main = modelConfigs[0].Name
 				}
 				ctx = ctxutil.ContextWithModels(ctx, m)
 				ctx = ctxutil.ContextWithHandleStreamFn(ctx, handleModelStream(os.Stdout))

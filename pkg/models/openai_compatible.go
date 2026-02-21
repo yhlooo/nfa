@@ -32,8 +32,8 @@ func (opts *OpenAICompatibleOptions) OpenAICompatiblePlugin() *oai.OpenAICompati
 func (opts *OpenAICompatibleOptions) RegisterModels(
 	g *genkit.Genkit,
 	plugin *oai.OpenAICompatible,
-) ([]string, error) {
-	var definedModels []string
+) ([]ModelConfig, error) {
+	var registeredModels []ModelConfig
 	for _, cfg := range opts.Models {
 		m := plugin.DefineModel(g, oai.ModelOptions{
 			ModelOptions: ai.ModelOptions{
@@ -55,8 +55,11 @@ func (opts *OpenAICompatibleOptions) RegisterModels(
 			},
 			ReasoningContentField: "reasoning_content",
 		})
-		definedModels = append(definedModels, m.Name())
+
+		registeredModel := cfg
+		registeredModel.Name = m.Name()
+		registeredModels = append(registeredModels, registeredModel)
 	}
 
-	return definedModels, nil
+	return registeredModels, nil
 }

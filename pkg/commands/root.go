@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -131,7 +130,7 @@ func NewCommand(name string) *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("load config %q error: %w", cfgPath, err)
 			}
-			ctx = NewContextWithConfig(ctx, cfg)
+			ctx = configs.ContextWithConfig(ctx, cfg, cfgPath)
 
 			keylog, err = setKeyLog()
 			if err != nil {
@@ -146,7 +145,7 @@ func NewCommand(name string) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 
-			cfg := ConfigFromContext(ctx)
+			cfg := configs.ConfigFromContext(ctx)
 			logger := logr.FromContextOrDiscard(ctx)
 
 			m := cfg.DefaultModels
@@ -211,23 +210,6 @@ func NewCommand(name string) *cobra.Command {
 	)
 
 	return cmd
-}
-
-// configContextKey 上下文中存放配置信息的 key
-type configContextKey struct{}
-
-// NewContextWithConfig 创建携带配置信息的上下文
-func NewContextWithConfig(parent context.Context, config configs.Config) context.Context {
-	return context.WithValue(parent, configContextKey{}, config)
-}
-
-// ConfigFromContext 从上下文获取配置信息
-func ConfigFromContext(ctx context.Context) configs.Config {
-	cfg, ok := ctx.Value(configContextKey{}).(configs.Config)
-	if !ok {
-		return configs.Config{}
-	}
-	return cfg
 }
 
 // setKeyLog 设置 TLS keylog

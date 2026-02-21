@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/yhlooo/nfa/pkg/agents"
+	"github.com/yhlooo/nfa/pkg/configs"
 )
 
 // newModelsCommand 创建 models 自命令
@@ -31,7 +32,7 @@ func newModelsListCommand() *cobra.Command {
 		Short:   "List available models",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
-			cfg := ConfigFromContext(ctx)
+			cfg := configs.ConfigFromContext(ctx)
 			logger := logr.FromContextOrDiscard(ctx)
 
 			agent := agents.NewNFA(agents.Options{

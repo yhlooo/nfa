@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 
 	"github.com/firebase/genkit/go/ai"
+
+	"github.com/yhlooo/nfa/pkg/models"
 )
 
 const (
-	MetaKeyModelName         = "modelName"
+	MetaKeyCurrentModels     = "currentModels"
 	MetaKeyAvailableModels   = "availableModels"
-	MetaKeyDefaultModel      = "defaultModel"
 	MetaKeyCurrentModelUsage = "currentModelUsage"
 )
 
@@ -33,25 +34,6 @@ func GetMetaStringValue(meta any, key string) string {
 		return ""
 	}
 	return v
-}
-
-// GetMetaStringSliceValue 从 _meta 中获取指定 key 的字符串切片值
-func GetMetaStringSliceValue(meta any, key string) []string {
-	v, ok := GetMetaValue(meta, key).([]any)
-	if !ok {
-		return nil
-	}
-
-	ret := make([]string, 0, len(v))
-	for _, item := range v {
-		vStr, ok := item.(string)
-		if !ok {
-			continue
-		}
-		ret = append(ret, vStr)
-	}
-
-	return ret
 }
 
 // SetMetaCurrentModelUsage 往 _meta 设置当前模型用量
@@ -80,4 +62,50 @@ func GetMetaCurrentModelUsageValue(meta any) ai.GenerationUsage {
 	}
 
 	return usage
+}
+
+// GetMetaAvailableModelsValue 从 _meta 中获取可用模型列表
+func GetMetaAvailableModelsValue(meta any) []models.ModelConfig {
+	v, ok := GetMetaValue(meta, MetaKeyAvailableModels).([]any)
+	if !ok {
+		return nil
+	}
+
+	ret := make([]models.ModelConfig, 0, len(v))
+	for _, item := range v {
+		itemMap, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		raw, _ := json.Marshal(itemMap)
+		var cfg models.ModelConfig
+		if err := json.Unmarshal(raw, &cfg); err != nil {
+			continue
+		}
+		ret = append(ret, cfg)
+	}
+
+	return ret
+}
+
+// GetMetaCurrentModelsValue 从 _meta 中获取当前使用的模型
+func GetMetaCurrentModelsValue(meta any) models.Models {
+	v, ok := GetMetaValue(meta, MetaKeyCurrentModels).(map[string]any)
+	if !ok {
+		return models.Models{}
+	}
+
+	ret := models.Models{}
+
+	if name, ok := v["main"].(string); ok {
+		ret.Main = name
+	}
+	if name, ok := v["fast"].(string); ok {
+		ret.Fast = name
+	}
+	if name, ok := v["vision"].(string); ok {
+		ret.Vision = name
+	}
+
+	return ret
 }

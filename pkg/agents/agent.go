@@ -76,7 +76,7 @@ type NFAAgent struct {
 	g           *genkit.Genkit
 	skillLoader *skills.SkillLoader
 
-	availableModels []string
+	availableModels []models.ModelConfig
 	availableTools  []ai.ToolRef
 
 	chatFlow      flows.ChatFlow

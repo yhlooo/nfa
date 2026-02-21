@@ -117,7 +117,7 @@ func (opts *BigModelOptions) Plugin() *oai.OpenAICompatible {
 func (opts *BigModelOptions) RegisterModels(
 	g *genkit.Genkit,
 	plugin *oai.OpenAICompatible,
-) ([]string, error) {
+) ([]ModelConfig, error) {
 	return (&OpenAICompatibleOptions{
 		Name:    BigModelProviderName,
 		BaseURL: opts.BaseURL,
