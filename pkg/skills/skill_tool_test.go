@@ -112,13 +112,13 @@ description: Send analysis report
 
 	// 预期内容（不含 frontmatter）
 	expectedContents := map[string]string{
-		"get-price":      `1. Confirm code
+		"get-price": `1. Confirm code
 2. Query prices
 `,
-		"analyze-trend":  `1. Get historical data
+		"analyze-trend": `1. Get historical data
 2. Calculate indicators
 `,
-		"send-report":    `1. Format report
+		"send-report": `1. Format report
 2. Send to user
 `,
 	}

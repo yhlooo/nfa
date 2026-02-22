@@ -56,8 +56,8 @@ description: Analyze market trends
 
 	// 创建 agent
 	agent := NewNFA(Options{
-		Logger:    logr.Discard(),
-		DataRoot:  tmpDir,
+		Logger:   logr.Discard(),
+		DataRoot: tmpDir,
 		ModelProviders: []models.ModelProvider{
 			{Ollama: &models.OllamaOptions{}},
 		},
@@ -114,8 +114,8 @@ func TestNFAAgent_EmptySkillsDirectory(t *testing.T) {
 
 	// 创建 agent
 	agent := NewNFA(Options{
-		Logger:    logr.Discard(),
-		DataRoot:  tmpDir,
+		Logger:   logr.Discard(),
+		DataRoot: tmpDir,
 		ModelProviders: []models.ModelProvider{
 			{Ollama: &models.OllamaOptions{}},
 		},
@@ -189,8 +189,8 @@ Valid skill content.
 
 	// 创建 agent
 	agent := NewNFA(Options{
-		Logger:    logr.Discard(),
-		DataRoot:  tmpDir,
+		Logger:   logr.Discard(),
+		DataRoot: tmpDir,
 		ModelProviders: []models.ModelProvider{
 			{Ollama: &models.OllamaOptions{}},
 		},
@@ -245,8 +245,8 @@ Test content.
 
 	// 创建 agent
 	agent := NewNFA(Options{
-		Logger:    logr.Discard(),
-		DataRoot:  tmpDir,
+		Logger:   logr.Discard(),
+		DataRoot: tmpDir,
 		ModelProviders: []models.ModelProvider{
 			{Ollama: &models.OllamaOptions{}},
 		},
