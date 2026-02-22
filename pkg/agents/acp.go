@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"path/filepath"
 	"strings"
 
 	"github.com/coder/acp-go-sdk"
@@ -16,6 +17,7 @@ import (
 	"github.com/yhlooo/nfa/pkg/acputil"
 	"github.com/yhlooo/nfa/pkg/agents/flows"
 	"github.com/yhlooo/nfa/pkg/ctxutil"
+	"github.com/yhlooo/nfa/pkg/skills"
 	"github.com/yhlooo/nfa/pkg/version"
 )
 
@@ -44,6 +46,13 @@ func (a *NFAAgent) Initialize(ctx context.Context, _ acp.InitializeRequest) (acp
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
+	// 初始化技能加载器并加载技能
+	a.skillLoader = skills.NewSkillLoader(filepath.Join(a.dataRoot, "skills"))
+	if err := a.skillLoader.LoadMeta(ctx); err != nil {
+		a.logger.Error(err, "load skills error")
+	}
+
+	// 初始化 genkit
 	a.InitGenkit(ctx)
 
 	return acp.InitializeResponse{

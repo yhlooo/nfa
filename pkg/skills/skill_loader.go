@@ -10,37 +10,30 @@ import (
 	"github.com/go-logr/logr"
 )
 
-const (
-	// SkillFileName skill 文件名
-	SkillFileName = "SKILL.md"
-)
-
 // SkillLoader 技能加载器
 type SkillLoader struct {
 	lock sync.RWMutex
 
 	skillsDir  string
-	skills     map[string]*Skill
+	skillRefs  map[string]SkillRef
 	skillNames []string
 }
 
-// Skill 技能
-type Skill struct {
-	Name        string
-	Description string
-	Path        string
+// SkillRef 技能
+type SkillRef struct {
+	Meta SkillMeta
+	Path string
 }
 
 // NewSkillLoader 创建技能加载器
 func NewSkillLoader(skillsDir string) *SkillLoader {
 	return &SkillLoader{
 		skillsDir: skillsDir,
-		skills:    make(map[string]*Skill),
 	}
 }
 
-// Load 加载所有技能
-func (sl *SkillLoader) Load(ctx context.Context) error {
+// LoadMeta 加载所有技能元信息
+func (sl *SkillLoader) LoadMeta(ctx context.Context) error {
 	sl.lock.Lock()
 	defer sl.lock.Unlock()
 
@@ -56,7 +49,7 @@ func (sl *SkillLoader) Load(ctx context.Context) error {
 	}
 
 	// 清空现有技能
-	sl.skills = make(map[string]*Skill)
+	sl.skillRefs = make(map[string]SkillRef)
 	sl.skillNames = nil
 
 	// 加载每个技能
@@ -67,45 +60,55 @@ func (sl *SkillLoader) Load(ctx context.Context) error {
 		}
 
 		skillName := entry.Name()
-		skillPath := filepath.Join(sl.skillsDir, skillName, SkillFileName)
-
-		// 检查 SKILL.md 是否存在
-		if _, err := os.Stat(skillPath); os.IsNotExist(err) {
-			logger.Info(fmt.Sprintf("skill '%s' does not have %s file, skipping", skillName, SkillFileName))
-			continue
-		}
+		skillPath := filepath.Join(sl.skillsDir, skillName)
 
 		// 验证 SKILL.md 格式
-		_, err := ParseSkillFile(skillPath)
+		s, err := ReadSkill(skillPath)
 		if err != nil {
-			logger.Info(fmt.Sprintf("skill '%s' has invalid format (%v), skipping", skillName, err))
+			logger.Info(fmt.Sprintf("WARN read skill %q from %q error, skipped: %s", skillName, skillPath, err))
 			continue
 		}
 
 		// 添加到技能列表
-		sl.skills[skillName] = &Skill{
-			Name: skillName,
+		sl.skillRefs[skillName] = SkillRef{
+			Meta: s.Meta,
 			Path: skillPath,
 		}
 		sl.skillNames = append(sl.skillNames, skillName)
 		logger.Info(fmt.Sprintf("loaded skill: %s", skillName))
 	}
 
-	logger.Info(fmt.Sprintf("loaded %d skills", len(sl.skills)))
+	logger.Info(fmt.Sprintf("loaded %d skills", len(sl.skillRefs)))
 	return nil
 }
 
 // Get 获取技能
-func (sl *SkillLoader) Get(name string) (*Skill, bool) {
+func (sl *SkillLoader) Get(name string) (*Skill, error) {
 	sl.lock.RLock()
 	defer sl.lock.RUnlock()
-	skill, ok := sl.skills[name]
-	return skill, ok
+
+	ref, ok := sl.skillRefs[name]
+	if !ok {
+		return nil, fmt.Errorf("skill %q not found", name)
+	}
+
+	skill, err := ReadSkill(ref.Path)
+	if err != nil {
+		return nil, fmt.Errorf("read skill %q from %q error: %w", name, ref.Path, err)
+	}
+
+	return skill, nil
 }
 
-// List 列出所有技能名称
-func (sl *SkillLoader) List() []string {
+// ListMeta 列出所有技能元数据
+func (sl *SkillLoader) ListMeta() []SkillMeta {
 	sl.lock.RLock()
 	defer sl.lock.RUnlock()
-	return sl.skillNames
+
+	ret := make([]SkillMeta, len(sl.skillNames))
+	for i, name := range sl.skillNames {
+		ret[i] = sl.skillRefs[name].Meta
+	}
+
+	return ret
 }

@@ -26,8 +26,10 @@ import (
 
 // NewGlobalOptions 创建默认 GlobalOptions
 func NewGlobalOptions() GlobalOptions {
+	homeDir, _ := os.UserHomeDir()
 	return GlobalOptions{
 		Verbosity: 0,
+		DataRoot:  filepath.Join(homeDir, ".nfa"),
 	}
 }
 
@@ -35,6 +37,8 @@ func NewGlobalOptions() GlobalOptions {
 type GlobalOptions struct {
 	// 日志数量级别（ 0 / 1 / 2 ）
 	Verbosity uint32
+	// 数据存储根目录
+	DataRoot string
 }
 
 // Validate 校验选项是否合法
@@ -48,6 +52,7 @@ func (o *GlobalOptions) Validate() error {
 // AddPFlags 将选项绑定到命令行参数
 func (o *GlobalOptions) AddPFlags(fs *pflag.FlagSet) {
 	fs.Uint32VarP(&o.Verbosity, "verbose", "v", o.Verbosity, "Number for the log level verbosity (0, 1, or 2)")
+	fs.StringVar(&o.DataRoot, "data-root", o.DataRoot, "Path of data root directory")
 }
 
 // NewOptions 创建默认 Options
@@ -94,21 +99,15 @@ func NewCommand(name string) *cobra.Command {
 				return err
 			}
 
-			home, err := os.UserHomeDir()
-			if err != nil {
-				return fmt.Errorf("get user home directory error: %w", err)
-			}
-			dataPath := filepath.Join(home, ".nfa")
-
 			// 创建日志目录
-			if err := os.MkdirAll(dataPath, 0o755); err != nil {
-				return fmt.Errorf("create log directory %q error: %w", dataPath, err)
+			if err := os.MkdirAll(globalOpts.DataRoot, 0o755); err != nil {
+				return fmt.Errorf("create log directory %q error: %w", globalOpts.DataRoot, err)
 			}
 
 			// 初始化 logger
 			logrusLogger := logrus.New()
 			logrusLogger.SetOutput(&lumberjack.Logger{
-				Filename:   filepath.Join(dataPath, "nfa.log"),
+				Filename:   filepath.Join(globalOpts.DataRoot, "nfa.log"),
 				MaxSize:    500, // MB
 				MaxBackups: 3,
 				MaxAge:     28, // 天
@@ -125,7 +124,7 @@ func NewCommand(name string) *cobra.Command {
 			ctx = logr.NewContext(ctx, logger)
 
 			// 加载配置
-			cfgPath := filepath.Join(dataPath, "nfa.json")
+			cfgPath := filepath.Join(globalOpts.DataRoot, "nfa.json")
 			cfg, err := configs.LoadConfig(cfgPath)
 			if err != nil {
 				return fmt.Errorf("load config %q error: %w", cfgPath, err)
@@ -161,6 +160,7 @@ func NewCommand(name string) *cobra.Command {
 				ModelProviders: cfg.ModelProviders,
 				DataProviders:  cfg.DataProviders,
 				DefaultModels:  m,
+				DataRoot:       globalOpts.DataRoot,
 			})
 
 			agentIn, clientOut := io.Pipe()

@@ -103,7 +103,7 @@ var TopicRoutingPromptTpl = template.Must(template.New("TopicRoutingPrompt").
 以下是需要判断话题的对话过程：
 ` + "```" + `
 {{- range .Messages }}
-{{- if .Text }} 
+{{- if .Text }}
 {{ .Role }}:
 {{ .Text }}
 {{- end }}

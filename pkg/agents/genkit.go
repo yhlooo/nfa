@@ -3,7 +3,6 @@ package agents
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/core/api"
@@ -14,7 +13,6 @@ import (
 	"github.com/yhlooo/nfa/pkg/agents/flows"
 	"github.com/yhlooo/nfa/pkg/genkitplugins/oai"
 	"github.com/yhlooo/nfa/pkg/models"
-	"github.com/yhlooo/nfa/pkg/skills"
 	"github.com/yhlooo/nfa/pkg/tools/webbrowse"
 )
 
@@ -29,22 +27,11 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	}
 
 	a.g, a.availableModels = NewGenkitWithModels(ctx, a.modelProviders, a.defaultModels)
-
 	if a.defaultModels.Main == "" && len(a.availableModels) > 0 {
 		a.defaultModels.Main = a.availableModels[0].Name
 	}
-
 	for _, m := range a.availableModels {
 		a.logger.Info(fmt.Sprintf("registered model: %s", m.Name))
-	}
-
-	// 初始化技能加载器并加载技能
-	if a.dataRoot != "" {
-		skillsDir := filepath.Join(a.dataRoot, "skills")
-		a.skillLoader = skills.NewSkillLoader(skillsDir)
-		if err := a.skillLoader.Load(ctx); err != nil {
-			a.logger.Error(err, "load skills error")
-		}
 	}
 
 	// 注册工具
@@ -71,10 +58,7 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	a.availableTools = append(a.availableTools, wb.RegisterTools(a.g)...)
 
 	// 注册 Skill 工具
-	if a.skillLoader != nil {
-		skillTool := skills.DefineSkillTool(a.g, a.skillLoader)
-		a.availableTools = append(a.availableTools, skillTool)
-	}
+	a.availableTools = append(a.availableTools, a.skillLoader.DefineSkillTool(a.g))
 
 	for _, t := range a.availableTools {
 		a.logger.Info(fmt.Sprintf("registered tool: %s", t.Name()))
@@ -82,7 +66,7 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 
 	// 注册 flows
 	a.chatFlow = flows.DefineSimpleChatFlow(a.g, ChatFlowName, flows.FixedGenerateOptions(
-		ai.WithSystemFn(AnalystSystemPromptWithSkills(a.skillLoader)),
+		ai.WithSystemFn(AnalystSystemPrompt(a.skillLoader)),
 		ai.WithTools(a.availableTools...),
 	))
 	a.summarizeFlow = flows.DefineSummarizeFlow(a.g)

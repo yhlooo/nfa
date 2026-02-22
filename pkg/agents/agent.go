@@ -2,8 +2,6 @@ package agents
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 	"sync"
 
 	"github.com/coder/acp-go-sdk"
@@ -26,7 +24,7 @@ type Options struct {
 	ModelProviders []models.ModelProvider
 	DataProviders  []DataProvider
 	DefaultModels  models.Models
-	DataRoot       string // nfa 数据目录，默认 ~/.nfa
+	DataRoot       string
 }
 
 // DataProvider 数据供应商配置
@@ -41,10 +39,7 @@ func (opts *Options) Complete() {
 		opts.ModelProviders = append(opts.ModelProviders, models.ModelProvider{Ollama: &models.OllamaOptions{}})
 	}
 	if opts.DataRoot == "" {
-		homeDir, err := os.UserHomeDir()
-		if err == nil {
-			opts.DataRoot = filepath.Join(homeDir, ".nfa")
-		}
+		opts.DataRoot = ".nfa"
 	}
 }
 
@@ -70,7 +65,7 @@ type NFAAgent struct {
 	modelProviders []models.ModelProvider
 	dataProviders  []DataProvider
 	defaultModels  models.Models
-	dataRoot       string // nfa 数据目录
+	dataRoot       string
 
 	conn        *acp.AgentSideConnection
 	g           *genkit.Genkit

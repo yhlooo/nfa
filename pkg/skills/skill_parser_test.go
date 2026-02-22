@@ -19,12 +19,12 @@ It can have multiple lines.
 		t.Fatalf("ParseSkillContent() error = %v", err)
 	}
 
-	if parsed.Metadata.Name != "test-skill" {
-		t.Errorf("expected name 'test-skill', got '%s'", parsed.Metadata.Name)
+	if parsed.Meta.Name != "test-skill" {
+		t.Errorf("expected name 'test-skill', got '%s'", parsed.Meta.Name)
 	}
 
-	if parsed.Metadata.Description != "A test skill for testing" {
-		t.Errorf("expected description 'A test skill for testing', got '%s'", parsed.Metadata.Description)
+	if parsed.Meta.Description != "A test skill for testing" {
+		t.Errorf("expected description 'A test skill for testing', got '%s'", parsed.Meta.Description)
 	}
 
 	expectedContent := "This is the skill content.\nIt can have multiple lines.\n"
@@ -155,36 +155,11 @@ func TestParseSkillContent_CRLF(t *testing.T) {
 		t.Fatalf("ParseSkillContent() error = %v", err)
 	}
 
-	if parsed.Metadata.Name != "test-skill" {
-		t.Errorf("expected name 'test-skill', got '%s'", parsed.Metadata.Name)
+	if parsed.Meta.Name != "test-skill" {
+		t.Errorf("expected name 'test-skill', got '%s'", parsed.Meta.Name)
 	}
 
-	if parsed.Metadata.Description != "A test skill" {
-		t.Errorf("expected description 'A test skill', got '%s'", parsed.Metadata.Description)
-	}
-}
-
-func TestFormatSkillContent(t *testing.T) {
-	content := &SkillContent{
-		Metadata: SkillMetadata{
-			Name:        "test-skill",
-			Description: "A test skill",
-		},
-		Content: "This is the content.\nMultiple lines.",
-	}
-
-	formatted := FormatSkillContent(content)
-
-	expected := `---
-name: test-skill
-description: A test skill
----
-
-This is the content.
-Multiple lines.
-`
-
-	if formatted != expected {
-		t.Errorf("expected formatted content:\n%s\ngot:\n%s", expected, formatted)
+	if parsed.Meta.Description != "A test skill" {
+		t.Errorf("expected description 'A test skill', got '%s'", parsed.Meta.Description)
 	}
 }

@@ -21,12 +21,12 @@ func TestLoad_EmptyDirectory(t *testing.T) {
 	tmpDir := t.TempDir()
 	loader := NewSkillLoader(tmpDir)
 
-	err := loader.Load(t.Context())
+	err := loader.LoadMeta(t.Context())
 	if err != nil {
-		t.Fatalf("Load() error = %v", err)
+		t.Fatalf("LoadMeta() error = %v", err)
 	}
 
-	skills := loader.List()
+	skills := loader.ListMeta()
 	if len(skills) != 0 {
 		t.Errorf("expected 0 skills, got %d", len(skills))
 	}
@@ -55,27 +55,27 @@ This is a test skill content.
 	}
 
 	// 加载技能
-	err := loader.Load(t.Context())
+	err := loader.LoadMeta(t.Context())
 	if err != nil {
-		t.Fatalf("Load() error = %v", err)
+		t.Fatalf("LoadMeta() error = %v", err)
 	}
 
-	skills := loader.List()
+	skills := loader.ListMeta()
 	if len(skills) != 1 {
 		t.Fatalf("expected 1 skill, got %d", len(skills))
 	}
 
-	if skills[0] != "test-skill" {
-		t.Errorf("expected skill name 'test-skill', got '%s'", skills[0])
+	if skills[0].Name != "test-skill" {
+		t.Errorf("expected skill name 'test-skill', got '%s'", skills[0].Name)
 	}
 
-	skill, ok := loader.Get("test-skill")
-	if !ok {
-		t.Fatal("skill 'test-skill' not found")
+	skill, err := loader.Get("test-skill")
+	if err != nil {
+		t.Fatalf("skill 'test-skill' not found: %v", err)
 	}
 
-	if skill.Name != "test-skill" {
-		t.Errorf("expected skill name 'test-skill', got '%s'", skill.Name)
+	if skill.Meta.Name != "test-skill" {
+		t.Errorf("expected skill name 'test-skill', got '%s'", skill.Meta.Name)
 	}
 }
 
@@ -89,13 +89,13 @@ func TestLoad_MissingSkillFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err := loader.Load(t.Context())
+	err := loader.LoadMeta(t.Context())
 	if err != nil {
-		t.Fatalf("Load() error = %v", err)
+		t.Fatalf("LoadMeta() error = %v", err)
 	}
 
 	// 应该跳过没有 SKILL.md 的技能
-	skills := loader.List()
+	skills := loader.ListMeta()
 	if len(skills) != 0 {
 		t.Errorf("expected 0 skills (missing SKILL.md), got %d", len(skills))
 	}
@@ -113,13 +113,13 @@ func TestLoad_NonDirectoryEntries(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err := loader.Load(t.Context())
+	err := loader.LoadMeta(t.Context())
 	if err != nil {
-		t.Fatalf("Load() error = %v", err)
+		t.Fatalf("LoadMeta() error = %v", err)
 	}
 
 	// 应该跳过非目录条目
-	skills := loader.List()
+	skills := loader.ListMeta()
 	if len(skills) != 0 {
 		t.Errorf("expected 0 skills (non-directory), got %d", len(skills))
 	}
@@ -147,23 +147,23 @@ This is a test skill content.
 	}
 
 	// 加载技能
-	if err := loader.Load(t.Context()); err != nil {
+	if err := loader.LoadMeta(t.Context()); err != nil {
 		t.Fatal(err)
 	}
 
 	// 测试获取存在的技能
-	skill, ok := loader.Get("test-skill")
-	if !ok {
-		t.Fatal("skill 'test-skill' not found")
+	skill, err := loader.Get("test-skill")
+	if err != nil {
+		t.Fatalf("skill 'test-skill' not found: %v", err)
 	}
 
-	if skill.Name != "test-skill" {
-		t.Errorf("expected skill name 'test-skill', got '%s'", skill.Name)
+	if skill.Meta.Name != "test-skill" {
+		t.Errorf("expected skill name 'test-skill', got '%s'", skill.Meta.Name)
 	}
 
 	// 测试获取不存在的技能
-	_, ok = loader.Get("non-existent")
-	if ok {
-		t.Error("expected false for non-existent skill, got true")
+	_, err = loader.Get("non-existent")
+	if err == nil {
+		t.Error("expected error for non-existent skill, got nil")
 	}
 }

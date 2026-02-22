@@ -24,12 +24,19 @@ func TestTopicClassificationPrompt(t *testing.T) {
 	})
 	a.NoError(err)
 
-	a.Contains(ret, `user: question 1
-model: answer 1
-user: question 2
-model: answer 2
-user: question 3
-model: answer 3
-user: question 4
+	a.Contains(ret, `user:
+question 1
+model:
+answer 1
+user:
+question 2
+model:
+answer 2
+user:
+question 3
+model:
+answer 3
+user:
+question 4
 `, "Result:\n"+ret)
 }

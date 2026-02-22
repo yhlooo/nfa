@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"strings"
 	"text/template"
 	"time"
 
@@ -12,47 +11,8 @@ import (
 )
 
 // AnalystSystemPrompt 分析师系统提示
-func AnalystSystemPrompt(_ context.Context, _ any) (string, error) {
-	return NewAgentSystemPrompt(AgentSystemPromptData{
-		Overview: "你是一个专业的金融分析师，为用户提供专业的金融咨询服务。",
-		Goal:     "你的目标是回答用户咨询的问题。",
-		Workflow: []string{
-			"理解用户问题和意图；",
-			"如果当前信息不足以回答用户问题，你可以先通过工具查询相关信息；",
-			"当已有信息足以回答用户问题时，停止调用工具，整理已有信息并回答用户问题；",
-		},
-		Requirements: []string{
-			"不要做多余的查询，只要已有信息足以回答用户问题就直接回答用户问题；",
-			"对话应该逐渐深入，对话刚开始用户的要求较模糊时不要马上进行大量查询、分析和大段陈述，可以先进行简单的启发性陈述并引导用户进一步具体的提问；",
-			"所有输出内容都必须基于通过工具查询获取的客观事实，不能凭空臆断，如果无法获取足够信息就直接回答因为缺少必要信息无法回答；",
-			"用用户提问的语言回答问题，比如用户用中文提问就用中文回答，用户用英文提问就用英文回答；",
-		},
-	})
-}
-
-// AnalystSystemPromptWithSkills 带技能列表的分析师系统提示
-func AnalystSystemPromptWithSkills(skillLoader *skills.SkillLoader) func(context.Context, any) (string, error) {
+func AnalystSystemPrompt(sl *skills.SkillLoader) func(context.Context, any) (string, error) {
 	return func(_ context.Context, _ any) (string, error) {
-		// 获取可用技能
-		skillNames := skillLoader.List()
-		var extra string
-		if len(skillNames) > 0 {
-			// 获取所有技能的元数据
-			var skillDescriptions []string
-			for _, skillName := range skillNames {
-				metadata, err := skillLoader.GetSkillMetadata(skillName)
-				if err != nil {
-					continue
-				}
-				skillDescriptions = append(skillDescriptions, fmt.Sprintf("- %s: %s", metadata.Name, metadata.Description))
-			}
-
-			extra = fmt.Sprintf("## 可用技能\n\n你可以通过 Skill 工具调用以下用户自定义技能来扩展你的能力：\n\n%s\n\n当需要使用某个技能时，使用 Skill 工具并传入技能名称。",
-				strings.Join(skillDescriptions, "\n"))
-		} else {
-			extra = "## 可用技能\n\n当前没有可用的自定义技能。"
-		}
-
 		return NewAgentSystemPrompt(AgentSystemPromptData{
 			Overview: "你是一个专业的金融分析师，为用户提供专业的金融咨询服务。",
 			Goal:     "你的目标是回答用户咨询的问题。",
@@ -61,13 +21,13 @@ func AnalystSystemPromptWithSkills(skillLoader *skills.SkillLoader) func(context
 				"如果当前信息不足以回答用户问题，你可以先通过工具查询相关信息；",
 				"当已有信息足以回答用户问题时，停止调用工具，整理已有信息并回答用户问题；",
 			},
+			Skills: sl.ListMeta(),
 			Requirements: []string{
 				"不要做多余的查询，只要已有信息足以回答用户问题就直接回答用户问题；",
 				"对话应该逐渐深入，对话刚开始用户的要求较模糊时不要马上进行大量查询、分析和大段陈述，可以先进行简单的启发性陈述并引导用户进一步具体的提问；",
 				"所有输出内容都必须基于通过工具查询获取的客观事实，不能凭空臆断，如果无法获取足够信息就直接回答因为缺少必要信息无法回答；",
 				"用用户提问的语言回答问题，比如用户用中文提问就用中文回答，用户用英文提问就用英文回答；",
 			},
-			Extra: extra,
 		})
 	}
 }
@@ -82,6 +42,8 @@ type AgentSystemPromptData struct {
 	Workflow []string
 	// 要求
 	Requirements []string
+	// 技能列表
+	Skills []skills.SkillMeta
 	// 额外信息
 	Extra string
 	// 当前时间
@@ -108,6 +70,15 @@ var AgentSystemPromptTpl = template.Must(template.New("AgentSystemPrompt").
 ## 严格遵循以下要求进行回答
 {{- range .Requirements }}
 - {{ . }}
+{{- end }}
+
+{{- if .Skills }}
+
+## 可用技能
+你可以通过调用 Skill 工具加载技能来扩展你的能力，当需要使用某个技能时，调用 Skill 工具并传入以下列出的技能名称：
+{{- range .Skills }}
+- {{ .Name }}: {{ .Description }}
+{{- end }}
 {{- end }}
 
 {{- if .Extra }}

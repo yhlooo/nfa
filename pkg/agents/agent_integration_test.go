@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/yhlooo/nfa/pkg/models"
+	"github.com/yhlooo/nfa/pkg/skills"
 )
 
 func TestNFAAgent_WithSkills(t *testing.T) {
@@ -62,8 +63,16 @@ description: Analyze market trends
 		},
 	})
 
+	// 初始化技能加载器
+	agent.skillLoader = skills.NewSkillLoader(filepath.Join(tmpDir, "skills"))
+
 	// 初始化 genkit
 	agent.InitGenkit(context.Background())
+
+	// 初始化技能加载器
+	if err := agent.skillLoader.LoadMeta(context.Background()); err != nil {
+		t.Fatalf("LoadMeta() error = %v", err)
+	}
 
 	// 验证技能加载器已初始化
 	if agent.skillLoader == nil {
@@ -71,7 +80,7 @@ description: Analyze market trends
 	}
 
 	// 验证技能已加载
-	skills := agent.skillLoader.List()
+	skills := agent.skillLoader.ListMeta()
 	if len(skills) != 2 {
 		t.Errorf("expected 2 skills, got %d", len(skills))
 	}
@@ -112,8 +121,16 @@ func TestNFAAgent_EmptySkillsDirectory(t *testing.T) {
 		},
 	})
 
+	// 初始化技能加载器
+	agent.skillLoader = skills.NewSkillLoader(filepath.Join(tmpDir, "skills"))
+
 	// 初始化 genkit
 	agent.InitGenkit(context.Background())
+
+	// 初始化技能加载器
+	if err := agent.skillLoader.LoadMeta(context.Background()); err != nil {
+		t.Fatalf("LoadMeta() error = %v", err)
+	}
 
 	// 验证技能加载器已初始化
 	if agent.skillLoader == nil {
@@ -121,7 +138,7 @@ func TestNFAAgent_EmptySkillsDirectory(t *testing.T) {
 	}
 
 	// 验证没有技能
-	skills := agent.skillLoader.List()
+	skills := agent.skillLoader.ListMeta()
 	if len(skills) != 0 {
 		t.Errorf("expected 0 skills, got %d", len(skills))
 	}
@@ -179,17 +196,25 @@ Valid skill content.
 		},
 	})
 
+	// 初始化技能加载器
+	agent.skillLoader = skills.NewSkillLoader(filepath.Join(tmpDir, "skills"))
+
 	// 初始化 genkit
 	agent.InitGenkit(context.Background())
 
+	// 初始化技能加载器
+	if err := agent.skillLoader.LoadMeta(context.Background()); err != nil {
+		t.Fatalf("LoadMeta() error = %v", err)
+	}
+
 	// 验证只加载了有效技能
-	skills := agent.skillLoader.List()
+	skills := agent.skillLoader.ListMeta()
 	if len(skills) != 1 {
 		t.Errorf("expected 1 valid skill, got %d", len(skills))
 	}
 
-	if skills[0] != "valid-skill" {
-		t.Errorf("expected skill 'valid-skill', got '%s'", skills[0])
+	if skills[0].Name != "valid-skill" {
+		t.Errorf("expected skill 'valid-skill', got '%s'", skills[0].Name)
 	}
 }
 
@@ -227,14 +252,22 @@ Test content.
 		},
 	})
 
+	// 初始化技能加载器
+	agent.skillLoader = skills.NewSkillLoader(filepath.Join(tmpDir, "skills"))
+
 	// 初始化 genkit
 	agent.InitGenkit(context.Background())
 
+	// 初始化技能加载器
+	if err := agent.skillLoader.LoadMeta(context.Background()); err != nil {
+		t.Fatalf("LoadMeta() error = %v", err)
+	}
+
 	// 生成系统提示
-	systemPromptFn := AnalystSystemPromptWithSkills(agent.skillLoader)
+	systemPromptFn := AnalystSystemPrompt(agent.skillLoader)
 	prompt, err := systemPromptFn(context.Background(), nil)
 	if err != nil {
-		t.Fatalf("AnalystSystemPromptWithSkills() error = %v", err)
+		t.Fatalf("AnalystSystemPrompt() error = %v", err)
 	}
 
 	// 验证提示包含技能信息
