@@ -2,7 +2,7 @@ schema: spec-driven
 context: |
   ## 项目简介
   基于大语言模型的金融交易顾问 Agent 。
-  
+
   ## 技术栈
   - 使用 go 编写
   - 主要第三方库：
@@ -37,6 +37,6 @@ context: |
     ├── ui      # 用户交互界面实现
     # ... 其它包
   ```
-  
+
   ## 提案规范
   - 所有 OpenSpec artifacts 都必须使用中文编写
