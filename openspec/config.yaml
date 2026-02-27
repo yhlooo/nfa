@@ -1,20 +1,42 @@
 schema: spec-driven
+context: |
+  ## 项目简介
+  基于大语言模型的金融交易顾问 Agent 。
+  
+  ## 技术栈
+  - 使用 go 编写
+  - 主要第三方库：
+    - AI Agent 框架： `github.com/firebase/genkit/go`
+    - Agent 和 TUI 使用 ACP 协议交互： `github.com/coder/acp-go-sdk`
+    - 命令行入口： `github.com/spf13/cobra`
+    - TUI 框架： `github.com/charmbracelet/bubbletea`
+    - 日志： `github.com/go-logr/logr`
+    - 单元测试断言： `github.com/stretchr/testify`
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
-
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  ## 项目结构
+  ```
+  .
+  ├── cmd
+  │   └── nfa  # 程序入口， main 包 
+  ├── docs  # 文档
+  │   ├── guides     # 使用指南，针对每个特性的详细说明
+  │   ├── reference  # 参考，针对实现细节、 API 的详细参考手册
+  │   └── tutorials  # 快速教程
+  ├── examples  # 示例文件
+  └── pkg  # 代码
+    ├── acputil  # ACP 协议相关工具
+    ├── agents   # Agent 核心逻辑实现
+    ├── apo  # 自动 Prompt 优化相关工具 
+    ├── commands  # 命令行入口实现
+    ├── configs  # 配置系统实现
+    ├── ctxutil  # context 相关工具
+    ├── genkitplugins  # Genkit 插件
+    ├── models  # 模型调用相关实现
+    ├── skills  # Skill 系统实现
+    ├── tools   # 部分内置工具实现
+    ├── ui      # 用户交互界面实现
+    # ... 其它包
+  ```
+  
+  ## 提案规范
+  - 所有 OpenSpec artifacts 都必须使用中文编写
