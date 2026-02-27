@@ -16,8 +16,9 @@ const (
 // BigModelModels 建议的智谱模型
 var BigModelModels = []ModelConfig{
 	{
-		Name:      "glm-5",
-		Reasoning: true,
+		Name:        "glm-5",
+		Description: "智谱 GLM-5，新一代旗舰模型，强大的推理和理解能力",
+		Reasoning:   true,
 		Cost: ModelCost{
 			Input:  0.006,
 			Output: 0.022,
@@ -27,8 +28,9 @@ var BigModelModels = []ModelConfig{
 		MaxOutputTokens: 128000,
 	},
 	{
-		Name:      "glm-4.7",
-		Reasoning: true,
+		Name:        "glm-4.7",
+		Description: "智谱 GLM-4.7，高性能通用模型",
+		Reasoning:   true,
 		Cost: ModelCost{
 			Input:  0.004,
 			Output: 0.016,
@@ -38,8 +40,9 @@ var BigModelModels = []ModelConfig{
 		MaxOutputTokens: 128000,
 	},
 	{
-		Name:      "glm-4.7-flashx",
-		Reasoning: true,
+		Name:        "glm-4.7-flashx",
+		Description: "智谱 GLM-4.7 FlashX，快速响应模型",
+		Reasoning:   true,
 		Cost: ModelCost{
 			Input:  0.0005,
 			Output: 0.003,
@@ -49,9 +52,10 @@ var BigModelModels = []ModelConfig{
 		MaxOutputTokens: 128000,
 	},
 	{
-		Name:      "glm-4.6v",
-		Reasoning: true,
-		Vision:    true,
+		Name:        "glm-4.6v",
+		Description: "智谱 GLM-4.6V，视觉理解多模态模型",
+		Reasoning:   true,
+		Vision:      true,
 		Cost: ModelCost{
 			Input:  0.002,
 			Output: 0.006,
@@ -61,9 +65,10 @@ var BigModelModels = []ModelConfig{
 		MaxOutputTokens: 32000,
 	},
 	{
-		Name:      "glm-4.6v-flashx",
-		Reasoning: true,
-		Vision:    true,
+		Name:        "glm-4.6v-flashx",
+		Description: "智谱 GLM-4.6V FlashX，快速视觉多模态模型",
+		Reasoning:   true,
+		Vision:      true,
 		Cost: ModelCost{
 			Input:  0.0003,
 			Output: 0.003,

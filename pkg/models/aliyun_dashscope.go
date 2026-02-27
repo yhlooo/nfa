@@ -17,8 +17,9 @@ const (
 // DashScopeModels 建议的阿里云模型
 var DashScopeModels = []ModelConfig{
 	{
-		Name:      "qwen3-max",
-		Reasoning: true,
+		Name:        "qwen3-max",
+		Description: "通义千问 3.0 Max，旗舰级超大规模语言模型",
+		Reasoning:   true,
 		Cost: ModelCost{
 			Input:  0.0025,
 			Output: 0.01,
@@ -28,7 +29,8 @@ var DashScopeModels = []ModelConfig{
 		MaxOutputTokens: 64000,
 	},
 	{
-		Name: "qwen3-coder-plus",
+		Name:        "qwen3-coder-plus",
+		Description: "通义千问 3.0 Coder Plus，专业代码生成模型",
 		Cost: ModelCost{
 			Input:  0.004,
 			Output: 0.016,
@@ -38,7 +40,8 @@ var DashScopeModels = []ModelConfig{
 		MaxOutputTokens: 64000,
 	},
 	{
-		Name: "qwen3-coder-flash",
+		Name:        "qwen3-coder-flash",
+		Description: "通义千问 3.0 Coder Flash，快速代码模型",
 		Cost: ModelCost{
 			Input:  0.001,
 			Output: 0.004,
@@ -48,9 +51,10 @@ var DashScopeModels = []ModelConfig{
 		MaxOutputTokens: 64000,
 	},
 	{
-		Name:      "qwen3-vl-plus",
-		Reasoning: true,
-		Vision:    true,
+		Name:        "qwen3-vl-plus",
+		Description: "通义千问 3.0 VL Plus，视觉理解多模态模型",
+		Reasoning:   true,
+		Vision:      true,
 		Cost: ModelCost{
 			Input:  0.001,
 			Output: 0.01,
@@ -60,9 +64,10 @@ var DashScopeModels = []ModelConfig{
 		MaxOutputTokens: 32000,
 	},
 	{
-		Name:      "qwen3-vl-flash",
-		Reasoning: true,
-		Vision:    true,
+		Name:        "qwen3-vl-flash",
+		Description: "通义千问 3.0 VL Flash，快速视觉多模态模型",
+		Reasoning:   true,
+		Vision:      true,
 		Cost: ModelCost{
 			Input:  0.00015,
 			Output: 0.0015,

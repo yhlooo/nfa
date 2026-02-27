@@ -16,8 +16,9 @@ const (
 // DeepSeekModels 建议的 DeepSeek 模型
 var DeepSeekModels = []ModelConfig{
 	{
-		Name:      "deepseek-reasoner",
-		Reasoning: true,
+		Name:        "deepseek-reasoner",
+		Description: "DeepSeek 推理模型，擅长复杂逻辑推理和深度思考",
+		Reasoning:   true,
 		Cost: ModelCost{
 			Input:  0.002,
 			Output: 0.003,
@@ -26,7 +27,8 @@ var DeepSeekModels = []ModelConfig{
 		MaxOutputTokens: 64000,
 	},
 	{
-		Name: "deepseek-chat",
+		Name:        "deepseek-chat",
+		Description: "DeepSeek 对话模型，适用于通用对话和问答",
 		Cost: ModelCost{
 			Input:  0.002,
 			Output: 0.003,
