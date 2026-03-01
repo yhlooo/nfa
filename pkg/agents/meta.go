@@ -97,11 +97,11 @@ func GetMetaCurrentModelsValue(meta any) models.Models {
 
 	ret := models.Models{}
 
-	if name, ok := v["main"].(string); ok {
-		ret.Main = name
+	if name, ok := v["primary"].(string); ok {
+		ret.Primary = name
 	}
-	if name, ok := v["fast"].(string); ok {
-		ret.Fast = name
+	if name, ok := v["light"].(string); ok {
+		ret.Light = name
 	}
 	if name, ok := v["vision"].(string); ok {
 		ret.Vision = name

@@ -103,8 +103,8 @@ func newInternalToolsAPOCommand() *cobra.Command {
 				}
 
 				m := cfg.DefaultModels
-				if m.Main == "" {
-					m.Main = modelConfigs[0].Name
+				if m.Primary == "" {
+					m.Primary = modelConfigs[0].Name
 				}
 				ctx = ctxutil.ContextWithModels(ctx, m)
 				ctx = ctxutil.ContextWithHandleStreamFn(ctx, handleModelStream(os.Stdout))
@@ -178,8 +178,8 @@ func newInternalToolsAPOCommand() *cobra.Command {
 				}
 
 				m := cfg.DefaultModels
-				if m.Main == "" {
-					m.Main = modelConfigs[0].Name
+				if m.Primary == "" {
+					m.Primary = modelConfigs[0].Name
 				}
 				ctx = ctxutil.ContextWithModels(ctx, m)
 				ctx = ctxutil.ContextWithHandleStreamFn(ctx, handleModelStream(os.Stdout))

@@ -181,8 +181,8 @@ NFA 的配置文件位于 `~/.nfa/nfa.json`。
     }
   ],
   "defaultModels": {
-    "main": "ollama/llama3.2",
-    "fast": "ollama/mistral",
+    "primary": "ollama/llama3.2",
+    "light": "ollama/mistral",
     "vision": ""
   }
 }
@@ -193,7 +193,7 @@ NFA 的配置文件位于 `~/.nfa/nfa.json`。
 在交互式模型选择菜单中，描述会显示在模型名称后面：
 
 ```
-Select main model
+Select primary model
 
  ❯ 1. ollama/llama3.2 - Meta Llama 3.2，通用对话能力强，适合复杂推理任务
    2. ollama/qwen3:14b - 通义千问 3 14B，中英双语平衡，金融领域表现优秀
@@ -210,16 +210,16 @@ Select main model
 ```json
 {
   "defaultModels": {
-    "main": "ollama/llama2",
-    "fast": "ollama/llama2",
+    "primary": "ollama/llama2",
+    "light": "ollama/llama2",
     "vision": ""
   }
 }
 ```
 
 字段说明：
-- `main` - 主模型，用于回答用户问题
-- `fast` - 快速模型，用于处理简单事务。为空时使用主模型
+- `primary` - 主模型，用于回答用户问题
+- `light` - 轻量模型，用于处理简单事务。为空时使用主模型
 - `vision` - 视觉模型，用于处理图片理解任务
 
 ### dataProviders
@@ -287,8 +287,8 @@ Select main model
     }
   ],
   "defaultModels": {
-    "main": "ollama/llama2",
-    "fast": "ollama/llama2",
+    "primary": "ollama/llama2",
+    "light": "ollama/llama2",
     "vision": ""
   },
   "dataProviders": [

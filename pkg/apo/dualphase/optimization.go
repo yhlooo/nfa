@@ -47,7 +47,7 @@ func OptimizationFlow(g *genkit.Genkit) core.Func[OptimizationInput, Optimizatio
 			ai.WithPrompt(prompt),
 		}
 		if m, ok := ctxutil.ModelsFromContext(ctx); ok {
-			opts = append(opts, ai.WithModelName(m.GetMain()))
+			opts = append(opts, ai.WithModelName(m.GetPrimary()))
 		}
 		if handleStream := ctxutil.HandleStreamFnFromContext(ctx); handleStream != nil {
 			opts = append(opts, ai.WithStreaming(handleStream))

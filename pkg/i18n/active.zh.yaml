@@ -13,10 +13,10 @@ commands.GlobalOptsDataRootDesc:
 commands.GlobalOptsVerbosityDesc:
   hash: sha1-d99c2b79a5d6e3a42f969d5df2dd282899e7e5fd
   other: 日志级别 (0, 1, 或 2)
-commands.RootOptsMainModelDesc:
+commands.RootOptsModelDesc:
   hash: sha1-65c7bbb4ac1c6906658d43d6c9dc8dda75b47c23
   other: 当前会话的主模型
-commands.RootOptsFastModelDesc:
+commands.RootOptsLightModelDesc:
   hash: sha1-4cab43cf2be6177638a90633433a4f11b31585af
   other: 当前会话的轻量模型
 commands.RootOptsPrintAndExitDesc:

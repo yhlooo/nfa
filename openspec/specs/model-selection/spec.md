@@ -6,18 +6,18 @@ TBD - created by archiving change add-model-command. Update Purpose after archiv
 ### Requirement: Interactive model selection menu
 用户通过 `/model` 命令进入模型选择菜单时，系统 MUST 显示可用模型列表，支持键盘导航和选择。
 
-#### Scenario: Open main model selection menu
+#### Scenario: Open primary model selection menu
 - **WHEN** 用户输入 `/model` 并按回车
 - **THEN** 系统隐藏输入框
 - **AND** 显示主模型选择菜单
-- **AND** 菜单标题为 "Select main model"
+- **AND** 菜单标题为 "Select primary model"
 - **AND** 菜单显示所有可用模型列表
 
-#### Scenario: Open fast model selection menu
-- **WHEN** 用户输入 `/model :fast` 并按回车
+#### Scenario: Open light model selection menu
+- **WHEN** 用户输入 `/model :light` 并按回车
 - **THEN** 系统隐藏输入框
-- **AND** 显示快速模型选择菜单
-- **AND** 菜单标题为 "Select fast model"
+- **AND** 显示轻量模型选择菜单
+- **AND** 菜单标题为 "Select light model"
 
 #### Scenario: Open vision model selection menu
 - **WHEN** 用户输入 `/model :vision` 并按回车
@@ -56,7 +56,7 @@ TBD - created by archiving change add-model-command. Update Purpose after archiv
 
 #### Scenario: Confirm model selection
 - **WHEN** 用户按回车键
-- **THEN** 系统应用当前选中的模型到对应类型（main/fast/vision）
+- **THEN** 系统应用当前选中的模型到对应类型（primary/light/vision）
 - **AND** 保存配置到 `~/.nfa/nfa.json`
 - **AND** 显示成功消息 "✓ {type} model set to: {model}"
 - **AND** 返回输入框视图
@@ -70,15 +70,15 @@ TBD - created by archiving change add-model-command. Update Purpose after archiv
 ### Requirement: Direct model setting via command
 用户 MUST 能够通过命令直接指定模型，无需进入选择菜单。
 
-#### Scenario: Set main model directly
+#### Scenario: Set primary model directly
 - **WHEN** 用户输入 `/model ollama/llama3.2` 并按回车
 - **THEN** 系统设置主模型为 "ollama/llama3.2"
 - **AND** 保存配置到 `~/.nfa/nfa.json`
-- **AND** 显示成功消息 "✓ Main model set to: ollama/llama3.2"
+- **AND** 显示成功消息 "✓ Primary model set to: ollama/llama3.2"
 
-#### Scenario: Set fast model with explicit target
-- **WHEN** 用户输入 `/model :fast ollama/qwen3:14b` 并按回车
-- **THEN** 系统设置快速模型为 "ollama/qwen3:14b"
+#### Scenario: Set light model with explicit target
+- **WHEN** 用户输入 `/model :light ollama/qwen3:14b` 并按回车
+- **THEN** 系统设置轻量模型为 "ollama/qwen3:14b"
 - **AND** 保存配置
 - **AND** 显示成功消息
 
@@ -94,7 +94,7 @@ TBD - created by archiving change add-model-command. Update Purpose after archiv
 #### Scenario: Save configuration after model selection
 - **WHEN** 用户在选择菜单中确认模型选择
 - **THEN** 系统更新 `~/.nfa/nfa.json` 中的 `defaultModels` 字段
-- **AND** 对应模型类型（main/fast/vision）的值更新为新选择的模型
+- **AND** 对应模型类型（primary/light/vision）的值更新为新选择的模型
 - **AND** 配置文件使用 2 空格缩进
 - **AND** 其他配置项保持不变
 
@@ -110,7 +110,7 @@ TBD - created by archiving change add-model-command. Update Purpose after archiv
 - **WHEN** UI 发送新的 PromptRequest 到 Agent
 - **THEN** PromptRequest.Meta 包含当前选择的模型配置
 - **AND** Meta 中包含 "modelName" 字段（主模型）
-- **AND** Meta 中包含 "fastModel" 字段（快速模型，如果已设置）
+- **AND** Meta 中包含 "lightModel" 字段（轻量模型，如果已设置）
 - **AND** Meta 中包含 "visionModel" 字段（视觉模型，如果已设置）
 
 #### Scenario: Agent uses provided models
@@ -136,14 +136,14 @@ TBD - created by archiving change add-model-command. Update Purpose after archiv
 ### Requirement: Current model highlighting
 选择菜单 MUST 标识当前正在使用的模型。
 
-#### Scenario: Highlight current main model
+#### Scenario: Highlight current primary model
 - **WHEN** 打开主模型选择菜单
 - **THEN** 选择光标默认定位到当前使用的主模型
 - **AND** 当前模型前显示 "❯" 指示符
 
-#### Scenario: Highlight current fast model
-- **WHEN** 打开快速模型选择菜单
-- **THEN** 选择光标默认定位到当前使用的快速模型
+#### Scenario: Highlight current light model
+- **WHEN** 打开轻量模型选择菜单
+- **THEN** 选择光标默认定位到当前使用的轻量模型
 
 ### Requirement: Command syntax error handling
 系统 MUST 对无效的命令语法提供清晰的错误提示。
@@ -156,7 +156,7 @@ TBD - created by archiving change add-model-command. Update Purpose after archiv
 #### Scenario: Invalid target prefix
 - **WHEN** 用户输入 `/model :invalid-target ollama/llama3.2`
 - **THEN** 系统显示错误消息
-- **AND** 错误消息提示有效的目标选项 "Expected: :main, :fast, :vision"
+- **AND** 错误消息提示有效的目标选项 "Expected: :primary, :light, :vision"
 
 ### Requirement: Model selection during agent processing
 系统 MUST 允许在 Agent 思考过程中切换模型，新模型在下一次对话时生效。

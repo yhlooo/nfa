@@ -3,24 +3,24 @@ package models
 // Models 模型配置
 type Models struct {
 	// 主模型，用于回答用户问题
-	Main string `json:"main,omitempty"`
-	// 快速模型，用于处理简单事务。为空时使用主模型
-	Fast string `json:"fast,omitempty"`
+	Primary string `json:"primary,omitempty"`
+	// 轻量模型，用于处理简单事务。为空时使用主模型
+	Light string `json:"light,omitempty"`
 	// 视觉模型，用于处理图片理解任务
 	Vision string `json:"vision,omitempty"`
 }
 
-// GetMain 获取主模型
-func (m Models) GetMain() string {
-	return m.Main
+// GetPrimary 获取主模型
+func (m Models) GetPrimary() string {
+	return m.Primary
 }
 
-// GetFast 获取快速模型
-func (m Models) GetFast() string {
-	if m.Fast != "" {
-		return m.Fast
+// GetLight 获取轻量模型
+func (m Models) GetLight() string {
+	if m.Light != "" {
+		return m.Light
 	}
-	return m.Main
+	return m.Primary
 }
 
 // GetVision 获取视觉模型

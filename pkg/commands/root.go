@@ -59,23 +59,23 @@ func (o *GlobalOptions) AddPFlags(fs *pflag.FlagSet) {
 // NewOptions 创建默认 Options
 func NewOptions() Options {
 	return Options{
-		MainModel:    "",
-		FastModel:    "",
+		Model:        "",
+		LightModel:   "",
 		PrintAndExit: false,
 	}
 }
 
 // Options 运行选项
 type Options struct {
-	MainModel    string
-	FastModel    string
+	Model        string
+	LightModel   string
 	PrintAndExit bool
 }
 
 // AddPFlags 将选项绑定到命令行参数
 func (o *Options) AddPFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&o.MainModel, "model", o.MainModel, i18n.T(MsgRootOptsMainModelDesc))
-	fs.StringVar(&o.FastModel, "fast-model", o.FastModel, i18n.T(MsgRootOptsFastModelDesc))
+	fs.StringVar(&o.Model, "model", o.Model, i18n.T(MsgRootOptsModelDesc))
+	fs.StringVar(&o.LightModel, "light-model", o.LightModel, i18n.T(MsgRootOptsLightModelDesc))
 	fs.BoolVarP(&o.PrintAndExit, "print", "p", o.PrintAndExit, i18n.T(MsgRootOptsPrintAndExitDesc))
 }
 
@@ -152,11 +152,11 @@ func NewCommand(name string) *cobra.Command {
 			logger := logr.FromContextOrDiscard(ctx)
 
 			m := cfg.DefaultModels
-			if opts.MainModel != "" {
-				m.Main = opts.MainModel
+			if opts.Model != "" {
+				m.Primary = opts.Model
 			}
-			if opts.FastModel != "" {
-				m.Fast = opts.FastModel
+			if opts.LightModel != "" {
+				m.Light = opts.LightModel
 			}
 
 			agent := agents.NewNFA(agents.Options{

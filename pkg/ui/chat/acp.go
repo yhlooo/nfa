@@ -126,7 +126,7 @@ func (ui *ChatUI) handleDirectModelSet(content string) (modelType ModelType, mod
 		return "", "", false
 	}
 
-	modelType = ModelTypeMain
+	modelType = ModelTypePrimary
 
 	switch len(parts) {
 	case 2:
@@ -151,10 +151,10 @@ func (ui *ChatUI) handleDirectModelSet(content string) (modelType ModelType, mod
 
 	// 应用模型并保存
 	switch modelType {
-	case ModelTypeMain:
-		ui.curModels.Main = modelName
-	case ModelTypeFast:
-		ui.curModels.Fast = modelName
+	case ModelTypePrimary:
+		ui.curModels.Primary = modelName
+	case ModelTypeLight:
+		ui.curModels.Light = modelName
 	case ModelTypeVision:
 		ui.curModels.Vision = modelName
 	default:

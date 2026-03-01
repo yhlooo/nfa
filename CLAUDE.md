@@ -33,7 +33,7 @@ go run ./cmd/nfa tools
 配置存储在 `~/.nfa/nfa.json`。核心结构：
 
 - `modelProviders` - 模型提供商配置数组（Ollama、DeepSeek、OpenAI 兼容、阿里云、智谱）
-- `defaultModels` - 不同任务的默认模型（main 主模型、fast 快速模型、vision 视觉模型）
+- `defaultModels` - 不同任务的默认模型（primary 主模型、light 轻量模型、vision 视觉模型）
 - `dataProviders` - 数据提供商配置（AlphaVantage、腾讯云）
 
 详细配置选项参见 `docs/reference/config.md`。
@@ -83,7 +83,7 @@ go test ./...
 
 **模型管理** (`pkg/models/`):
 - `providers.go` - 模型提供商接口和实现
-- `model_routing.go` - Models 结构体，用于 main/fast/vision 模型选择
+- `model_routing.go` - Models 结构体，用于 primary/light/vision 模型选择
 - 各提供商文件：`ollama.go`、`deepseek.go`、`openai_compatible.go`、`aliyun_dashscope.go`、`zhipu_bigmodel.go`
 
 **技能系统** (`pkg/skills/`):
@@ -132,7 +132,7 @@ Agent 需要遵循的分步指令。
 ### 交互式命令
 
 - `/model` - 切换模型（交互式或直接指定：`/model ollama/llama3.2`）
-- `/model :fast` - 切换快速模型
+- `/model :light` - 切换轻量模型
 - `/model :vision` - 切换视觉模型
 - `/clear` - 清空对话上下文
 - `/summarize` - 生成对话摘要
@@ -142,7 +142,7 @@ Agent 需要遵循的分步指令。
 
 ## 核心模式
 
-1. **模型路由** - 系统根据任务复杂度将请求路由到不同的模型（main 主模型 vs fast 快速模型 vs vision 视觉模型）
+1. **模型路由** - 系统根据任务复杂度将请求路由到不同的模型（primary 主模型 vs light 轻量模型 vs vision 视觉模型）
 
 2. **基于主题的流程** - 用户查询首先经过主题分类，然后选择适当的流程
 

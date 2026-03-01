@@ -61,7 +61,7 @@ func NewTopicRoutingFlow(g *genkit.Genkit) core.Func[TopicRoutingInput, TopicRou
 			}),
 		}
 		if m, ok := ctxutil.ModelsFromContext(ctx); ok {
-			opts = append(opts, ai.WithModelName(m.GetFast()))
+			opts = append(opts, ai.WithModelName(m.GetLight()))
 		}
 		if handleStream := ctxutil.HandleStreamFnFromContext(ctx); handleStream != nil {
 			opts = append(opts, ai.WithStreaming(handleTextStream(handleStream, true, false)))

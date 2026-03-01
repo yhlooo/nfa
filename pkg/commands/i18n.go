@@ -17,13 +17,13 @@ var (
 		Other: "Path of data root directory",
 	}
 
-	MsgRootOptsMainModelDesc = &i18n.Message{
-		ID:    "commands.RootOptsMainModelDesc",
-		Other: "Default main model for the current session",
+	MsgRootOptsModelDesc = &i18n.Message{
+		ID:    "commands.RootOptsModelDesc",
+		Other: "Default primary model for the current session",
 	}
-	MsgRootOptsFastModelDesc = &i18n.Message{
-		ID:    "commands.RootOptsFastModelDesc",
-		Other: "Default fast model for the current session",
+	MsgRootOptsLightModelDesc = &i18n.Message{
+		ID:    "commands.RootOptsLightModelDesc",
+		Other: "Default light model for the current session",
 	}
 	MsgRootOptsPrintAndExitDesc = &i18n.Message{
 		ID:    "commands.RootOptsPrintAndExitDesc",

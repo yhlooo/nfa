@@ -72,8 +72,8 @@ Ollama 是本地模型运行平台，适合需要隐私保护或离线使用的�
     }
   ],
   "defaultModels": {
-    "main": "ollama/llama2",
-    "fast": "ollama/mistral",
+    "primary": "ollama/llama2",
+    "light": "ollama/mistral",
     "vision": ""
   }
 }
@@ -148,8 +148,8 @@ Deepseek 提供高性价比的中文大模型服务。
     }
   ],
   "defaultModels": {
-    "main": "deepseek/deepseek-chat",
-    "fast": "deepseek/deepseek-chat",
+    "primary": "deepseek/deepseek-chat",
+    "light": "deepseek/deepseek-chat",
     "vision": ""
   }
 }
@@ -206,8 +206,8 @@ Deepseek 提供高性价比的中文大模型服务。
     }
   ],
   "defaultModels": {
-    "main": "aliyun/qwen-max",
-    "fast": "aliyun/qwen-turbo",
+    "primary": "aliyun/qwen-max",
+    "light": "aliyun/qwen-turbo",
     "vision": "aliyun/qwen-vl-plus"
   }
 }
@@ -252,7 +252,7 @@ NFA 根据任务类型自动选择合适的模型：
 nfa --model "deepseek-chat" "分析一下当前市场"
 
 # 使用指定的快速模型
-nfa --fast-model "ollama/mistral" "简单介绍一下ETF"
+nfa --light-model "ollama/mistral" "简单介绍一下ETF"
 
 # 同时指定主模型和快速模型
 nfa --model "deepseek-chat" --fast-model "ollama/mistral" "问题内容"
@@ -300,8 +300,8 @@ nfa --model "deepseek-chat" --fast-model "ollama/mistral" "问题内容"
     }
   ],
   "defaultModels": {
-    "main": "deepseek/deepseek-chat",
-    "fast": "ollama/mistral",
+    "primary": "deepseek/deepseek-chat",
+    "light": "ollama/mistral",
     "vision": "openai/gpt-4-vision-preview"
   }
 }

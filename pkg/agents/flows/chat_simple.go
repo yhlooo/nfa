@@ -24,7 +24,7 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptions
 				ai.WithReturnToolRequests(true),
 			}
 			if m, ok := ctxutil.ModelsFromContext(ctx); ok {
-				opts = append(opts, ai.WithModelName(m.GetMain()))
+				opts = append(opts, ai.WithModelName(m.GetPrimary()))
 			}
 			handleStream := ctxutil.HandleStreamFnFromContext(ctx)
 			if handleStream != nil {

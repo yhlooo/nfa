@@ -129,16 +129,16 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	session.lock.Unlock()
 
 	m := GetMetaCurrentModelsValue(params.Meta)
-	if m.Main == "" {
-		m.Main = a.defaultModels.Main
+	if m.Primary == "" {
+		m.Primary = a.defaultModels.Primary
 	}
-	if m.Fast == "" {
-		m.Fast = a.defaultModels.Fast
+	if m.Light == "" {
+		m.Light = a.defaultModels.Light
 	}
 	if m.Vision == "" {
 		m.Vision = a.defaultModels.Vision
 	}
-	if m.Main == "" {
+	if m.Primary == "" {
 		return acp.PromptResponse{StopReason: acp.StopReasonRefusal}, fmt.Errorf("no available model")
 	}
 

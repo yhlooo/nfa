@@ -27,8 +27,8 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	}
 
 	a.g, a.availableModels = NewGenkitWithModels(ctx, a.modelProviders, a.defaultModels)
-	if a.defaultModels.Main == "" && len(a.availableModels) > 0 {
-		a.defaultModels.Main = a.availableModels[0].Name
+	if a.defaultModels.Primary == "" && len(a.availableModels) > 0 {
+		a.defaultModels.Primary = a.availableModels[0].Name
 	}
 	for _, m := range a.availableModels {
 		a.logger.Info(fmt.Sprintf("registered model: %s", m.Name))
@@ -115,8 +115,8 @@ func NewGenkitWithModels(
 	genkitOpts := []genkit.GenkitOption{
 		genkit.WithPlugins(plugins...),
 	}
-	if defaultModels.GetMain() != "" {
-		genkitOpts = append(genkitOpts, genkit.WithDefaultModel(defaultModels.GetMain()))
+	if defaultModels.GetPrimary() != "" {
+		genkitOpts = append(genkitOpts, genkit.WithDefaultModel(defaultModels.GetPrimary()))
 	}
 	g := genkit.Init(ctx, genkitOpts...)
 

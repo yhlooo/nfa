@@ -22,7 +22,7 @@ type ModelSelector struct {
 // NewModelSelector 创建模型选择器
 func NewModelSelector() *ModelSelector {
 	s := &ModelSelector{
-		modelType: ModelTypeMain,
+		modelType: ModelTypePrimary,
 		cursor:    0,
 	}
 	s.syncCursor()
@@ -118,10 +118,10 @@ func (s *ModelSelector) SetModelType(t ModelType) {
 func (s *ModelSelector) syncCursor() {
 	currentName := ""
 	switch s.modelType {
-	case ModelTypeMain:
-		currentName = s.selectedModels.Main
-	case ModelTypeFast:
-		currentName = s.selectedModels.Fast
+	case ModelTypePrimary:
+		currentName = s.selectedModels.Primary
+	case ModelTypeLight:
+		currentName = s.selectedModels.Light
 	case ModelTypeVision:
 		currentName = s.selectedModels.Vision
 	}
@@ -147,10 +147,10 @@ func (s *ModelSelector) syncCurrentModels() {
 	modelName := s.availableModels[s.cursor].Name
 
 	switch s.modelType {
-	case ModelTypeMain:
-		s.selectedModels.Main = modelName
-	case ModelTypeFast:
-		s.selectedModels.Fast = modelName
+	case ModelTypePrimary:
+		s.selectedModels.Primary = modelName
+	case ModelTypeLight:
+		s.selectedModels.Light = modelName
 	case ModelTypeVision:
 		s.selectedModels.Vision = modelName
 	}

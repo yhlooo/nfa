@@ -30,9 +30,9 @@ const (
 type ModelType string
 
 const (
-	ModelTypeMain   ModelType = "main"
-	ModelTypeFast   ModelType = "fast"
-	ModelTypeVision ModelType = "vision"
+	ModelTypePrimary ModelType = "primary"
+	ModelTypeLight   ModelType = "light"
+	ModelTypeVision  ModelType = "vision"
 )
 
 // Options UI 运行选项
@@ -168,10 +168,10 @@ func (ui *ChatUI) updateInInputState(msg tea.Msg) (tea.Model, tea.Cmd) {
 					switch content {
 					case "/exit":
 						return ui, tea.Quit
-					case "/model", "/model :main":
-						return ui, ui.enterModelSelectMode(ModelTypeMain)
-					case "/model :fast":
-						return ui, ui.enterModelSelectMode(ModelTypeFast)
+					case "/model", "/model :primary":
+						return ui, ui.enterModelSelectMode(ModelTypePrimary)
+					case "/model :light":
+						return ui, ui.enterModelSelectMode(ModelTypeLight)
 					case "/model :vision":
 						return ui, ui.enterModelSelectMode(ModelTypeVision)
 					default:
@@ -336,8 +336,8 @@ func (ui *ChatUI) printHello() tea.Cmd {
 │                                 │ `+"\033[1;32m"+`Session`+"\033[0m"+`  %-52s │
 ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
 `,
-			ui.curModels.Main+" (main)",
-			ui.curModels.Fast+" (fast)",
+			ui.curModels.Primary+" (primary)",
+			ui.curModels.Light+" (light)",
 			ui.curModels.Vision+" (vision)",
 			ui.sessionID,
 		)()

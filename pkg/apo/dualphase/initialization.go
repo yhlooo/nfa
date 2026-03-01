@@ -50,7 +50,7 @@ func InitializationFlow(g *genkit.Genkit) core.Func[InitializationInput, Initial
 			opts = append(opts, ai.WithMessages(ai.NewModelTextMessage(in.PreviousP0)))
 		}
 		if m, ok := ctxutil.ModelsFromContext(ctx); ok {
-			opts = append(opts, ai.WithModelName(m.GetMain()))
+			opts = append(opts, ai.WithModelName(m.GetPrimary()))
 		}
 		if handleStream := ctxutil.HandleStreamFnFromContext(ctx); handleStream != nil {
 			opts = append(opts, ai.WithStreaming(handleStream))
@@ -158,7 +158,7 @@ func DivideToSentencesFlow(g *genkit.Genkit) core.Func[DivideToSentencesInput, D
 			ai.WithPrompt(prompt),
 		}
 		if m, ok := ctxutil.ModelsFromContext(ctx); ok {
-			opts = append(opts, ai.WithModelName(m.GetMain()))
+			opts = append(opts, ai.WithModelName(m.GetPrimary()))
 		}
 		if handleStream := ctxutil.HandleStreamFnFromContext(ctx); handleStream != nil {
 			opts = append(opts, ai.WithStreaming(handleStream))

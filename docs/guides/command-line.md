@@ -101,26 +101,26 @@ nfa --model "aliyun/qwen-max" "写一个投资策略"
 
 这个参数非常适合临时测试不同模型，无需修改配置文件。
 
-### 快速模型选择 (`--fast-model`)
+### 轻量模型选择 (`--light-model`)
 
-指定当前会话使用的快速模型。
+指定当前会话使用的轻量模型。
 
 **语法**:
 ```bash
-nfa --fast-model MODEL_NAME [PROMPT]
+nfa --light-model MODEL_NAME [PROMPT]
 ```
 
 **使用示例**:
 
 ```bash
-# 指定快速模型
-nfa --fast-model "ollama/mistral" --model "deepseek-chat" "简单介绍一下"
+# 指定轻量模型
+nfa --light-model "ollama/mistral" --model "deepseek-chat" "简单介绍一下"
 
-# 只指定快速模型（未指定主模型时使用配置文件）
-nfa --fast-model "ollama/mistral" "这是什么？"
+# 只指定轻量模型（未指定主模型时使用配置文件）
+nfa --light-model "ollama/mistral" "这是什么？"
 ```
 
-**注意**: 如果未配置快速模型，系统会自动使用主模型处理快速任务。
+**注意**: 如果未配置轻量模型，系统会自动使用主模型处理简单任务。
 
 ## 交互式命令
 
@@ -128,15 +128,15 @@ nfa --fast-model "ollama/mistral" "这是什么？"
 
 ### `/model` - 模型切换命令
 
-`/model` 命令允许你在运行时动态切换主模型、快速模型和视觉模型，无需重启程序。
+`/model` 命令允许你在运行时动态切换主模型、轻量模型和视觉模型，无需重启程序。
 
 #### 交互式选择模式
 
 **语法**:
 ```bash
 /model              # 打开主模型选择菜单
-/model :main        # 打开主模型选择菜单
-/model :fast        # 打开快速模型选择菜单
+/model :primary        # 打开主模型选择菜单
+/model :light         # 打开轻量模型选择菜单
 /model :vision      # 打开视觉模型选择菜单
 ```
 
@@ -145,7 +145,7 @@ nfa --fast-model "ollama/mistral" "这是什么？"
 ```
 用户: /model
 # 系统显示交互式菜单：
-# Select main model
+# Select primary model
 #
 #  ❯ 1. ollama/llama3.2
 #    2. ollama/qwen3:14b
@@ -167,7 +167,7 @@ nfa --fast-model "ollama/mistral" "这是什么？"
 **语法**:
 ```bash
 /model <provider>/<name>              # 直接设置主模型
-/model :fast <provider>/<name>        # 直接设置快速模型
+/model :light <provider>/<name>        # 直接设置轻量模型
 /model :vision <provider>/<name>      # 直接设置视觉模型
 ```
 
@@ -178,14 +178,14 @@ nfa --fast-model "ollama/mistral" "这是什么？"
 /model ollama/llama3.2
 
 # 设置快速模型
-/model :fast ollama/mistral
+/model :light ollama/mistral
 
 # 设置视觉模型
 /model :vision deepseek/deepseek-chat
 
 # 同时设置（需要分步执行）
 /model :main deepseek/deepseek-chat
-/model :fast ollama/mistral
+/model :light ollama/mistral
 ```
 
 **模型名称格式**:
@@ -224,7 +224,7 @@ nfa --fast-model "ollama/mistral" "这是什么？"
 分析一下特斯拉的财报
 
 # 切换到快速模型
-/model :fast ollama/mistral
+/model :light ollama/mistral
 分析一下特斯拉的财报
 
 # 对比两次回答的质量和速度
@@ -237,7 +237,7 @@ nfa --fast-model "ollama/mistral" "这是什么？"
 详细分析当前市场趋势
 
 # 简单查询使用快速模型
-/model :fast ollama/mistral
+/model :light ollama/mistral
 什么是市盈率？
 ```
 
@@ -466,7 +466,7 @@ nfa -p "分析 $STOCK 的技术指标" > "$STOCK-analysis.txt"
 使用本地模型作为快速模型，云端模型作为主模型：
 
 ```bash
-nfa --fast-model "ollama/mistral" --model "deepseek-chat" "分析问题"
+nfa --light-model "ollama/mistral" --model "deepseek-chat" "分析问题"
 ```
 
 这样可以降低 API 调用成本。
@@ -506,7 +506,7 @@ Error: model "invalid-model" not found
 
 ```bash
 alias nfa-debug='nfa -vv'
-alias nfa-quick='nfa --fast-model ollama/mistral'
+alias nfa-quick='nfa --light-model ollama/mistral'
 alias nfa-single='nfa -p'
 ```
 
@@ -563,7 +563,7 @@ done
 |------|------|------|--------|------|
 | `--verbose` | `-v` | uint32 | 0 | 日志级别 (0/1/2) |
 | `--model` | - | string | 配置文件 | 主模型名称 |
-| `--fast-model` | - | string | 配置文件 | 快速模型名称 |
+| `--light-model` | - | string | 配置文件 | 轻量模型名称 |
 | `--print` | `-p` | bool | false | 打印后退出 |
 | `--help` | `-h` | - | - | 显示帮助信息 |
 | `--version` | `-V` | - | - | 显示版本信息 |

@@ -51,7 +51,7 @@ func EvaluationFlow(g *genkit.Genkit) core.Func[EvaluationInput, EvaluationOutpu
 			ai.WithPrompt(prompt),
 		}
 		if m, ok := ctxutil.ModelsFromContext(ctx); ok {
-			opts = append(opts, ai.WithModelName(m.GetMain()))
+			opts = append(opts, ai.WithModelName(m.GetPrimary()))
 		}
 
 		for i := 0; i < 3; i++ {
