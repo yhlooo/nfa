@@ -4,7 +4,7 @@ commands.CmdShortDescModelsList: List available models
 commands.GlobalOptsDataRootDesc: Path of data root directory
 commands.GlobalOptsVerbosityDesc: Number for the log level verbosity (0, 1, or 2)
 commands.ReasoningTag: Reasoning
+commands.RootOptsLightModelDesc: Default light model for the current session
 commands.RootOptsModelDesc: Default primary model for the current session
-commands.RootOptsLightModelDesc: Default fast model for the current session
 commands.RootOptsPrintAndExitDesc: Print answer and exit after responding
 commands.VisionTag: Vision
