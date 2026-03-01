@@ -13,6 +13,7 @@ import (
 
 	"github.com/yhlooo/nfa/pkg/agents"
 	"github.com/yhlooo/nfa/pkg/configs"
+	"github.com/yhlooo/nfa/pkg/i18n"
 	"github.com/yhlooo/nfa/pkg/models"
 )
 
@@ -20,7 +21,7 @@ import (
 func newModelsCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "models",
-		Short: "Manage LLMs used by the agent",
+		Short: i18n.T(MsgCmdShortDescModels),
 	}
 
 	cmd.AddCommand(
@@ -35,7 +36,7 @@ func newModelsListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "list",
 		Aliases: []string{"ls"},
-		Short:   "List available models",
+		Short:   i18n.T(MsgCmdShortDescModelsList),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runModelsList(cmd.Context())
 		},
@@ -61,7 +62,7 @@ func runModelsList(ctx context.Context) error {
 }
 
 // outputModelList 输出模型列表
-func outputModelList(_ context.Context, modelList []models.ModelConfig) error {
+func outputModelList(ctx context.Context, modelList []models.ModelConfig) error {
 	t := tablewriter.NewTable(os.Stdout, tablewriter.WithRendition(tw.Rendition{
 		Borders: tw.BorderNone,
 		Settings: tw.Settings{
@@ -73,10 +74,10 @@ func outputModelList(_ context.Context, modelList []models.ModelConfig) error {
 	for _, model := range modelList {
 		var tags []string
 		if model.Reasoning {
-			tags = append(tags, "Reasoning")
+			tags = append(tags, i18n.TContext(ctx, MsgReasoningTag))
 		}
 		if model.Vision {
-			tags = append(tags, "Vision")
+			tags = append(tags, i18n.TContext(ctx, MsgVisionTag))
 		}
 
 		ctxSize := strconv.FormatInt(model.ContextWindow/1000, 10) + "K"

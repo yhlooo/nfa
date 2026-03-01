@@ -13,4 +13,6 @@ type Config struct {
 	DefaultModels models.Models `json:"defaultModels,omitempty"`
 	// 数据提供商配置
 	DataProviders []agents.DataProvider `json:"dataProviders,omitempty"`
+	// 语言，可选 en, zh
+	Language string `json:"language,omitempty"`
 }

@@ -20,6 +20,7 @@ import (
 
 	"github.com/yhlooo/nfa/pkg/agents"
 	"github.com/yhlooo/nfa/pkg/configs"
+	"github.com/yhlooo/nfa/pkg/i18n"
 	uitty "github.com/yhlooo/nfa/pkg/ui/chat"
 	"github.com/yhlooo/nfa/pkg/version"
 )
@@ -51,31 +52,31 @@ func (o *GlobalOptions) Validate() error {
 
 // AddPFlags 将选项绑定到命令行参数
 func (o *GlobalOptions) AddPFlags(fs *pflag.FlagSet) {
-	fs.Uint32VarP(&o.Verbosity, "verbose", "v", o.Verbosity, "Number for the log level verbosity (0, 1, or 2)")
-	fs.StringVar(&o.DataRoot, "data-root", o.DataRoot, "Path of data root directory")
+	fs.Uint32VarP(&o.Verbosity, "verbose", "v", o.Verbosity, i18n.T(MsgGlobalOptsVerbosityDesc))
+	fs.StringVar(&o.DataRoot, "data-root", o.DataRoot, i18n.T(MsgGlobalOptsDataRootDesc))
 }
 
 // NewOptions 创建默认 Options
 func NewOptions() Options {
 	return Options{
-		DefaultMainModel: "",
-		DefaultFastModel: "",
-		PrintAndExit:     false,
+		MainModel:    "",
+		FastModel:    "",
+		PrintAndExit: false,
 	}
 }
 
 // Options 运行选项
 type Options struct {
-	DefaultMainModel string
-	DefaultFastModel string
-	PrintAndExit     bool
+	MainModel    string
+	FastModel    string
+	PrintAndExit bool
 }
 
 // AddPFlags 将选项绑定到命令行参数
 func (o *Options) AddPFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&o.DefaultMainModel, "model", o.DefaultMainModel, "Default main model for the current session")
-	fs.StringVar(&o.DefaultFastModel, "fast-model", o.DefaultFastModel, "Default fast model for the current session")
-	fs.BoolVarP(&o.PrintAndExit, "print", "p", o.PrintAndExit, "Print answer and exit after responding")
+	fs.StringVar(&o.MainModel, "model", o.MainModel, i18n.T(MsgRootOptsMainModelDesc))
+	fs.StringVar(&o.FastModel, "fast-model", o.FastModel, i18n.T(MsgRootOptsFastModelDesc))
+	fs.BoolVarP(&o.PrintAndExit, "print", "p", o.PrintAndExit, i18n.T(MsgRootOptsPrintAndExitDesc))
 }
 
 // NewCommand 创建根命令
@@ -86,7 +87,7 @@ func NewCommand(name string) *cobra.Command {
 	var keylog *os.File
 	cmd := &cobra.Command{
 		Use:           fmt.Sprintf("%s [PROMPT]", name),
-		Short:         "Financial Trading LLM AI Agent. **This is Not Financial Advice.**",
+		Short:         i18n.T(MsgCmdShortDesc),
 		Args:          cobra.MaximumNArgs(1),
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -131,6 +132,9 @@ func NewCommand(name string) *cobra.Command {
 			}
 			ctx = configs.ContextWithConfig(ctx, cfg, cfgPath)
 
+			// 设置本地化器
+			ctx = i18n.ContextWithLocalizer(ctx, i18n.NewLocalizer(cfg.Language, i18n.GetEnvLanguage()))
+
 			keylog, err = setKeyLog()
 			if err != nil {
 				return fmt.Errorf("set tls key log error: %w", err)
@@ -148,11 +152,11 @@ func NewCommand(name string) *cobra.Command {
 			logger := logr.FromContextOrDiscard(ctx)
 
 			m := cfg.DefaultModels
-			if opts.DefaultMainModel != "" {
-				m.Main = opts.DefaultMainModel
+			if opts.MainModel != "" {
+				m.Main = opts.MainModel
 			}
-			if opts.DefaultFastModel != "" {
-				m.Fast = opts.DefaultFastModel
+			if opts.FastModel != "" {
+				m.Fast = opts.FastModel
 			}
 
 			agent := agents.NewNFA(agents.Options{

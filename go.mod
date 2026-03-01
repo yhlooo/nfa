@@ -3,6 +3,7 @@ module github.com/yhlooo/nfa
 go 1.24.7
 
 require (
+	github.com/BurntSushi/toml v1.6.0
 	github.com/bombsimon/logrusr/v4 v4.1.0
 	github.com/charmbracelet/bubbles v0.21.0
 	github.com/charmbracelet/bubbletea v1.3.10
@@ -12,6 +13,7 @@ require (
 	github.com/firebase/genkit/go v1.4.0
 	github.com/go-logr/logr v1.4.3
 	github.com/google/uuid v1.6.0
+	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/olekukonko/tablewriter v1.1.3
 	github.com/openai/openai-go v1.8.2
 	github.com/sirupsen/logrus v1.9.3
@@ -20,6 +22,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.3.34
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/wsa v1.3.34
+	golang.org/x/text v0.32.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -83,5 +86,4 @@ require (
 	go.opentelemetry.io/otel/sdk v1.36.0 // indirect
 	go.opentelemetry.io/otel/trace v1.36.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
-	golang.org/x/text v0.32.0 // indirect
 )

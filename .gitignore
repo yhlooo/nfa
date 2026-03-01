@@ -38,3 +38,8 @@ go.work
 
 # Claude
 .claude/settings.local.json
+
+# i18n
+translate.*.yaml
+translate.*.toml
+translate.*.json
