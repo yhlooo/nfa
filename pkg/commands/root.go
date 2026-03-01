@@ -161,6 +161,7 @@ func NewCommand(name string) *cobra.Command {
 
 			agent := agents.NewNFA(agents.Options{
 				Logger:         logger,
+				Localizer:      i18n.LocalizerFromContext(ctx),
 				ModelProviders: cfg.ModelProviders,
 				DataProviders:  cfg.DataProviders,
 				DefaultModels:  m,

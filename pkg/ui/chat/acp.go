@@ -14,6 +14,16 @@ import (
 	"github.com/yhlooo/nfa/pkg/version"
 )
 
+// ACPClientSideConnection ACP 客户端侧连接
+type ACPClientSideConnection interface {
+	Initialize(ctx context.Context, req acp.InitializeRequest) (acp.InitializeResponse, error)
+	NewSession(ctx context.Context, req acp.NewSessionRequest) (acp.NewSessionResponse, error)
+	Prompt(ctx context.Context, req acp.PromptRequest) (acp.PromptResponse, error)
+	Cancel(ctx context.Context, req acp.CancelNotification) error
+}
+
+var _ ACPClientSideConnection = (*acp.ClientSideConnection)(nil)
+
 // initAgent 初始化 Agent
 func (ui *ChatUI) initAgent(ctx context.Context) error {
 	resp, err := ui.conn.Initialize(ctx, acp.InitializeRequest{

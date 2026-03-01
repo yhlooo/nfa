@@ -17,6 +17,7 @@ import (
 	"github.com/yhlooo/nfa/pkg/acputil"
 	"github.com/yhlooo/nfa/pkg/agents"
 	"github.com/yhlooo/nfa/pkg/configs"
+	"github.com/yhlooo/nfa/pkg/i18n"
 	"github.com/yhlooo/nfa/pkg/models"
 )
 
@@ -68,7 +69,7 @@ type ChatUI struct {
 	acputil.NopTerminal
 	modelUsageStyle lipgloss.Style
 
-	conn                  *acp.ClientSideConnection
+	conn                  ACPClientSideConnection
 	cwd                   string
 	sessionID             acp.SessionId
 	curModels             models.Models
@@ -321,24 +322,32 @@ func (ui *ChatUI) View() string {
 func (ui *ChatUI) printHello() tea.Cmd {
 	return func() tea.Msg {
 		return tea.Printf(`
-╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-│                                 │ `+"\033[1;32m"+`Tips:`+"\033[0m"+`                                                         │
-│                                 │ ...                                                           │
-│                                 │ ...                                                           │
-│`+"\033[1;34m"+`         _   __ ______ ___       `+"\033[0m"+`│ ...                                                           │
-│`+"\033[1;34m"+`        / | / // ____//   |      `+"\033[0m"+`│ ...                                                           │
-│`+"\033[1;34m"+`       /  |/ // /_   / /| |      `+"\033[0m"+`│                                                               │
-│`+"\033[1;34m"+`      / /|  // __/  / ___ |      `+"\033[0m"+`│ `+"\033[1;33m"+`NOTE: Any output should not be construed as financial advice.`+"\033[0m"+` │
-│`+"\033[1;34m"+`     /_/ |_//_/    /_/  |_|      `+"\033[0m"+`│ ───────────────────────────────────────────────────────────── │
-│                                 │ `+"\033[1;32m"+`Model`+"\033[0m"+`    %-52s │
-│                                 │          %-52s │
-│                                 │          %-52s │
-│                                 │ `+"\033[1;32m"+`Session`+"\033[0m"+`  %-52s │
-╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                 │ `+"\033[1;32m"+`%-66s`+"\033[0m"+` │
+│                                 │ %-66s │
+│                                 │ %-66s │
+│`+"\033[1;34m"+`         _   __ ______ ___       `+"\033[0m"+`│ %-66s │
+│`+"\033[1;34m"+`        / | / // ____//   |      `+"\033[0m"+`│ %-66s │
+│`+"\033[1;34m"+`       /  |/ // /_   / /| |      `+"\033[0m"+`│                                                                    │
+│`+"\033[1;34m"+`      / /|  // __/  / ___ |      `+"\033[0m"+`│ `+"\033[1;33m"+`%-66s`+"\033[0m"+` │
+│`+"\033[1;34m"+`     /_/ |_//_/    /_/  |_|      `+"\033[0m"+`│ ────────────────────────────────────────────────────────────────── │
+│                                 │ `+"\033[1;32m"+`%-7s`+"\033[0m"+`  %-57s │
+│                                 │          %-57s │
+│                                 │          %-57s │
+│                                 │ `+"\033[1;32m"+`%-7s`+"\033[0m"+`  %-57s │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────╯
 `,
+			i18n.TContext(ui.ctx, MsgTips),
+			"...",
+			"...",
+			"...",
+			"...",
+			i18n.TContext(ui.ctx, MsgNFANote),
+			i18n.TContext(ui.ctx, MsgModel),
 			ui.curModels.Primary+" (primary)",
 			ui.curModels.Light+" (light)",
 			ui.curModels.Vision+" (vision)",
+			i18n.TContext(ui.ctx, MsgSession),
 			ui.sessionID,
 		)()
 	}

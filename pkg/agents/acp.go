@@ -17,11 +17,20 @@ import (
 	"github.com/yhlooo/nfa/pkg/acputil"
 	"github.com/yhlooo/nfa/pkg/agents/flows"
 	"github.com/yhlooo/nfa/pkg/ctxutil"
+	"github.com/yhlooo/nfa/pkg/i18n"
 	"github.com/yhlooo/nfa/pkg/skills"
 	"github.com/yhlooo/nfa/pkg/version"
 )
 
 var _ acp.Agent = (*NFAAgent)(nil)
+
+// ACPAgentSideConnection ACP Agent 侧连接
+type ACPAgentSideConnection interface {
+	SessionUpdate(ctx context.Context, req acp.SessionNotification) error
+	Done() <-chan struct{}
+}
+
+var _ ACPAgentSideConnection = (*acp.AgentSideConnection)(nil)
 
 // Connect 连接
 func (a *NFAAgent) Connect(in io.Reader, out io.Writer) error {
@@ -45,6 +54,9 @@ func (a *NFAAgent) Connect(in io.Reader, out io.Writer) error {
 func (a *NFAAgent) Initialize(ctx context.Context, _ acp.InitializeRequest) (acp.InitializeResponse, error) {
 	a.lock.Lock()
 	defer a.lock.Unlock()
+
+	ctx = i18n.ContextWithLocalizer(ctx, a.localizer)
+	ctx = logr.NewContext(ctx, a.logger)
 
 	// 初始化技能加载器并加载技能
 	a.skillLoader = skills.NewSkillLoader(filepath.Join(a.dataRoot, "skills"))

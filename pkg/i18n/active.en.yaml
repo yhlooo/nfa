@@ -20,3 +20,7 @@ models.ModelDescQwen3CoderPlus: Qwen's premium coder for full-stack and advanced
 models.ModelDescQwen3Max: Qwen's top flagship, rivaling global premier closed models
 models.ModelDescQwen3VLFlash: Qwen's lightweight vision model for fast, real-time perception
 models.ModelDescQwen3VLPlus: Qwen's vision flagship for high-res parsing and complex docs
+ui.chat.Model: Model
+ui.chat.NFANote: 'NOTE: Any output should not be construed as financial advice.'
+ui.chat.Session: Session
+ui.chat.Tips: 'Tips:'

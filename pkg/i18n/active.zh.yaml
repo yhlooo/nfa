@@ -64,3 +64,15 @@ models.ModelDescQwen3VLFlash:
 models.ModelDescQwen3VLPlus:
     hash: sha1-81298d45eb0b49106b6ad518fe3ac0ccc4fa63e1
     other: 阿里通义千问视觉旗舰，擅长高清图文解析与复杂文档
+ui.chat.Model:
+    hash: sha1-68c2cc7f0ceaa3e499ecb4db331feb4debbbcc23
+    other: 模型
+ui.chat.NFANote:
+    hash: sha1-fa7916e7e2e077f4ce4551dfd8b908b8d9f58002
+    other: 注意：任何输出都不应被理解为财务建议。
+ui.chat.Session:
+    hash: sha1-f7f1997c6cd1aa051279675742272a956e7db628
+    other: 会话
+ui.chat.Tips:
+    hash: sha1-547184d2eb07d1e52c4d74ab23282f7c9977fe1d
+    other: 提示：
