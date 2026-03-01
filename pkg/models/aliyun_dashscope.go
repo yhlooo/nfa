@@ -1,10 +1,13 @@
 package models
 
 import (
+	"context"
+
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/genkit"
 
 	"github.com/yhlooo/nfa/pkg/genkitplugins/oai"
+	"github.com/yhlooo/nfa/pkg/i18n"
 )
 
 const (
@@ -15,67 +18,69 @@ const (
 )
 
 // DashScopeModels 建议的阿里云模型
-var DashScopeModels = []ModelConfig{
-	{
-		Name:        "qwen3-max",
-		Description: "通义千问 3.0 Max，旗舰级超大规模语言模型",
-		Reasoning:   true,
-		Cost: ModelCost{
-			Input:  0.0025,
-			Output: 0.01,
-			Cached: 0.0005,
+func DashScopeModels(ctx context.Context) []ModelConfig {
+	return []ModelConfig{
+		{
+			Name:        "qwen3-max",
+			Description: i18n.TContext(ctx, MsgModelDescQwen3Max),
+			Reasoning:   true,
+			Cost: ModelCost{
+				Input:  0.0025,
+				Output: 0.01,
+				Cached: 0.0005,
+			},
+			ContextWindow:   256000,
+			MaxOutputTokens: 64000,
 		},
-		ContextWindow:   256000,
-		MaxOutputTokens: 64000,
-	},
-	{
-		Name:        "qwen3-coder-plus",
-		Description: "通义千问 3.0 Coder Plus，专业代码生成模型",
-		Cost: ModelCost{
-			Input:  0.004,
-			Output: 0.016,
-			Cached: 0.0008,
+		{
+			Name:        "qwen3-coder-plus",
+			Description: i18n.TContext(ctx, MsgModelDescQwen3CoderPlus),
+			Cost: ModelCost{
+				Input:  0.004,
+				Output: 0.016,
+				Cached: 0.0008,
+			},
+			ContextWindow:   1000000,
+			MaxOutputTokens: 64000,
 		},
-		ContextWindow:   1000000,
-		MaxOutputTokens: 64000,
-	},
-	{
-		Name:        "qwen3-coder-flash",
-		Description: "通义千问 3.0 Coder Flash，快速代码模型",
-		Cost: ModelCost{
-			Input:  0.001,
-			Output: 0.004,
-			Cached: 0.0002,
+		{
+			Name:        "qwen3-coder-flash",
+			Description: i18n.TContext(ctx, MsgModelDescQwen3CoderFlash),
+			Cost: ModelCost{
+				Input:  0.001,
+				Output: 0.004,
+				Cached: 0.0002,
+			},
+			ContextWindow:   1000000,
+			MaxOutputTokens: 64000,
 		},
-		ContextWindow:   1000000,
-		MaxOutputTokens: 64000,
-	},
-	{
-		Name:        "qwen3-vl-plus",
-		Description: "通义千问 3.0 VL Plus，视觉理解多模态模型",
-		Reasoning:   true,
-		Vision:      true,
-		Cost: ModelCost{
-			Input:  0.001,
-			Output: 0.01,
-			Cached: 0.0002,
+		{
+			Name:        "qwen3-vl-plus",
+			Description: i18n.TContext(ctx, MsgModelDescQwen3VLPlus),
+			Reasoning:   true,
+			Vision:      true,
+			Cost: ModelCost{
+				Input:  0.001,
+				Output: 0.01,
+				Cached: 0.0002,
+			},
+			ContextWindow:   256000,
+			MaxOutputTokens: 32000,
 		},
-		ContextWindow:   256000,
-		MaxOutputTokens: 32000,
-	},
-	{
-		Name:        "qwen3-vl-flash",
-		Description: "通义千问 3.0 VL Flash，快速视觉多模态模型",
-		Reasoning:   true,
-		Vision:      true,
-		Cost: ModelCost{
-			Input:  0.00015,
-			Output: 0.0015,
-			Cached: 0.00003,
+		{
+			Name:        "qwen3-vl-flash",
+			Description: i18n.TContext(ctx, MsgModelDescQwen3VLFlash),
+			Reasoning:   true,
+			Vision:      true,
+			Cost: ModelCost{
+				Input:  0.00015,
+				Output: 0.0015,
+				Cached: 0.00003,
+			},
+			ContextWindow:   256000,
+			MaxOutputTokens: 32000,
 		},
-		ContextWindow:   256000,
-		MaxOutputTokens: 32000,
-	},
+	}
 }
 
 // DashScopeOptions 阿里云模型选项
@@ -93,18 +98,6 @@ func (opts *DashScopeOptions) Complete() {
 	if opts.BaseURL == "" {
 		opts.BaseURL = DashScopeBaseURL
 	}
-
-	definedModels := map[string]struct{}{}
-	for _, m := range opts.Models {
-		definedModels[m.Name] = struct{}{}
-	}
-
-	// 注册建议模型
-	for _, m := range DashScopeModels {
-		if _, ok := definedModels[m.Name]; !ok {
-			opts.Models = append(opts.Models, m)
-		}
-	}
 }
 
 // Plugin 基于选项创建 OpenAICompatible 插件
@@ -119,9 +112,22 @@ func (opts *DashScopeOptions) Plugin() *oai.OpenAICompatible {
 
 // RegisterModels 注册模型
 func (opts *DashScopeOptions) RegisterModels(
+	ctx context.Context,
 	g *genkit.Genkit,
 	plugin *oai.OpenAICompatible,
 ) ([]ModelConfig, error) {
+	definedModels := map[string]struct{}{}
+	for _, m := range opts.Models {
+		definedModels[m.Name] = struct{}{}
+	}
+
+	// 注册建议模型
+	for _, m := range DashScopeModels(ctx) {
+		if _, ok := definedModels[m.Name]; !ok {
+			opts.Models = append(opts.Models, m)
+		}
+	}
+
 	var registeredModels []ModelConfig
 	for _, cfg := range opts.Models {
 		m := plugin.DefineModel(g, oai.ModelOptions{

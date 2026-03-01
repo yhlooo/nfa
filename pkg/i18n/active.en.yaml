@@ -8,3 +8,15 @@ commands.RootOptsLightModelDesc: Default light model for the current session
 commands.RootOptsModelDesc: Default primary model for the current session
 commands.RootOptsPrintAndExitDesc: Print answer and exit after responding
 commands.VisionTag: Vision
+models.ModelDescDeepseekChat: DeepSeek's flagship, balancing top-tier performance and cost-efficiency
+models.ModelDescDeepseekReasoner: DeepSeek's CoT reasoning model for complex logic, math, and coding
+models.ModelDescGLM5: Zai's Coding/Agent flagship, SOTA in complex system engineering
+models.ModelDescGLM46V: Zai's multimodal flagship for high-precision image/video analysis
+models.ModelDescGLM46VFlashX: Zai's fast vision model tailored for real-time interaction
+models.ModelDescGLM47: Zai's versatile flagship with elite logic and long-context parsing
+models.ModelDescGLM47FlashX: Zai's high-speed 4.7 model, optimized for ultra-low latency
+models.ModelDescQwen3CoderFlash: Qwen's high-speed coding assistant for near-instant completion
+models.ModelDescQwen3CoderPlus: Qwen's premium coder for full-stack and advanced algorithms
+models.ModelDescQwen3Max: Qwen's top flagship, rivaling global premier closed models
+models.ModelDescQwen3VLFlash: Qwen's lightweight vision model for fast, real-time perception
+models.ModelDescQwen3VLPlus: Qwen's vision flagship for high-res parsing and complex docs

@@ -131,21 +131,21 @@ func NewGenkitWithModels(
 			}
 			modelConfigs = append(modelConfigs, registeredModels...)
 		case p.Zhipu != nil:
-			registeredModels, err := p.Zhipu.RegisterModels(g, oaiPlugins[i])
+			registeredModels, err := p.Zhipu.RegisterModels(ctx, g, oaiPlugins[i])
 			if err != nil {
 				logger.Error(err, "define zhipu models error")
 				continue
 			}
 			modelConfigs = append(modelConfigs, registeredModels...)
 		case p.Aliyun != nil:
-			registeredModels, err := p.Aliyun.RegisterModels(g, oaiPlugins[i])
+			registeredModels, err := p.Aliyun.RegisterModels(ctx, g, oaiPlugins[i])
 			if err != nil {
 				logger.Error(err, "define aliyun models error")
 				continue
 			}
 			modelConfigs = append(modelConfigs, registeredModels...)
 		case p.Deepseek != nil:
-			registeredModels, err := p.Deepseek.RegisterModels(g, oaiPlugins[i])
+			registeredModels, err := p.Deepseek.RegisterModels(ctx, g, oaiPlugins[i])
 			if err != nil {
 				logger.Error(err, "define deepseek models error")
 				continue

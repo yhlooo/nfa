@@ -28,3 +28,39 @@ commands.RootOptsPrintAndExitDesc:
 commands.VisionTag:
     hash: sha1-40b0906c4f3b5a2658a393a02faf70a3ff416418
     other: 视觉
+models.ModelDescDeepseekChat:
+    hash: sha1-97358522e3d086d7236a5ded1c0ad8c3d573c3bd
+    other: DeepSeek 全能旗舰，兼顾卓越性能与极致成本效益
+models.ModelDescDeepseekReasoner:
+    hash: sha1-40f0bc912088b2e96c30e9164fdd8311b0e583d9
+    other: DeepSeek 逻辑推理旗舰，擅长复杂数学、编程与深度思考
+models.ModelDescGLM5:
+    hash: sha1-73f13f296f7f33cf3d8a5ec9c317bf4cb274ab4a
+    other: 智谱 Coding 与 Agent 旗舰，复杂系统工程任务达到 SOTA
+models.ModelDescGLM46V:
+    hash: sha1-ca44d1f3453c911886cb28a0be2fae85db55b2d0
+    other: 智谱多模态旗舰，支持高精度图像理解与视频分析
+models.ModelDescGLM46VFlashX:
+    hash: sha1-f1501b2ae2028c61972e3a919932531e2faeb867
+    other: 智谱极速视觉模型，针对端到端实时交互深度优化
+models.ModelDescGLM47:
+    hash: sha1-9b5e5bbc45c45e488bd7239b34930da3d9ec4fd8
+    other: 智谱全能旗舰，逻辑与长文本解析能力对标国际顶尖模型
+models.ModelDescGLM47FlashX:
+    hash: sha1-ebbea52a3acdb011961835827f145696739dbc5e
+    other: 智谱高性能轻量版，保持 4.7 核心能力并实现极速响应
+models.ModelDescQwen3CoderFlash:
+    hash: sha1-5f678ce454adfcf2090e314709e65388d5ba0286
+    other: 阿里通义千问极速编程助手，提供秒级响应的代码生成
+models.ModelDescQwen3CoderPlus:
+    hash: sha1-b5f7e42ef279636569c1b632d28e64e6813d6971
+    other: 阿里通义千问专业编程模型，深度优化全栈开发与算法
+models.ModelDescQwen3Max:
+    hash: sha1-1730ec0ff8f62149fa5b356d28dc4cc08c1bc5d6
+    other: 阿里通义千问全能旗舰，处理能力对标全球顶级闭源模型
+models.ModelDescQwen3VLFlash:
+    hash: sha1-77d83ebeb6f8b22d4922465a0e7768f8fe535cd2
+    other: 阿里通义千问轻量视觉模型，主打低延迟实时感知与理解
+models.ModelDescQwen3VLPlus:
+    hash: sha1-81298d45eb0b49106b6ad518fe3ac0ccc4fa63e1
+    other: 阿里通义千问视觉旗舰，擅长高清图文解析与复杂文档
