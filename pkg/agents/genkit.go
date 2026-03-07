@@ -13,6 +13,7 @@ import (
 	"github.com/yhlooo/nfa/pkg/agents/flows"
 	"github.com/yhlooo/nfa/pkg/genkitplugins/oai"
 	"github.com/yhlooo/nfa/pkg/models"
+	"github.com/yhlooo/nfa/pkg/tools/fs"
 	"github.com/yhlooo/nfa/pkg/tools/webbrowse"
 )
 
@@ -56,6 +57,9 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	// 网页浏览工具
 	wb := webbrowse.NewWebBrowser()
 	a.availableTools = append(a.availableTools, wb.RegisterTools(a.g)...)
+
+	// 文件读取工具
+	a.availableTools = append(a.availableTools, fs.DefineReadTool(a.g))
 
 	// 注册 Skill 工具
 	a.availableTools = append(a.availableTools, a.skillLoader.DefineSkillTool(a.g))
