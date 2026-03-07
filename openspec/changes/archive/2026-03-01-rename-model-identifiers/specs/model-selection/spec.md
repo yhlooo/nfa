@@ -1,0 +1,106 @@
+# model-selection Specification (Delta)
+
+## MODIFIED Requirements
+
+### Requirement: Interactive model selection menu
+用户通过 `/model` 命令进入模型选择菜单时，系统 MUST 显示可用模型列表，支持键盘导航和选择。
+
+#### Scenario: Open primary model selection menu
+- **WHEN** 用户输入 `/model` 并按回车
+- **THEN** 系统隐藏输入框
+- **AND** 显示主模型选择菜单
+- **AND** 菜单标题为 "Select primary model"
+- **AND** 菜单显示所有可用模型列表
+
+#### Scenario: Open light model selection menu
+- **WHEN** 用户输入 `/model :light` 并按回车
+- **THEN** 系统隐藏输入框
+- **AND** 显示轻量模型选择菜单
+- **AND** 菜单标题为 "Select light model"
+
+#### Scenario: Open vision model selection menu
+- **WHEN** 用户输入 `/model :vision` 并按回车
+- **THEN** 系统隐藏输入框
+- **AND** 显示视觉模型选择菜单
+- **AND** 菜单标题为 "Select vision model"
+
+### Requirement: Keyboard navigation in model selector
+用户 MUST 能够使用键盘在模型列表中导航和选择。
+
+#### Scenario: Confirm model selection
+- **WHEN** 用户按回车键
+- **THEN** 系统应用当前选中的模型到对应类型（primary/light/vision）
+- **AND** 保存配置到 `~/.nfa/nfa.json`
+- **AND** 显示成功消息 "✓ {type} model set to: {model}"
+- **AND** 返回输入框视图
+
+### Requirement: Direct model setting via command
+用户 MUST 能够通过命令直接指定模型，无需进入选择菜单。
+
+#### Scenario: Set primary model directly
+- **WHEN** 用户输入 `/model ollama/llama3.2` 并按回车
+- **THEN** 系统设置主模型为 "ollama/llama3.2"
+- **AND** 保存配置到 `~/.nfa/nfa.json`
+- **AND** 显示成功消息 "✓ Primary model set to: ollama/llama3.2"
+
+#### Scenario: Set light model with explicit target
+- **WHEN** 用户输入 `/model :light ollama/qwen3:14b` 并按回车
+- **THEN** 系统设置轻量模型为 "ollama/qwen3:14b"
+- **AND** 保存配置
+- **AND** 显示成功消息
+
+#### Scenario: Set vision model directly
+- **WHEN** 用户输入 `/model :vision aliyun/qwen3-vl-plus` 并按回车
+- **THEN** 系统设置视觉模型为 "aliyun/qwen3-vl-plus"
+- **AND** 保存配置
+- **AND** 显示成功消息
+
+### Requirement: Model configuration persistence
+系统 MUST 在用户选择或设置模型后立即保存配置到文件。
+
+#### Scenario: Save configuration after model selection
+- **WHEN** 用户在选择菜单中确认模型选择
+- **THEN** 系统更新 `~/.nfa/nfa.json` 中的 `defaultModels` 字段
+- **AND** 对应模型类型（primary/light/vision）的值更新为新选择的模型
+- **AND** 配置文件使用 2 空格缩进
+- **AND** 其他配置项保持不变
+
+#### Scenario: Save configuration after direct model setting
+- **WHEN** 用户通过命令直接设置模型
+- **THEN** 系统立即保存配置到 `~/.nfa/nfa.json`
+- **AND** 更新对应的模型类型字段
+
+### Requirement: Agent model configuration from UI
+系统 MUST 将用户选择的模型配置传递给 Agent，在每次对话时使用正确的模型。
+
+#### Scenario: Pass selected models to agent
+- **WHEN** UI 发送新的 PromptRequest 到 Agent
+- **THEN** PromptRequest.Meta 包含当前选择的模型配置
+- **AND** Meta 中包含 "modelName" 字段（主模型）
+- **AND** Meta 中包含 "lightModel" 字段（轻量模型，如果已设置）
+- **AND** Meta 中包含 "visionModel" 字段（视觉模型，如果已设置）
+
+#### Scenario: Agent uses provided models
+- **WHEN** Agent 接收到包含模型配置的 PromptRequest
+- **THEN** Agent 使用 Meta 中指定的模型
+- **AND** 如果 Meta 中未指定某个模型类型，使用配置文件中的默认值
+
+### Requirement: Current model highlighting
+选择菜单 MUST 标识当前正在使用的模型。
+
+#### Scenario: Highlight current primary model
+- **WHEN** 打开主模型选择菜单
+- **THEN** 选择光标默认定位到当前使用的主模型
+- **AND** 当前模型前显示 "❯" 指示符
+
+#### Scenario: Highlight current light model
+- **WHEN** 打开轻量模型选择菜单
+- **THEN** 选择光标默认定位到当前使用的轻量模型
+
+### Requirement: Command syntax error handling
+系统 MUST 对无效的命令语法提供清晰的错误提示。
+
+#### Scenario: Invalid target prefix
+- **WHEN** 用户输入 `/model :invalid-target ollama/llama3.2`
+- **THEN** 系统显示错误消息
+- **AND** 错误消息提示有效的目标选项 "Expected: :primary, :light, :vision"
