@@ -16,6 +16,10 @@ var (
 		ID:    "commands.GlobalOptsDataRootDesc",
 		Other: "Path of data root directory",
 	}
+	MsgGlobalOptsLangDesc = &i18n.Message{
+		ID:    "commands.GlobalOptsLangDesc",
+		Other: "The language used in UI (en or zh)",
+	}
 
 	MsgRootOptsModelDesc = &i18n.Message{
 		ID:    "commands.RootOptsModelDesc",

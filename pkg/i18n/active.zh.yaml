@@ -10,6 +10,9 @@ commands.CmdShortDescModelsList:
 commands.GlobalOptsDataRootDesc:
     hash: sha1-9166723576bfdb06a263d84ae7606493e8a01a6e
     other: 数据存储根目录路径
+commands.GlobalOptsLangDesc:
+    hash: sha1-20c0027be580b8be1690a424db01dc0270f82fa2
+    other: UI 使用的语言（en 或 zh）
 commands.GlobalOptsVerbosityDesc:
     hash: sha1-d99c2b79a5d6e3a42f969d5df2dd282899e7e5fd
     other: 日志级别 (0, 1, 或 2)

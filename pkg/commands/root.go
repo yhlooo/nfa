@@ -31,6 +31,7 @@ func NewGlobalOptions() GlobalOptions {
 	return GlobalOptions{
 		Verbosity: 0,
 		DataRoot:  filepath.Join(homeDir, ".nfa"),
+		Language:  "",
 	}
 }
 
@@ -40,6 +41,8 @@ type GlobalOptions struct {
 	Verbosity uint32
 	// 数据存储根目录
 	DataRoot string
+	// 语言
+	Language string
 }
 
 // Validate 校验选项是否合法
@@ -54,6 +57,7 @@ func (o *GlobalOptions) Validate() error {
 func (o *GlobalOptions) AddPFlags(fs *pflag.FlagSet) {
 	fs.Uint32VarP(&o.Verbosity, "verbose", "v", o.Verbosity, i18n.T(MsgGlobalOptsVerbosityDesc))
 	fs.StringVar(&o.DataRoot, "data-root", o.DataRoot, i18n.T(MsgGlobalOptsDataRootDesc))
+	fs.StringVar(&o.Language, "lang", o.Language, i18n.T(MsgGlobalOptsLangDesc))
 }
 
 // NewOptions 创建默认 Options
@@ -133,7 +137,7 @@ func NewCommand(name string) *cobra.Command {
 			ctx = configs.ContextWithConfig(ctx, cfg, cfgPath)
 
 			// 设置本地化器
-			ctx = i18n.ContextWithLocalizer(ctx, i18n.NewLocalizer(cfg.Language, i18n.GetEnvLanguage()))
+			ctx = i18n.ContextWithLocalizer(ctx, i18n.NewLocalizer(globalOpts.Language, cfg.Language, i18n.GetEnvLanguage()))
 
 			keylog, err = setKeyLog()
 			if err != nil {

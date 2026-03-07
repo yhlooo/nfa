@@ -2,6 +2,7 @@ commands.CmdShortDesc: Financial Trading LLM AI Agent. **This is Not Financial A
 commands.CmdShortDescModels: Manage LLMs used by the agent
 commands.CmdShortDescModelsList: List available models
 commands.GlobalOptsDataRootDesc: Path of data root directory
+commands.GlobalOptsLangDesc: The language used in UI (en or zh)
 commands.GlobalOptsVerbosityDesc: Number for the log level verbosity (0, 1, or 2)
 commands.ReasoningTag: Reasoning
 commands.RootOptsLightModelDesc: Default light model for the current session
