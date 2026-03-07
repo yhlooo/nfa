@@ -94,7 +94,12 @@ func (ui *ChatUI) Run(ctx context.Context) error {
 	ui.ctx = ctx
 	ui.logger = logger
 
-	ui.vp = NewMessageViewport()
+	var err error
+	ui.vp, err = NewMessageViewport(ctx)
+	if err != nil {
+		return err
+	}
+
 	ui.modelSelector = NewModelSelector()
 
 	ui.cfgPath = configs.ConfigPathFromContext(ctx)
@@ -113,7 +118,7 @@ func (ui *ChatUI) Run(ctx context.Context) error {
 
 	p := tea.NewProgram(ui, tea.WithContext(ctx))
 	ui.p = p
-	_, err := p.Run()
+	_, err = p.Run()
 	return err
 }
 

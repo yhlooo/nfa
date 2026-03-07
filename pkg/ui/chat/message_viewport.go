@@ -1,30 +1,39 @@
 package chat
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"slices"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/coder/acp-go-sdk"
+	"github.com/go-logr/logr"
 )
 
 // NewMessageViewport 创建消息视窗
-func NewMessageViewport() MessageViewport {
-	return MessageViewport{
-		viewStyle: lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder()).BorderLeft(true),
+func NewMessageViewport(ctx context.Context) (MessageViewport, error) {
+	r, err := glamour.NewTermRenderer(glamour.WithAutoStyle())
+	if err != nil {
+		return MessageViewport{}, fmt.Errorf("new markdown renderer error: %w", err)
 	}
+	return MessageViewport{
+		viewStyle:  lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder()).BorderLeft(true),
+		mdRenderer: r,
+		logger:     logr.FromContextOrDiscard(ctx),
+	}, nil
 }
 
 // MessageViewport 消息视窗
 type MessageViewport struct {
 	agentProcessing int
-
-	messages MessagesList
-
-	viewStyle lipgloss.Style
+	messages        MessagesList
+	viewStyle       lipgloss.Style
+	mdRenderer      *glamour.TermRenderer
+	logger          logr.Logger
 }
 
 // AgentProcessing 返回是否 Agent 处理中
@@ -104,11 +113,11 @@ func (vp MessageViewport) View() string {
 	if len(vp.messages) == 0 {
 		return ""
 	}
-	return vp.viewStyle.Render(vp.viewMessages(vp.messages))
+	return vp.viewStyle.Render(vp.viewMessages(vp.messages, true))
 }
 
 // viewMessages 渲染消息
-func (vp MessageViewport) viewMessages(messages MessagesList) string {
+func (vp MessageViewport) viewMessages(messages MessagesList, renderMD bool) string {
 	var ret strings.Builder
 	for _, msg := range messages {
 		switch msg.Type {
@@ -119,9 +128,17 @@ func (vp MessageViewport) viewMessages(messages MessagesList) string {
 				ret.WriteString("☝️ \033[1;32m" + withIndent(msg.Text, 2) + "\033[0m\n")
 			}
 		case MessageTypeAgent:
-			ret.WriteString(msg.Text + "\n")
+			if renderMD {
+				ret.WriteString(vp.renderMarkdown(msg.Text) + "\n")
+			} else {
+				ret.WriteString(msg.Text + "\n")
+			}
 		case MessageTypeAgentThought:
-			ret.WriteString("🧠 \033[2m" + withIndent(msg.Text, 2) + "\033[0m\n")
+			content := msg.Text
+			//if renderMD {
+			//	content = vp.renderMarkdown(msg.Text)
+			//}
+			ret.WriteString("🧠 \033[2m" + withIndent(content, 2) + "\033[0m\n")
 		case MessageTypeToolCall:
 			ret.WriteString("🔧 \033[34m" + withIndent(msg.Text, 2) + "\033[0m\n")
 		case MessageTypeToolCallUpdate:
@@ -147,7 +164,7 @@ func (vp *MessageViewport) Flush() tea.Cmd {
 		return nil
 	}
 
-	content := vp.viewMessages(vp.messages[:n])
+	content := vp.viewMessages(vp.messages[:n], true)
 	vp.messages = vp.messages[n:]
 
 	return tea.Println(content)
@@ -194,6 +211,16 @@ func (vp MessageViewport) renderAgentToolCallUpdateMessage(msg *acp.SessionToolC
 func withIndent(content string, indent int) string {
 	indentStr := strings.Repeat(" ", indent)
 	return strings.ReplaceAll(content, "\n", "\n"+indentStr)
+}
+
+// renderMarkdown 使用 glamour 渲染 Markdown 文本
+// 如果渲染器未初始化或渲染失败，返回原始文本
+func (vp MessageViewport) renderMarkdown(text string) string {
+	rendered, err := vp.mdRenderer.Render(text)
+	if err != nil {
+		return text
+	}
+	return strings.TrimRight(rendered, "\n")
 }
 
 // renderAgentToolCallContent 将 Agent 工具调用内容转换为文本
