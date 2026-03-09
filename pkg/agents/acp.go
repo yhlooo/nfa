@@ -195,37 +195,37 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	default:
 	}
 
-	// 路由
-	routingRet, err := a.routingFlow.Run(ctx, flows.TopicRoutingInput{
-		Messages: append(messages, ai.NewUserTextMessage(prompt)),
-	})
-	if err != nil {
-		resp.StopReason = acp.StopReasonRefusal
-		err = fmt.Errorf("topic routing error: %w", err)
-		SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
-		return resp, err
-	}
+	//// 路由
+	//routingRet, err := a.routingFlow.Run(ctx, flows.TopicRoutingInput{
+	//	Messages: append(messages, ai.NewUserTextMessage(prompt)),
+	//})
+	//if err != nil {
+	//	resp.StopReason = acp.StopReasonRefusal
+	//	err = fmt.Errorf("topic routing error: %w", err)
+	//	SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
+	//	return resp, err
+	//}
 
 	history := make([]*ai.Message, len(messages))
 	copy(history, messages)
 	messages = append(messages, ai.NewUserTextMessage(prompt))
 
-	// 根据话题套模版
-	a.logger.Info(fmt.Sprintf("topic routing: continue: %t, topic: %s", routingRet.Continue, routingRet.Topic))
-	if !routingRet.Continue {
-		switch routingRet.Topic {
-		case flows.TopicContinue:
-		case flows.TopicQuery:
-		case flows.TopicStockAnalysis:
-		case flows.TopicPortfolioAnalysis:
-		case flows.TopicShortTermTrendForecast:
-			prompt = ShortTermTrendForecastPrompt(prompt)
-		case flows.TopicBasic:
-		case flows.TopicComprehensive:
-		case flows.TopicOthers:
-		default:
-		}
-	}
+	//// 根据话题套模版
+	//a.logger.Info(fmt.Sprintf("topic routing: continue: %t, topic: %s", routingRet.Continue, routingRet.Topic))
+	//if !routingRet.Continue {
+	//	switch routingRet.Topic {
+	//	case flows.TopicContinue:
+	//	case flows.TopicQuery:
+	//	case flows.TopicStockAnalysis:
+	//	case flows.TopicPortfolioAnalysis:
+	//	case flows.TopicShortTermTrendForecast:
+	//		prompt = ShortTermTrendForecastPrompt(prompt)
+	//	case flows.TopicBasic:
+	//	case flows.TopicComprehensive:
+	//	case flows.TopicOthers:
+	//	default:
+	//	}
+	//}
 
 	chatOut, err := a.chatFlow.Run(ctx, flows.ChatInput{
 		Prompt:  prompt,

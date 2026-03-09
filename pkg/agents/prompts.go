@@ -79,7 +79,8 @@ var AgentSystemPromptTpl = template.Must(template.New("AgentSystemPrompt").
 {{- if .Skills }}
 
 ## 可用技能
-你可以通过调用 Skill 工具加载技能来扩展你的能力，当需要使用某个技能时，调用 Skill 工具并传入以下列出的技能名称：
+你可以通过调用 Skill 工具加载技能来扩展你的能力，当用户问题匹配技能描述时尽可能在开始查询或分析前先加载技能，在分析过程中发现匹配也可在分析过程中加载。
+当需要使用某个技能时，调用 Skill 工具并传入以下列出的技能名称，工具会返回技能内容：
 {{- range .Skills }}
 - {{ .Name }}: {{ .Description }}
 {{- end }}
