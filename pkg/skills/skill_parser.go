@@ -22,17 +22,37 @@ type Skill struct { // TODO
 
 // SkillMeta 技能元数据
 type SkillMeta struct {
-	Name        string `yaml:"name"`
-	Description string `yaml:"description"`
+	Name        string      `yaml:"name"`
+	Description string      `yaml:"description"`
+	Source      SkillSource `yaml:"-"`
 }
 
-// ReadSkill 读取技能
-func ReadSkill(path string) (*Skill, error) {
+// ReadSkillFromFile 读取技能
+func ReadSkillFromFile(path string) (*Skill, error) {
 	content, err := os.ReadFile(filepath.Join(path, SkillFileName))
 	if err != nil {
-		return nil, fmt.Errorf("read skill file %q error: %w", SkillFileName, err)
+		return nil, fmt.Errorf("read skill file %q error: %w", path, err)
 	}
-	return ParseSkillContent(string(content))
+	s, err := ParseSkillContent(string(content))
+	if err != nil {
+		return nil, err
+	}
+	s.Meta.Source = SkillSourceLocal
+	return s, nil
+}
+
+// ReadSkillFromEmbed 从 embed.FS 读取内置技能
+func ReadSkillFromEmbed(path string) (*Skill, error) {
+	content, err := builtinSkillsFS.ReadFile(filepath.Join(path, SkillFileName))
+	if err != nil {
+		return nil, fmt.Errorf("read builtin skill %q error: %w", path, err)
+	}
+	s, err := ParseSkillContent(string(content))
+	if err != nil {
+		return nil, err
+	}
+	s.Meta.Source = SkillSourceBuiltin
+	return s, nil
 }
 
 // ParseSkillContent 解析技能内容

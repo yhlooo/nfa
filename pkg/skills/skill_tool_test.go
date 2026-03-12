@@ -162,10 +162,16 @@ Content
 		t.Fatal(err)
 	}
 
-	// 验证技能没有被加载
-	skills := loader.ListMeta()
-	if len(skills) != 0 {
-		t.Errorf("expected 0 skills (invalid metadata), got %d", len(skills))
+	// 验证无效技能没有被加载，但内置技能仍会被加载
+	skillList := loader.ListMeta()
+	if len(skillList) == 0 {
+		t.Error("expected at least builtin skill, got 0")
+	}
+	// 验证无效技能不在列表中
+	for _, s := range skillList {
+		if s.Name == "invalid-skill" {
+			t.Error("invalid skill should not be loaded")
+		}
 	}
 
 	// 验证直接获取会失败

@@ -81,8 +81,9 @@ description: Analyze market trends
 
 	// 验证技能已加载
 	skills := agent.skillLoader.ListMeta()
-	if len(skills) != 2 {
-		t.Errorf("expected 2 skills, got %d", len(skills))
+	// 2 个用户技能 + 1 个内置技能
+	if len(skills) < 3 {
+		t.Errorf("expected at least 3 skills (2 user + builtin), got %d", len(skills))
 	}
 
 	// 验证工具已注册
@@ -137,10 +138,10 @@ func TestNFAAgent_EmptySkillsDirectory(t *testing.T) {
 		t.Fatal("skillLoader should be initialized")
 	}
 
-	// 验证没有技能
-	skills := agent.skillLoader.ListMeta()
-	if len(skills) != 0 {
-		t.Errorf("expected 0 skills, got %d", len(skills))
+	// 验证至少有内置技能
+	skillList := agent.skillLoader.ListMeta()
+	if len(skillList) == 0 {
+		t.Error("expected at least builtin skill, got 0")
 	}
 
 	// 验证 Skill 工具仍被注册
@@ -207,14 +208,22 @@ Valid skill content.
 		t.Fatalf("LoadMeta() error = %v", err)
 	}
 
-	// 验证只加载了有效技能
-	skills := agent.skillLoader.ListMeta()
-	if len(skills) != 1 {
-		t.Errorf("expected 1 valid skill, got %d", len(skills))
+	// 验证加载了有效技能和内置技能
+	skillList := agent.skillLoader.ListMeta()
+	if len(skillList) < 2 {
+		t.Errorf("expected at least 2 skills (valid + builtin), got %d", len(skillList))
 	}
 
-	if skills[0].Name != "valid-skill" {
-		t.Errorf("expected skill 'valid-skill', got '%s'", skills[0].Name)
+	// 验证包含有效技能
+	found := false
+	for _, s := range skillList {
+		if s.Name == "valid-skill" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("expected to find 'valid-skill'")
 	}
 }
 
@@ -278,5 +287,124 @@ Test content.
 	// 验证包含技能名称
 	if len(prompt) < 10 {
 		t.Error("prompt should be longer")
+	}
+}
+
+// TestNFAAgent_WithBuiltinSkills 测试内置技能加载
+func TestNFAAgent_WithBuiltinSkills(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// 创建 agent（不创建用户技能目录）
+	agent := NewNFA(Options{
+		Logger:   logr.Discard(),
+		DataRoot: tmpDir,
+		ModelProviders: []models.ModelProvider{
+			{Ollama: &models.OllamaOptions{}},
+		},
+	})
+
+	// 初始化技能加载器
+	agent.skillLoader = skills.NewSkillLoader(filepath.Join(tmpDir, "skills"))
+
+	// 初始化 genkit
+	agent.InitGenkit(context.Background())
+
+	// 加载技能（包含内置技能）
+	if err := agent.skillLoader.LoadMeta(context.Background()); err != nil {
+		t.Fatalf("LoadMeta() error = %v", err)
+	}
+
+	// 验证内置技能已加载
+	skillList := agent.skillLoader.ListMeta()
+	if len(skillList) == 0 {
+		t.Error("expected at least 1 builtin skill, got 0")
+	}
+
+	// 验证内置技能 short-term-trend-forecast 存在
+	found := false
+	for _, skill := range skillList {
+		if skill.Name == "short-term-trend-forecast" {
+			found = true
+			if skill.Source != skills.SkillSourceBuiltin {
+				t.Errorf("expected source '%s', got '%s'", skills.SkillSourceBuiltin, skill.Source)
+			}
+			break
+		}
+	}
+	if !found {
+		t.Error("builtin skill 'short-term-trend-forecast' not found")
+	}
+
+	// 验证 Skill 工具已注册
+	if len(agent.availableTools) == 0 {
+		t.Fatal("no tools registered")
+	}
+}
+
+// TestNFAAgent_BuiltinAndUserSkills 测试内置技能和用户技能共存
+func TestNFAAgent_BuiltinAndUserSkills(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// 创建用户技能目录
+	skillsDir := filepath.Join(tmpDir, "skills")
+	if err := os.MkdirAll(skillsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// 创建用户技能
+	userSkillDir := filepath.Join(skillsDir, "user-custom-skill")
+	if err := os.MkdirAll(userSkillDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	userSkillContent := `---
+name: user-custom-skill
+description: A custom user skill
+---
+Custom user skill content.`
+	if err := os.WriteFile(filepath.Join(userSkillDir, "SKILL.md"), []byte(userSkillContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 创建 agent
+	agent := NewNFA(Options{
+		Logger:   logr.Discard(),
+		DataRoot: tmpDir,
+		ModelProviders: []models.ModelProvider{
+			{Ollama: &models.OllamaOptions{}},
+		},
+	})
+
+	// 初始化技能加载器
+	agent.skillLoader = skills.NewSkillLoader(filepath.Join(tmpDir, "skills"))
+
+	// 初始化 genkit
+	agent.InitGenkit(context.Background())
+
+	// 加载技能
+	if err := agent.skillLoader.LoadMeta(context.Background()); err != nil {
+		t.Fatalf("LoadMeta() error = %v", err)
+	}
+
+	// 验证两个技能都存在
+	skillList := agent.skillLoader.ListMeta()
+	if len(skillList) < 2 {
+		t.Errorf("expected at least 2 skills (builtin + user), got %d", len(skillList))
+	}
+
+	hasBuiltin := false
+	hasUser := false
+	for _, skill := range skillList {
+		if skill.Name == "short-term-trend-forecast" && skill.Source == skills.SkillSourceBuiltin {
+			hasBuiltin = true
+		}
+		if skill.Name == "user-custom-skill" && skill.Source == skills.SkillSourceLocal {
+			hasUser = true
+		}
+	}
+	if !hasBuiltin {
+		t.Error("builtin skill not found")
+	}
+	if !hasUser {
+		t.Error("user skill not found")
 	}
 }

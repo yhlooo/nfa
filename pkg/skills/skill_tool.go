@@ -31,9 +31,10 @@ type LoadSkillOutput struct {
 // DefineSkillTool 定义技能工具
 func (sl *SkillLoader) DefineSkillTool(g *genkit.Genkit) ai.ToolRef {
 	return genkit.DefineTool(g, LoadSkillToolName,
-		`Retrieves the content of a custom skill by name.
+		`Retrieves the content of a skill by name.
 
-Skills are user-defined capabilities stored in ~/.nfa/skills/<skill-name>/SKILL.md.
+Skills can be built-in capabilities (embedded in the program) or user-defined capabilities stored in ~/.nfa/skills/<skill-name>/SKILL.md.
+User skills can override built-in skills with the same name.
 Each skill contains a YAML frontmatter with name and description, followed by the skill's implementation details.
 
 Input:
@@ -46,7 +47,7 @@ Output:
 
 Example usage:
 {
-  "name": "get-price"
+  "name": "short-term-trend-forecast"
 }`,
 		func(ctx *ai.ToolContext, in LoadSkillInput) (LoadSkillOutput, error) {
 			// 验证输入
