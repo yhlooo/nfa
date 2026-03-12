@@ -71,6 +71,7 @@ func (a *NFAAgent) Initialize(ctx context.Context, _ acp.InitializeRequest) (acp
 		Meta: map[string]any{
 			MetaKeyAvailableModels: a.availableModels,
 			MetaKeyCurrentModels:   a.defaultModels,
+			MetaKeySkills:          a.skillLoader.ListMeta(),
 		},
 		AgentCapabilities: acp.AgentCapabilities{},
 		AgentInfo: &acp.Implementation{

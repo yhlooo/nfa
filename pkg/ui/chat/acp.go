@@ -40,6 +40,7 @@ func (ui *ChatUI) initAgent(ctx context.Context) error {
 	ui.curModels = agents.GetMetaCurrentModelsValue(resp.Meta)
 	ui.modelSelector.SetAvailableModels(agents.GetMetaAvailableModelsValue(resp.Meta))
 	ui.modelSelector.SetCurrentModels(ui.curModels)
+	ui.skills = agents.GetMetaSkillsValue(resp.Meta)
 
 	cwd, err := os.Getwd()
 	if err != nil {

@@ -20,6 +20,7 @@ import (
 	"github.com/yhlooo/nfa/pkg/configs"
 	"github.com/yhlooo/nfa/pkg/i18n"
 	"github.com/yhlooo/nfa/pkg/models"
+	"github.com/yhlooo/nfa/pkg/skills"
 )
 
 type viewState string
@@ -82,6 +83,9 @@ type ChatUI struct {
 	cfgPath       string
 	viewState     viewState
 	modelSelector *ModelSelector
+
+	// Skills
+	skills []skills.SkillMeta
 }
 
 var _ tea.Model = (*ChatUI)(nil)
@@ -113,6 +117,7 @@ func (ui *ChatUI) Run(ctx context.Context) error {
 		//{Name: "mcp", Description: "Manage MCP servers"},
 		{Name: "clear", Description: "Start a fresh conversation"},
 		{Name: "model", Description: "Set the AI model for NFA"},
+		{Name: "skills", Description: "List loaded skills"},
 		{Name: "exit", Description: "Exit the NFA"},
 	})
 
@@ -181,6 +186,8 @@ func (ui *ChatUI) updateInInputState(msg tea.Msg) (tea.Model, tea.Cmd) {
 						return ui, ui.enterModelSelectMode(ModelTypeLight)
 					case "/model :vision":
 						return ui, ui.enterModelSelectMode(ModelTypeVision)
+					case "/skills":
+						cmds = append(cmds, ui.printSkillsList())
 					default:
 						// 检查是否是 /model 开头的直接设置命令
 						if modelType, modelName, ok := ui.handleDirectModelSet(content); ok {
@@ -396,4 +403,44 @@ func intWithSeparator(v int) string {
 	}
 
 	return sign + strings.Join(divided, ",")
+}
+
+// printSkillsList 输出技能列表
+func (ui *ChatUI) printSkillsList() tea.Cmd {
+	var buf strings.Builder
+
+	// 标题和总数
+	buf.WriteString("\033[36mSkills\033[0m\n")
+	buf.WriteString(fmt.Sprintf("\033[30m%d skills\033[0m\n\n", len(ui.skills)))
+
+	// 按 Source 分组
+	var builtins, locals []skills.SkillMeta
+	for _, s := range ui.skills {
+		if s.Source == skills.SkillSourceBuiltin {
+			builtins = append(builtins, s)
+		} else {
+			locals = append(locals, s)
+		}
+	}
+
+	// Builtin skills
+	if len(builtins) > 0 {
+		buf.WriteString("\033[30mBuiltin skills\033[0m\n")
+		for _, s := range builtins {
+			buf.WriteString(fmt.Sprintf("\033[1m%s\033[0m - %s\n", s.Name, s.Description))
+		}
+		if len(locals) > 0 {
+			buf.WriteString("\n")
+		}
+	}
+
+	// Local skills
+	if len(locals) > 0 {
+		buf.WriteString("\033[30mLocal skills\033[0m\n")
+		for _, s := range locals {
+			buf.WriteString(fmt.Sprintf("\033[1m%s\0330m - %s\n", s.Name, s.Description))
+		}
+	}
+
+	return tea.Println(buf.String())
 }

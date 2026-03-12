@@ -6,12 +6,14 @@ import (
 	"github.com/firebase/genkit/go/ai"
 
 	"github.com/yhlooo/nfa/pkg/models"
+	"github.com/yhlooo/nfa/pkg/skills"
 )
 
 const (
 	MetaKeyCurrentModels     = "currentModels"
 	MetaKeyAvailableModels   = "availableModels"
 	MetaKeyCurrentModelUsage = "currentModelUsage"
+	MetaKeySkills            = "skills"
 )
 
 // GetMetaValue 从 _meta 中获取指定 key 的值
@@ -105,6 +107,30 @@ func GetMetaCurrentModelsValue(meta any) models.Models {
 	}
 	if name, ok := v["vision"].(string); ok {
 		ret.Vision = name
+	}
+
+	return ret
+}
+
+// GetMetaSkillsValue 从 _meta 中获取技能列表
+func GetMetaSkillsValue(meta any) []skills.SkillMeta {
+	v, ok := GetMetaValue(meta, MetaKeySkills).([]any)
+	if !ok {
+		return nil
+	}
+
+	ret := make([]skills.SkillMeta, 0, len(v))
+	for _, item := range v {
+		itemMap, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		raw, _ := json.Marshal(itemMap)
+		var m skills.SkillMeta
+		if err := json.Unmarshal(raw, &m); err != nil {
+			continue
+		}
+		ret = append(ret, m)
 	}
 
 	return ret
