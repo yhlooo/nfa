@@ -53,6 +53,7 @@ func NewChatUI(opts Options) *ChatUI {
 		initialPrompt:         opts.InitialPrompt,
 		autoExitAfterResponse: opts.AutoExitAfterResponse,
 		viewState:             viewStateInput,
+		width:                 80,
 	}
 	ui.conn = acp.NewClientSideConnection(ui, opts.AgentClientOut, opts.AgentClientIn)
 	return ui
@@ -66,6 +67,7 @@ type ChatUI struct {
 
 	vp    MessageViewport
 	input *InputBox
+	width int
 
 	acputil.NopFS
 	acputil.NopTerminal
@@ -166,6 +168,7 @@ func (ui *ChatUI) updateInInputState(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch typedMsg := msg.(type) {
 	case tea.WindowSizeMsg:
+		ui.width = typedMsg.Width
 		ui.modelUsageStyle = ui.modelUsageStyle.Width(typedMsg.Width)
 		ui.logger.Info(fmt.Sprintf("resize message: width: %d, height: %d", typedMsg.Width, typedMsg.Height))
 
@@ -410,6 +413,7 @@ func (ui *ChatUI) printSkillsList() tea.Cmd {
 	var buf strings.Builder
 
 	// 标题和总数
+	buf.WriteString("\033[2m" + strings.Repeat("─", ui.width) + "\033[0m\n")
 	buf.WriteString("\033[36mSkills\033[0m\n")
 	buf.WriteString(fmt.Sprintf("\033[30m%d skills\033[0m\n\n", len(ui.skills)))
 
@@ -441,6 +445,7 @@ func (ui *ChatUI) printSkillsList() tea.Cmd {
 			buf.WriteString(fmt.Sprintf("\033[1m%s\0330m - %s\n", s.Name, s.Description))
 		}
 	}
+	buf.WriteString("\033[2m" + strings.Repeat("─", ui.width) + "\033[0m\n")
 
 	return tea.Println(buf.String())
 }
