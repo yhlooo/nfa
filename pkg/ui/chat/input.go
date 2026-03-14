@@ -95,8 +95,8 @@ func (box *InputBox) Update(msg tea.Msg) (*InputBox, tea.Cmd) {
 			}
 
 		case tea.KeyUp:
-			// 单行模式下浏览历史
-			if !box.multiLine && box.history != nil && box.history.Count() > 0 {
+			// 单行模式下浏览历史（命令选择器启用时不处理，由选择器处理上下键）
+			if !box.commandSelector.Enabled() && !box.multiLine && box.history != nil && box.history.Count() > 0 {
 				// 如果未在浏览历史，先保存当前输入
 				if !box.history.IsNavigating() {
 					box.historyTempValue = box.input.Value()
@@ -108,8 +108,8 @@ func (box *InputBox) Update(msg tea.Msg) (*InputBox, tea.Cmd) {
 			}
 
 		case tea.KeyDown:
-			// 单行模式下浏览历史（只有在浏览历史时才处理）
-			if !box.multiLine && box.history != nil && box.history.IsNavigating() {
+			// 单行模式下浏览历史（命令选择器启用时不处理，由选择器处理上下键）
+			if !box.commandSelector.Enabled() && !box.multiLine && box.history != nil && box.history.IsNavigating() {
 				if content := box.history.Down(); content != "" {
 					box.input.SetValue(content)
 					box.input.CursorEnd()
