@@ -13,11 +13,12 @@ import (
 	"github.com/coder/acp-go-sdk"
 	"github.com/firebase/genkit/go/ai"
 	"github.com/go-logr/logr"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 
 	"github.com/yhlooo/nfa/pkg/acputil"
 	"github.com/yhlooo/nfa/pkg/agents"
 	"github.com/yhlooo/nfa/pkg/configs"
-	"github.com/yhlooo/nfa/pkg/i18n"
+	i18nutil "github.com/yhlooo/nfa/pkg/i18n"
 	"github.com/yhlooo/nfa/pkg/models"
 	"github.com/yhlooo/nfa/pkg/otter"
 	"github.com/yhlooo/nfa/pkg/skills"
@@ -117,10 +118,10 @@ func (ui *ChatUI) Run(ctx context.Context) error {
 	}
 
 	ui.input = NewInputBox(ctx, []SelectorOption{
-		{Name: "clear", Description: i18n.TContext(ctx, MsgCmdDescClear)},
-		{Name: "model", Description: i18n.TContext(ctx, MsgCmdDescModel)},
-		{Name: "skills", Description: i18n.TContext(ctx, MsgCmdDescSkills)},
-		{Name: "exit", Description: i18n.TContext(ctx, MsgCmdDescExit)},
+		{Name: "clear", Description: i18nutil.TContext(ctx, MsgCmdDescClear)},
+		{Name: "model", Description: i18nutil.TContext(ctx, MsgCmdDescModel)},
+		{Name: "skills", Description: i18nutil.TContext(ctx, MsgCmdDescSkills)},
+		{Name: "exit", Description: i18nutil.TContext(ctx, MsgCmdDescExit)},
 	})
 
 	p := tea.NewProgram(ui, tea.WithContext(ctx))
@@ -354,7 +355,7 @@ func (ui *ChatUI) printHello() tea.Cmd {
 		bannerLines[i] += fmt.Sprintf("\r\033[36C\033[2m%s (vision)\033[0m", ui.curModels.GetVision())
 		i++
 	}
-	bannerLines[i] += fmt.Sprintf("\r\033[36C\033[1;33m%s\033[0m", i18n.TContext(ui.ctx, MsgNFANote))
+	bannerLines[i] += fmt.Sprintf("\r\033[36C\033[1;33m%s\033[0m", i18nutil.TContext(ui.ctx, MsgNFANote))
 
 	return func() tea.Msg {
 		return tea.Printf("\n" + strings.Join(bannerLines, "\n"))()
@@ -395,7 +396,11 @@ func (ui *ChatUI) printSkillsList() tea.Cmd {
 	// 标题和总数
 	buf.WriteString("\033[2m" + strings.Repeat("─", ui.width) + "\033[0m\n")
 	buf.WriteString("\033[36mSkills\033[0m\n")
-	buf.WriteString(fmt.Sprintf("\033[30m%d skills\033[0m\n\n", len(ui.skills)))
+	buf.WriteString("\033[30m" + i18nutil.LocalizeContext(ui.ctx, &i18n.LocalizeConfig{
+		DefaultMessage: MsgSkillsCount,
+		PluralCount:    len(ui.skills),
+		TemplateData:   map[string]any{"Count": len(ui.skills)},
+	}) + "\033[0m\n\n")
 
 	// 按 Source 分组
 	var builtins, locals []skills.SkillMeta

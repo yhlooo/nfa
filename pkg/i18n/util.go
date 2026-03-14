@@ -26,3 +26,20 @@ func localizeMessage(localizer *i18n.Localizer, defaultMessage *i18n.Message) st
 	}
 	return defaultMessage.Other
 }
+
+// LocalizeContext 使用上下文携带的本地化器本地化消息
+func LocalizeContext(ctx context.Context, lc *i18n.LocalizeConfig) string {
+	localizer := LocalizerFromContext(ctx)
+
+	if ret, err := localizer.Localize(lc); err == nil {
+		return ret
+	}
+	if ret, err := fallbackLocalizer.Localize(lc); err == nil {
+		return ret
+	}
+
+	if lc.DefaultMessage != nil {
+		return lc.DefaultMessage.Other
+	}
+	return ""
+}

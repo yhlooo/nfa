@@ -7,6 +7,7 @@ var (
 		ID:    "ui.chat.NFANote",
 		Other: "NOTE: Any output should not be construed as financial advice.",
 	}
+
 	MsgCmdDescClear = &i18n.Message{
 		ID:    "ui.chat.CmdDescClear",
 		Other: "Start a fresh conversation",
@@ -22,5 +23,11 @@ var (
 	MsgCmdDescExit = &i18n.Message{
 		ID:    "ui.chat.CmdDescExit",
 		Other: "Exit the NFA",
+	}
+
+	MsgSkillsCount = &i18n.Message{
+		ID:    "ui.chat.SkillsCount",
+		One:   "{{ .Count }} skill",
+		Other: "{{ .Count }} skills",
 	}
 )
