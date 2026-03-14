@@ -45,4 +45,7 @@ var (
 	MsgOtterOptsColorDesc      = &i18n.Message{ID: "commands.OtterOptsColorDesc", Other: "Print with color"}
 	MsgOtterOptsBackgroundDesc = &i18n.Message{ID: "commands.OtterOptsBackgroundDesc", Other: "Print with background"}
 	MsgOtterOptsScaleDesc      = &i18n.Message{ID: "commands.OtterOptsScaleDesc", Other: "Scaling factor"}
+
+	MsgCmdShortDescVersion         = &i18n.Message{ID: "commands.CmdShortDescVersion", Other: "Print the version information"}
+	MsgVersionOptsOutputFormatDesc = &i18n.Message{ID: "commands.VersionOptsOutputFormatDesc", Other: "Output format. One of (json)"}
 )

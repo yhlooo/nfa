@@ -217,6 +217,7 @@ func NewCommand(name string) *cobra.Command {
 		newOtterCommand(),
 		newModelsCommand(),
 		newInternalToolsCommand(),
+		newVersionCommand(),
 	)
 
 	return cmd

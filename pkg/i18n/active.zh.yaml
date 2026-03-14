@@ -10,6 +10,9 @@ commands.CmdShortDescModelsList:
 commands.CmdShortDescOtter:
     hash: sha1-5fbc197e535facad8b83cf991c9f1eea43a8b522
     other: 打印水獭图片
+commands.CmdShortDescVersion:
+    hash: sha1-79526ef3b57592a549aa6b35ce7596080ebf5668
+    other: 打印版本信息
 commands.GlobalOptsDataRootDesc:
     hash: sha1-9166723576bfdb06a263d84ae7606493e8a01a6e
     other: 数据存储根目录路径
@@ -40,6 +43,9 @@ commands.RootOptsModelDesc:
 commands.RootOptsPrintAndExitDesc:
     hash: sha1-6210181527192be6facd3ca6b81a9ae7b7dbb8d2
     other: 打印回答后退出
+commands.VersionOptsOutputFormatDesc:
+    hash: sha1-de77ee0b2f5735c84d34c64306b85f45fa9e62b7
+    other: 输出格式。可选值：(json)
 commands.VisionTag:
     hash: sha1-40b0906c4f3b5a2658a393a02faf70a3ff416418
     other: 视觉

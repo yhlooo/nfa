@@ -2,6 +2,7 @@ commands.CmdShortDesc: Financial Trading LLM AI Agent. **This is Not Financial A
 commands.CmdShortDescModels: Manage LLMs used by the agent
 commands.CmdShortDescModelsList: List available models
 commands.CmdShortDescOtter: Print Otter image
+commands.CmdShortDescVersion: Print the version information
 commands.GlobalOptsDataRootDesc: Path of data root directory
 commands.GlobalOptsLangDesc: The language used in UI (en or zh)
 commands.GlobalOptsVerbosityDesc: Number for the log level verbosity (0, 1, or 2)
@@ -12,6 +13,7 @@ commands.ReasoningTag: Reasoning
 commands.RootOptsLightModelDesc: Default light model for the current session
 commands.RootOptsModelDesc: Default primary model for the current session
 commands.RootOptsPrintAndExitDesc: Print answer and exit after responding
+commands.VersionOptsOutputFormatDesc: Output format. One of (json)
 commands.VisionTag: Vision
 models.ModelDescDeepseekChat: DeepSeek's flagship, balancing top-tier performance and cost-efficiency
 models.ModelDescDeepseekReasoner: DeepSeek's CoT reasoning model for complex logic, math, and coding
