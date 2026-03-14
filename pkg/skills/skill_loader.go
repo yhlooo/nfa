@@ -129,6 +129,8 @@ func (sl *SkillLoader) loadBuiltinSkills(ctx context.Context) error {
 		return err
 	}
 
+	descOverride := BuiltinSkillsDescOverride(ctx)
+
 	// 遍历每个技能目录
 	for _, entry := range entries {
 		if !entry.IsDir() {
@@ -143,6 +145,11 @@ func (sl *SkillLoader) loadBuiltinSkills(ctx context.Context) error {
 		if err != nil {
 			logger.Info(fmt.Sprintf("WARN read builtin skill %q error: %s", skillName, err))
 			continue
+		}
+
+		// 用翻译过的描述覆盖原描述
+		if desc := descOverride[s.Meta.Name]; desc != "" {
+			s.Meta.Description = desc
 		}
 
 		// 添加到技能列表

@@ -79,6 +79,21 @@ models.ModelDescQwen3VLFlash:
 models.ModelDescQwen3VLPlus:
     hash: sha1-81298d45eb0b49106b6ad518fe3ac0ccc4fa63e1
     other: 阿里通义千问视觉旗舰，擅长高清图文解析与复杂文档
+skills.ShortTermTrendForecastDesc:
+    hash: sha1-d1f1ca49c1c0c3a0326b93049b3bcfb9e1753759
+    other: 对股票短期趋势（数天、一周、一个月内）进行分析和预测
+ui.chat.CmdDescClear:
+    hash: sha1-76e1e8b29d481b4dd2605f98176539a6057dff69
+    other: 开始新的对话
+ui.chat.CmdDescExit:
+    hash: sha1-ffee71b73e85be6def2cecbebdbf6040052dc6d4
+    other: 退出 NFA
+ui.chat.CmdDescModel:
+    hash: sha1-ae789b907ff72297ee221e5d5fcf8d006d6276eb
+    other: 设置模型
+ui.chat.CmdDescSkills:
+    hash: sha1-04a0c4e99659770d3e0222d8fadf386a17dd0583
+    other: 列出已加载的技能
 ui.chat.NFANote:
     hash: sha1-fa7916e7e2e077f4ce4551dfd8b908b8d9f58002
     other: 注意：任何输出都不应被理解为财务建议。

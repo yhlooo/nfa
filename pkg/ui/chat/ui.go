@@ -117,11 +117,10 @@ func (ui *ChatUI) Run(ctx context.Context) error {
 	}
 
 	ui.input = NewInputBox(ctx, []SelectorOption{
-		//{Name: "mcp", Description: "Manage MCP servers"},
-		{Name: "clear", Description: "Start a fresh conversation"},
-		{Name: "model", Description: "Set the AI model for NFA"},
-		{Name: "skills", Description: "List loaded skills"},
-		{Name: "exit", Description: "Exit the NFA"},
+		{Name: "clear", Description: i18n.TContext(ctx, MsgCmdDescClear)},
+		{Name: "model", Description: i18n.TContext(ctx, MsgCmdDescModel)},
+		{Name: "skills", Description: i18n.TContext(ctx, MsgCmdDescSkills)},
+		{Name: "exit", Description: i18n.TContext(ctx, MsgCmdDescExit)},
 	})
 
 	p := tea.NewProgram(ui, tea.WithContext(ctx))
