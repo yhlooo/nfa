@@ -10,11 +10,12 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/go-logr/logr"
 
+	"github.com/yhlooo/nfa/pkg/history"
 	i18nutil "github.com/yhlooo/nfa/pkg/i18n"
 )
 
 // NewInputBox 创建输入框
-func NewInputBox(ctx context.Context, commands []SelectorOption) *InputBox {
+func NewInputBox(ctx context.Context, commands []SelectorOption, hist *history.History, histPath string) *InputBox {
 	logger := logr.FromContextOrDiscard(ctx)
 
 	input := textarea.New()
@@ -26,13 +27,16 @@ func NewInputBox(ctx context.Context, commands []SelectorOption) *InputBox {
 	commandSelector := NewSelector(commands, "/", 8, 100)
 
 	return &InputBox{
-		ctx:             ctx,
-		logger:          logger,
-		input:           input,
-		commandSelector: commandSelector,
-		rightTipsStyle:  lipgloss.NewStyle().Width(100).AlignHorizontal(lipgloss.Right),
-		faintTipsStyle:  lipgloss.NewStyle().Faint(true),
-		width:           100,
+		ctx:              ctx,
+		logger:           logger,
+		input:            input,
+		commandSelector:  commandSelector,
+		rightTipsStyle:   lipgloss.NewStyle().Width(100).AlignHorizontal(lipgloss.Right),
+		faintTipsStyle:   lipgloss.NewStyle().Faint(true),
+		width:            100,
+		history:          hist,
+		historyPath:      histPath,
+		historyTempValue: "",
 	}
 }
 
@@ -50,6 +54,11 @@ type InputBox struct {
 	multiLine bool
 	width     int
 	doubleEsc bool
+
+	// 历史记录
+	history          *history.History
+	historyPath      string
+	historyTempValue string // 开始浏览历史时保存的当前输入
 }
 
 // Update 处理更新事件
@@ -74,12 +83,42 @@ func (box *InputBox) Update(msg tea.Msg) (*InputBox, tea.Cmd) {
 		switch typedMsg.Type {
 		case tea.KeyRunes, tea.KeyBackspace:
 			box.doubleEsc = false
+			// 用户输入时重置历史导航
+			box.history.ResetNav()
+			box.historyTempValue = ""
 
 			if val := box.input.Value(); strings.HasPrefix(val, "/") {
 				box.commandSelector.SetSearchKey(strings.TrimPrefix(val, "/"))
 				box.commandSelector.SetEnabled(true)
 			} else {
 				box.commandSelector.SetEnabled(false)
+			}
+
+		case tea.KeyUp:
+			// 单行模式下浏览历史
+			if !box.multiLine && box.history != nil && box.history.Count() > 0 {
+				// 如果未在浏览历史，先保存当前输入
+				if !box.history.IsNavigating() {
+					box.historyTempValue = box.input.Value()
+				}
+				if content := box.history.Up(); content != "" {
+					box.input.SetValue(content)
+					box.input.CursorEnd()
+				}
+			}
+
+		case tea.KeyDown:
+			// 单行模式下浏览历史（只有在浏览历史时才处理）
+			if !box.multiLine && box.history != nil && box.history.IsNavigating() {
+				if content := box.history.Down(); content != "" {
+					box.input.SetValue(content)
+					box.input.CursorEnd()
+				} else {
+					// 到达最新，恢复之前保存的输入
+					box.input.SetValue(box.historyTempValue)
+					box.input.CursorEnd()
+					box.historyTempValue = ""
+				}
 			}
 
 		case tea.KeyEnter:
@@ -203,6 +242,11 @@ func (box *InputBox) Reset() {
 	box.input.Reset()
 	box.commandSelector.SetEnabled(false)
 	box.multiLine = false
+	// 重置历史导航状态
+	if box.history != nil {
+		box.history.ResetNav()
+	}
+	box.historyTempValue = ""
 }
 
 // NewSelector 创建选择器

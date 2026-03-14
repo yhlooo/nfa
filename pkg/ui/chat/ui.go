@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/yhlooo/nfa/pkg/acputil"
 	"github.com/yhlooo/nfa/pkg/agents"
 	"github.com/yhlooo/nfa/pkg/configs"
+	"github.com/yhlooo/nfa/pkg/history"
 	i18nutil "github.com/yhlooo/nfa/pkg/i18n"
 	"github.com/yhlooo/nfa/pkg/models"
 	"github.com/yhlooo/nfa/pkg/otter"
@@ -90,6 +92,10 @@ type ChatUI struct {
 
 	// Skills
 	skills []skills.SkillMeta
+
+	// History
+	history     *history.History
+	historyPath string
 }
 
 var _ tea.Model = (*ChatUI)(nil)
@@ -113,6 +119,16 @@ func (ui *ChatUI) Run(ctx context.Context) error {
 
 	ui.cfgPath = configs.ConfigPathFromContext(ctx)
 
+	// 确定历史文件路径（与配置文件同目录）
+	ui.historyPath = filepath.Join(filepath.Dir(ui.cfgPath), "history.json")
+
+	// 加载历史记录
+	ui.history, err = history.LoadHistory(ui.historyPath)
+	if err != nil {
+		logger.Error(err, "failed to load history, starting with empty history")
+		ui.history = history.NewHistory(100)
+	}
+
 	// 初始化 agent
 	if err := ui.initAgent(ctx); err != nil {
 		return fmt.Errorf("initialize agent error: %w", err)
@@ -123,7 +139,7 @@ func (ui *ChatUI) Run(ctx context.Context) error {
 		{Name: "model", Description: i18nutil.TContext(ctx, MsgCmdDescModel)},
 		{Name: "skills", Description: i18nutil.TContext(ctx, MsgCmdDescSkills)},
 		{Name: "exit", Description: i18nutil.TContext(ctx, MsgCmdDescExit)},
-	})
+	}, ui.history, ui.historyPath)
 
 	p := tea.NewProgram(ui, tea.WithContext(ctx))
 	ui.p = p
@@ -182,6 +198,12 @@ func (ui *ChatUI) updateInInputState(msg tea.Msg) (tea.Model, tea.Cmd) {
 				content := strings.TrimRight(ui.input.Value(), "\n")
 				ui.input.Reset()
 				if content != "" {
+					// 保存到历史记录
+					ui.history.Add(content)
+					if err := history.SaveHistory(ui.historyPath, ui.history); err != nil {
+						ui.logger.Error(err, "failed to save history")
+					}
+
 					switch content {
 					case "/exit":
 						return ui, tea.Quit
@@ -370,7 +392,7 @@ func (ui *ChatUI) printHello() tea.Cmd {
 	bannerLines[i] += fmt.Sprintf("\r\033[36C\033[1;33m%s\033[0m", i18nutil.TContext(ui.ctx, MsgNFANote))
 
 	return func() tea.Msg {
-		return tea.Printf("\n" + strings.Join(bannerLines, "\n"))()
+		return tea.Println("\n" + strings.Join(bannerLines, "\n"))()
 	}
 }
 
