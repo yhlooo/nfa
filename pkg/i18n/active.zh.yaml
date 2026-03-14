@@ -82,6 +82,9 @@ models.ModelDescQwen3VLPlus:
 skills.ShortTermTrendForecastDesc:
     hash: sha1-d1f1ca49c1c0c3a0326b93049b3bcfb9e1753759
     other: 对股票短期趋势（数天、一周、一个月内）进行分析和预测
+ui.chat.BuiltinSkills:
+    hash: sha1-e1514b4a811af7856e0c1e74a7c3fdb6f8423d80
+    other: 内置技能
 ui.chat.CmdDescClear:
     hash: sha1-76e1e8b29d481b4dd2605f98176539a6057dff69
     other: 开始新的对话
@@ -90,10 +93,37 @@ ui.chat.CmdDescExit:
     other: 退出 NFA
 ui.chat.CmdDescModel:
     hash: sha1-ae789b907ff72297ee221e5d5fcf8d006d6276eb
-    other: 设置模型
+    other: 设置 NFA 的 AI 模型
 ui.chat.CmdDescSkills:
     hash: sha1-04a0c4e99659770d3e0222d8fadf386a17dd0583
     other: 列出已加载的技能
+ui.chat.LocalSkills:
+    hash: sha1-4afc41e028e8b667faacc539cdcecf0a3601cac4
+    other: 本地技能
+ui.chat.MultilineMode:
+    hash: sha1-27b4a9dc6dd614acf5852244e54eb5e650751fe2
+    other: 多行模式
 ui.chat.NFANote:
     hash: sha1-fa7916e7e2e077f4ce4551dfd8b908b8d9f58002
     other: 注意：任何输出都不应被理解为财务建议。
+ui.chat.SelectModel:
+    hash: sha1-977fc7dbb71477723ef0c4865088a536cad8bd91
+    other: 选择 {{ .Type }} 模型
+ui.chat.Skills:
+    hash: sha1-e09212c7d3eaa769fbcf66f82a6263794e715931
+    other: 技能
+ui.chat.SkillsCount:
+    hash: sha1-2be33eec4048bf43faf5060e4ba5c04c72efa8d9
+    other: '{{ .Count }} 个技能'
+ui.chat.StopReason:
+    hash: sha1-1c7dec39bb38f990c74ab7ecae8c9940849bc3ce
+    other: '停止原因: {{ .Reason }}'
+ui.chat.TabToToggle:
+    hash: sha1-171713a985df6ca87a1f13df8e475c672f0b8bde
+    other: (Tab 切换)
+ui.chat.TokenUsage:
+    hash: sha1-aca515b03307105a53d46929e55e883c8d10b226
+    other: 'Token 用量:'
+ui.chat.ToolCall:
+    hash: sha1-a66e915a001cc7c61684ba45a8fefa8d8b79964f
+    other: '工具调用:'

@@ -30,4 +30,15 @@ var (
 		One:   "{{ .Count }} skill",
 		Other: "{{ .Count }} skills",
 	}
+
+	// UI 标签
+	MsgTokenUsage    = &i18n.Message{ID: "ui.chat.TokenUsage", Other: "Token Usage:"}
+	MsgSkills        = &i18n.Message{ID: "ui.chat.Skills", Other: "Skills"}
+	MsgBuiltinSkills = &i18n.Message{ID: "ui.chat.BuiltinSkills", Other: "Builtin skills"}
+	MsgLocalSkills   = &i18n.Message{ID: "ui.chat.LocalSkills", Other: "Local skills"}
+	MsgSelectModel   = &i18n.Message{ID: "ui.chat.SelectModel", Other: "Select {{ .Type }} model"}
+	MsgMultilineMode = &i18n.Message{ID: "ui.chat.MultilineMode", Other: "MULTILINE MODE"}
+	MsgTabToToggle   = &i18n.Message{ID: "ui.chat.TabToToggle", Other: "(tab to toggle)"}
+	MsgStopReason    = &i18n.Message{ID: "ui.chat.StopReason", Other: "stop reason: {{ .Reason }}"}
+	MsgToolCall      = &i18n.Message{ID: "ui.chat.ToolCall", Other: "ToolCall:"}
 )

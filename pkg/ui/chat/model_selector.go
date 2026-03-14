@@ -1,11 +1,14 @@
 package chat
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 
+	i18nutil "github.com/yhlooo/nfa/pkg/i18n"
 	"github.com/yhlooo/nfa/pkg/models"
 )
 
@@ -17,6 +20,7 @@ type ModelSelector struct {
 	cursor    int // 当前选中的索引
 
 	selectedModels models.Models
+	ctx            context.Context
 }
 
 // NewModelSelector 创建模型选择器
@@ -62,7 +66,10 @@ func (s *ModelSelector) View() string {
 	var b strings.Builder
 
 	// 标题
-	title := fmt.Sprintf("Select %s model", s.modelType)
+	title := i18nutil.LocalizeContext(s.ctx, &i18n.LocalizeConfig{
+		DefaultMessage: MsgSelectModel,
+		TemplateData:   map[string]any{"Type": s.modelType},
+	})
 	b.WriteString(title + "\n")
 	b.WriteString("\n")
 
@@ -112,6 +119,11 @@ func (s *ModelSelector) SetAvailableModels(availableModels []models.ModelConfig)
 func (s *ModelSelector) SetModelType(t ModelType) {
 	s.modelType = t
 	s.syncCursor()
+}
+
+// SetContext 设置上下文
+func (s *ModelSelector) SetContext(ctx context.Context) {
+	s.ctx = ctx
 }
 
 // syncCursor 同步指针

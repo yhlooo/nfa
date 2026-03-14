@@ -26,8 +26,20 @@ models.ModelDescQwen3Max: Qwen's top flagship, rivaling global premier closed mo
 models.ModelDescQwen3VLFlash: Qwen's lightweight vision model for fast, real-time perception
 models.ModelDescQwen3VLPlus: Qwen's vision flagship for high-res parsing and complex docs
 skills.ShortTermTrendForecastDesc: Analyze and predict short-term stock trends (within days, week, or month).
+ui.chat.BuiltinSkills: Builtin skills
 ui.chat.CmdDescClear: Start a fresh conversation
 ui.chat.CmdDescExit: Exit the NFA
 ui.chat.CmdDescModel: Set the AI model for NFA
 ui.chat.CmdDescSkills: List loaded skills
+ui.chat.LocalSkills: Local skills
+ui.chat.MultilineMode: MULTILINE MODE
 ui.chat.NFANote: 'NOTE: Any output should not be construed as financial advice.'
+ui.chat.SelectModel: Select {{ .Type }} model
+ui.chat.Skills: Skills
+ui.chat.SkillsCount:
+    one: '{{ .Count }} skill'
+    other: '{{ .Count }} skills'
+ui.chat.StopReason: 'stop reason: {{ .Reason }}'
+ui.chat.TabToToggle: (tab to toggle)
+ui.chat.TokenUsage: 'Token Usage:'
+ui.chat.ToolCall: 'ToolCall:'

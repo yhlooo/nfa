@@ -109,6 +109,7 @@ func (ui *ChatUI) Run(ctx context.Context) error {
 	}
 
 	ui.modelSelector = NewModelSelector()
+	ui.modelSelector.SetContext(ctx)
 
 	ui.cfgPath = configs.ConfigPathFromContext(ctx)
 
@@ -321,7 +322,7 @@ func (ui *ChatUI) View() string {
 		modelUsageView += fmt.Sprintf(" | ↓ %s", intWithSeparator(out))
 	}
 	if modelUsageView != "" {
-		modelUsageView = "Token Usage: " + strings.TrimPrefix(modelUsageView, " | ")
+		modelUsageView = i18nutil.TContext(ui.ctx, MsgTokenUsage) + " " + strings.TrimPrefix(modelUsageView, " | ")
 	}
 
 	return fmt.Sprintf(
@@ -395,7 +396,7 @@ func (ui *ChatUI) printSkillsList() tea.Cmd {
 
 	// 标题和总数
 	buf.WriteString("\033[2m" + strings.Repeat("─", ui.width) + "\033[0m\n")
-	buf.WriteString("\033[36mSkills\033[0m\n")
+	buf.WriteString("\033[36m" + i18nutil.TContext(ui.ctx, MsgSkills) + "\033[0m\n")
 	buf.WriteString("\033[30m" + i18nutil.LocalizeContext(ui.ctx, &i18n.LocalizeConfig{
 		DefaultMessage: MsgSkillsCount,
 		PluralCount:    len(ui.skills),
@@ -414,7 +415,7 @@ func (ui *ChatUI) printSkillsList() tea.Cmd {
 
 	// Builtin skills
 	if len(builtins) > 0 {
-		buf.WriteString("\033[30mBuiltin skills\033[0m\n")
+		buf.WriteString("\033[30m" + i18nutil.TContext(ui.ctx, MsgBuiltinSkills) + "\033[0m\n")
 		for _, s := range builtins {
 			buf.WriteString(fmt.Sprintf("\033[1m%s\033[0m - %s\n", s.Name, s.Description))
 		}
@@ -425,7 +426,7 @@ func (ui *ChatUI) printSkillsList() tea.Cmd {
 
 	// Local skills
 	if len(locals) > 0 {
-		buf.WriteString("\033[30mLocal skills\033[0m\n")
+		buf.WriteString("\033[30m" + i18nutil.TContext(ui.ctx, MsgLocalSkills) + "\033[0m\n")
 		for _, s := range locals {
 			buf.WriteString(fmt.Sprintf("\033[1m%s\0330m - %s\n", s.Name, s.Description))
 		}

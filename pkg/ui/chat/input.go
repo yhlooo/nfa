@@ -9,6 +9,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/go-logr/logr"
+
+	i18nutil "github.com/yhlooo/nfa/pkg/i18n"
 )
 
 // NewInputBox 创建输入框
@@ -24,6 +26,7 @@ func NewInputBox(ctx context.Context, commands []SelectorOption) *InputBox {
 	commandSelector := NewSelector(commands, "/", 8, 100)
 
 	return &InputBox{
+		ctx:             ctx,
 		logger:          logger,
 		input:           input,
 		commandSelector: commandSelector,
@@ -35,6 +38,7 @@ func NewInputBox(ctx context.Context, commands []SelectorOption) *InputBox {
 
 // InputBox 输入框
 type InputBox struct {
+	ctx    context.Context
 	logger logr.Logger
 
 	input           textarea.Model
@@ -155,7 +159,9 @@ func (box *InputBox) View() string {
 	if box.commandSelector.Enabled() {
 		ret.WriteString(box.commandSelector.View() + "\n")
 	} else if box.multiLine {
-		ret.WriteString(box.rightTipsStyle.Render("MULTILINE MODE " + box.faintTipsStyle.Render("(tab to toggle)")))
+		ret.WriteString(box.rightTipsStyle.Render(
+			i18nutil.TContext(box.ctx, MsgMultilineMode) + " " + box.faintTipsStyle.Render(i18nutil.TContext(box.ctx, MsgTabToToggle)),
+		))
 	}
 
 	return ret.String()

@@ -12,6 +12,9 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/coder/acp-go-sdk"
 	"github.com/go-logr/logr"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
+
+	i18nutil "github.com/yhlooo/nfa/pkg/i18n"
 )
 
 // NewMessageViewport 创建消息视窗
@@ -21,6 +24,7 @@ func NewMessageViewport(ctx context.Context) (MessageViewport, error) {
 		return MessageViewport{}, fmt.Errorf("new markdown renderer error: %w", err)
 	}
 	return MessageViewport{
+		ctx:        ctx,
 		viewStyle:  lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder()).BorderLeft(true),
 		mdRenderer: r,
 		logger:     logr.FromContextOrDiscard(ctx),
@@ -29,6 +33,7 @@ func NewMessageViewport(ctx context.Context) (MessageViewport, error) {
 
 // MessageViewport 消息视窗
 type MessageViewport struct {
+	ctx             context.Context
 	agentProcessing int
 	messages        MessagesList
 	viewStyle       lipgloss.Style
@@ -93,7 +98,10 @@ func (vp MessageViewport) Update(msg tea.Msg) (MessageViewport, tea.Cmd) {
 		if typedMsg.StopReason != "" && typedMsg.StopReason != acp.StopReasonEndTurn {
 			vp.messages = vp.messages.Append(MessageItem{
 				Type: MessageTypeError,
-				Text: fmt.Sprintf("stop reason: %s", typedMsg.StopReason),
+				Text: i18nutil.LocalizeContext(vp.ctx, &i18n.LocalizeConfig{
+					DefaultMessage: MsgStopReason,
+					TemplateData:   map[string]any{"Reason": typedMsg.StopReason},
+				}),
 			})
 		}
 
@@ -183,7 +191,8 @@ func (vp *MessageViewport) Reset() {
 //goland:noinspection GoMixedReceiverTypes
 func (vp MessageViewport) renderAgentToolCallStartMessage(msg *acp.SessionUpdateToolCall) string {
 	return fmt.Sprintf(
-		"ToolCall: %s \033[2m%s\033[22m",
+		"%s %s \033[2m%s\033[22m",
+		i18nutil.TContext(vp.ctx, MsgToolCall),
 		msg.Title,
 		withIndent(renderAgentToolCallContent(msg.Content), 11+len(msg.Title)),
 	)
