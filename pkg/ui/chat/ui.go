@@ -197,8 +197,12 @@ func (ui *ChatUI) updateInInputState(msg tea.Msg) (tea.Model, tea.Cmd) {
 						// 检查是否是 /model 开头的直接设置命令
 						if modelType, modelName, ok := ui.handleDirectModelSet(content); ok {
 							cmds = append(cmds, tea.Printf(
-								"\033[34m✓ set %s model: %s\033[0m",
-								modelType, modelName,
+								"\033[34m✓ %s %s\033[0m",
+								i18nutil.LocalizeContext(ui.ctx, &i18n.LocalizeConfig{
+									DefaultMessage: MsgSetModel,
+									TemplateData:   map[string]any{"Type": modelType},
+								}),
+								modelName,
 							))
 						} else {
 							cmds = append(cmds, ui.newPrompt(content))
@@ -267,7 +271,14 @@ func (ui *ChatUI) updateInModelSelectState(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return fmt.Errorf("failed to save model: %w", err)
 				})
 			} else {
-				cmds = append(cmds, tea.Printf("\033[34m✓ set %s model: %s\033[0m", modelType, modelName))
+				cmds = append(cmds, tea.Printf(
+					"\033[34m✓ %s %s\033[0m",
+					i18nutil.LocalizeContext(ui.ctx, &i18n.LocalizeConfig{
+						DefaultMessage: MsgSetModel,
+						TemplateData:   map[string]any{"Type": modelType},
+					}),
+					modelName,
+				))
 			}
 			cmds = append(cmds, ui.exitModelSelectMode())
 		case tea.KeyEsc:

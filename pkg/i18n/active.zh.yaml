@@ -109,6 +109,9 @@ ui.chat.NFANote:
 ui.chat.SelectModel:
     hash: sha1-977fc7dbb71477723ef0c4865088a536cad8bd91
     other: 选择 {{ .Type }} 模型
+ui.chat.SetModel:
+    hash: sha1-55bbdc8a807fbc738f1a1a0d6cfef96e964fb0ed
+    other: '设置 {{ .Type }} 模型:'
 ui.chat.Skills:
     hash: sha1-e09212c7d3eaa769fbcf66f82a6263794e715931
     other: 技能
