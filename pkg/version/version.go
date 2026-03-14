@@ -5,8 +5,12 @@ import (
 	"runtime/debug"
 )
 
+const (
+	zeroVersion = "0.0.0-dev"
+)
+
 // Version 构建时注入的版本信息
-var Version = ""
+var Version = zeroVersion
 
 // Info 版本信息
 type Info struct {
@@ -27,7 +31,7 @@ func GetVersionInfo() Info {
 
 	if buildInfo, ok := debug.ReadBuildInfo(); ok {
 		// 获取 go module 版本
-		if ret.Version == "" {
+		if ret.Version == zeroVersion {
 			ret.Version = buildInfo.Main.Version
 		}
 		// 获取 Go 版本

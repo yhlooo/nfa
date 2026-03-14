@@ -17,7 +17,7 @@ import (
 	"github.com/yhlooo/nfa/pkg/models"
 )
 
-// newModelsCommand 创建 models 自命令
+// newModelsCommand 创建 models 子命令
 func newModelsCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "models",

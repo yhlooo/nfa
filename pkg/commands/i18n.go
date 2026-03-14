@@ -39,4 +39,10 @@ var (
 
 	MsgReasoningTag = &i18n.Message{ID: "commands.ReasoningTag", Other: "Reasoning"}
 	MsgVisionTag    = &i18n.Message{ID: "commands.VisionTag", Other: "Vision"}
+
+	MsgCmdShortDescOtter = &i18n.Message{ID: "commands.CmdShortDescOtter", Other: "Print Otter image"}
+
+	MsgOtterOptsColorDesc      = &i18n.Message{ID: "commands.OtterOptsColorDesc", Other: "Print with color"}
+	MsgOtterOptsBackgroundDesc = &i18n.Message{ID: "commands.OtterOptsBackgroundDesc", Other: "Print with background"}
+	MsgOtterOptsScaleDesc      = &i18n.Message{ID: "commands.OtterOptsScaleDesc", Other: "Scaling factor"}
 )

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -20,7 +19,9 @@ import (
 	"github.com/yhlooo/nfa/pkg/configs"
 	"github.com/yhlooo/nfa/pkg/i18n"
 	"github.com/yhlooo/nfa/pkg/models"
+	"github.com/yhlooo/nfa/pkg/otter"
 	"github.com/yhlooo/nfa/pkg/skills"
+	"github.com/yhlooo/nfa/pkg/version"
 )
 
 type viewState string
@@ -336,48 +337,28 @@ func (ui *ChatUI) View() string {
 
 // printHello 输出欢迎信息
 func (ui *ChatUI) printHello() tea.Cmd {
-	tips := `1. ...
-2. ...
-3. ...
-4. ...`
-	tipsLines := strings.Split(tips, "\n")
-	if len(tipsLines) > 4 {
-		tipsLines = tipsLines[:4]
-	}
-	if len(tipsLines) < 4 {
-		tipsLines = append(tipsLines, slices.Repeat([]string{""}, 4-len(tipsLines))...)
+	bannerLines := strings.Split(otter.MustOtter(true, false, 1), "\n")
+	if len(bannerLines) < 5 {
+		return nil
 	}
 
+	i := len(bannerLines) - 6
+	bannerLines[i] += fmt.Sprintf("\r\033[36C\033[1mNFA\033[2m v%s\033[0m", version.Version)
+	i++
+	bannerLines[i] += fmt.Sprintf("\r\033[36C\033[2m%s\033[0m", ui.curModels.GetPrimary())
+	i++
+	if ui.curModels.GetLight() != ui.curModels.GetPrimary() {
+		bannerLines[i] += fmt.Sprintf("\r\033[36C\033[2m%s (light)\033[0m", ui.curModels.GetLight())
+		i++
+	}
+	if ui.curModels.GetVision() != ui.curModels.GetPrimary() {
+		bannerLines[i] += fmt.Sprintf("\r\033[36C\033[2m%s (vision)\033[0m", ui.curModels.GetVision())
+		i++
+	}
+	bannerLines[i] += fmt.Sprintf("\r\033[36C\033[1;33m%s\033[0m", i18n.TContext(ui.ctx, MsgNFANote))
+
 	return func() tea.Msg {
-		return tea.Printf(`
-╭──────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│                                 │ `+"\033[1;32m"+`%s`+"\033[0m\r\033[102C"+` │
-│                                 │ %s `+"\r\033[102C"+` │
-│                                 │ %s `+"\r\033[102C"+` │
-│`+"\033[1;34m"+`         _   __ ______ ___       `+"\033[0m"+`│ %s `+"\r\033[102C"+` │
-│`+"\033[1;34m"+`        / | / // ____//   |      `+"\033[0m"+`│ %s `+"\r\033[102C"+` │
-│`+"\033[1;34m"+`       /  |/ // /_   / /| |      `+"\033[0m"+`│                                                                    │
-│`+"\033[1;34m"+`      / /|  // __/  / ___ |      `+"\033[0m"+`│ `+"\033[1;33m"+`%s`+"\033[0m\r\033[102C"+` │
-│`+"\033[1;34m"+`     /_/ |_//_/    /_/  |_|      `+"\033[0m"+`│ ────────────────────────────────────────────────────────────────── │
-│                                 │ `+"\033[1;32m"+`%s`+"\033[0m\r\033[43C"+`  %-57s │
-│                                 │          %-57s │
-│                                 │          %-57s │
-│                                 │ `+"\033[1;32m"+`%s`+"\033[0m\r\033[43C"+`  %-57s │
-╰──────────────────────────────────────────────────────────────────────────────────────────────────────╯
-`,
-			i18n.TContext(ui.ctx, MsgTips),
-			tipsLines[0],
-			tipsLines[1],
-			tipsLines[2],
-			tipsLines[3],
-			i18n.TContext(ui.ctx, MsgNFANote),
-			i18n.TContext(ui.ctx, MsgModel),
-			ui.curModels.Primary+" (primary)",
-			ui.curModels.Light+" (light)",
-			ui.curModels.Vision+" (vision)",
-			i18n.TContext(ui.ctx, MsgSession),
-			ui.sessionID,
-		)()
+		return tea.Printf("\n" + strings.Join(bannerLines, "\n"))()
 	}
 }
 

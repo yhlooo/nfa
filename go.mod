@@ -16,6 +16,7 @@ require (
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/olekukonko/tablewriter v1.1.3
 	github.com/openai/openai-go v1.8.2
+	github.com/saran13raj/go-pixels v0.0.0-20250629121333-58b240a3ae51
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
@@ -94,6 +95,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.36.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.36.0 // indirect
 	go.opentelemetry.io/otel/trace v1.36.0 // indirect
+	golang.org/x/image v0.28.0 // indirect
 	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/term v0.32.0 // indirect

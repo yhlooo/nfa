@@ -214,6 +214,7 @@ func NewCommand(name string) *cobra.Command {
 	opts.AddPFlags(cmd.Flags())
 
 	cmd.AddCommand(
+		newOtterCommand(),
 		newModelsCommand(),
 		newInternalToolsCommand(),
 	)
