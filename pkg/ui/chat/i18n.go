@@ -42,4 +42,7 @@ var (
 	MsgToolCall      = &i18n.Message{ID: "ui.chat.ToolCall", Other: "ToolCall:"}
 
 	MsgSetModel = &i18n.Message{ID: "ui.chat.SetModel", Other: "set {{ .Type }} model:"}
+
+	MsgResumeSession = &i18n.Message{ID: "ui.chat.ResumeSession", Other: "Resume this session with:"}
+	MsgResumeCommand = &i18n.Message{ID: "ui.chat.ResumeCommand", Other: "nfa --resume {{ .SessionID }}"}
 )

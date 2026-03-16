@@ -48,6 +48,7 @@ type Options struct {
 	AgentClientOut        io.Writer
 	InitialPrompt         string
 	AutoExitAfterResponse bool
+	ResumeSessionID       string
 }
 
 // NewChatUI 创建对话 UI
@@ -56,6 +57,7 @@ func NewChatUI(opts Options) *ChatUI {
 		modelUsageStyle:       lipgloss.NewStyle().Faint(true).Align(lipgloss.Right).PaddingRight(2),
 		initialPrompt:         opts.InitialPrompt,
 		autoExitAfterResponse: opts.AutoExitAfterResponse,
+		resumeSessionID:       opts.ResumeSessionID,
 		viewState:             viewStateInput,
 		width:                 80,
 	}
@@ -84,6 +86,7 @@ type ChatUI struct {
 	modelUsage            ai.GenerationUsage
 	initialPrompt         string
 	autoExitAfterResponse bool
+	resumeSessionID       string
 
 	// Model selection
 	cfgPath       string
@@ -144,13 +147,32 @@ func (ui *ChatUI) Run(ctx context.Context) error {
 	p := tea.NewProgram(ui, tea.WithContext(ctx))
 	ui.p = p
 	_, err = p.Run()
+
+	// 打印会话恢复提示
+	if ui.sessionID != "" {
+		fmt.Printf("\n%s\n%s\n",
+			i18nutil.TContext(ctx, MsgResumeSession),
+			i18nutil.LocalizeContext(ctx, &i18n.LocalizeConfig{
+				DefaultMessage: MsgResumeCommand,
+				TemplateData:   map[string]any{"SessionID": ui.sessionID},
+			}),
+		)
+	}
+
 	return err
 }
 
 // Init 开始运行 UI 的第一个操作
 func (ui *ChatUI) Init() tea.Cmd {
+	var sessionCmd tea.Cmd
+	if ui.resumeSessionID != "" {
+		sessionCmd = ui.loadSession
+	} else {
+		sessionCmd = ui.newSession
+	}
+
 	cmds := []tea.Cmd{
-		ui.newSession,
+		sessionCmd,
 		ui.printHello(),
 		textarea.Blink,
 	}

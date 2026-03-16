@@ -43,6 +43,9 @@ commands.RootOptsModelDesc:
 commands.RootOptsPrintAndExitDesc:
     hash: sha1-6210181527192be6facd3ca6b81a9ae7b7dbb8d2
     other: 打印回答后退出
+commands.RootOptsResumeDesc:
+    hash: sha1-475d5126d70ac7787f7deaf2143028d2bf2442e5
+    other: 通过会话 ID 恢复之前的会话
 commands.VersionOptsOutputFormatDesc:
     hash: sha1-de77ee0b2f5735c84d34c64306b85f45fa9e62b7
     other: 输出格式。可选值：(json)
@@ -112,6 +115,12 @@ ui.chat.MultilineMode:
 ui.chat.NFANote:
     hash: sha1-fa7916e7e2e077f4ce4551dfd8b908b8d9f58002
     other: 注意：任何输出都不应被理解为财务建议。
+ui.chat.ResumeCommand:
+    hash: sha1-2838cf551113386186418cc96c0bfcfc1cce6062
+    other: nfa --resume {{ .SessionID }}
+ui.chat.ResumeSession:
+    hash: sha1-57a5171d18972bfd9cd12d05df0af36e30cbb3b0
+    other: '通过以下命令恢复此会话:'
 ui.chat.SelectModel:
     hash: sha1-977fc7dbb71477723ef0c4865088a536cad8bd91
     other: 选择 {{ .Type }} 模型

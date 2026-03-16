@@ -23,6 +23,7 @@ import (
 )
 
 var _ acp.Agent = (*NFAAgent)(nil)
+var _ acp.AgentLoader = (*NFAAgent)(nil)
 
 // ACPAgentSideConnection ACP Agent 侧连接
 type ACPAgentSideConnection interface {
@@ -73,7 +74,9 @@ func (a *NFAAgent) Initialize(ctx context.Context, _ acp.InitializeRequest) (acp
 			MetaKeyCurrentModels:   a.defaultModels,
 			MetaKeySkills:          a.skillLoader.ListMeta(),
 		},
-		AgentCapabilities: acp.AgentCapabilities{},
+		AgentCapabilities: acp.AgentCapabilities{
+			LoadSession: true,
+		},
 		AgentInfo: &acp.Implementation{
 			Name:    "NFA",
 			Title:   acp.Ptr("NFA (Not Financial Advice)"),
@@ -100,6 +103,26 @@ func (a *NFAAgent) NewSession(_ context.Context, _ acp.NewSessionRequest) (acp.N
 	return acp.NewSessionResponse{
 		SessionId: sessionID,
 	}, nil
+}
+
+// LoadSession 加载已有会话
+func (a *NFAAgent) LoadSession(_ context.Context, params acp.LoadSessionRequest) (acp.LoadSessionResponse, error) {
+	a.lock.Lock()
+	defer a.lock.Unlock()
+
+	// 从文件加载会话数据
+	data, err := LoadSessionData(a.sessionsDir, params.SessionId)
+	if err != nil {
+		return acp.LoadSessionResponse{}, fmt.Errorf("load session data error: %w", err)
+	}
+
+	// 创建会话
+	a.sessions[params.SessionId] = &Session{
+		id:      params.SessionId,
+		history: data.Messages,
+	}
+
+	return acp.LoadSessionResponse{}, nil
 }
 
 // SetSessionMode 设置会话模式
@@ -246,6 +269,12 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 
 	messages = append(messages, chatOut.Messages...)
 	SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
+
+	// 保存会话
+	if err := SaveSession(a.sessionsDir, params.SessionId, messages); err != nil {
+		a.logger.Error(err, "save session error")
+	}
+
 	return resp, nil
 }
 

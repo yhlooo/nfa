@@ -18,6 +18,7 @@ import (
 type ACPClientSideConnection interface {
 	Initialize(ctx context.Context, req acp.InitializeRequest) (acp.InitializeResponse, error)
 	NewSession(ctx context.Context, req acp.NewSessionRequest) (acp.NewSessionResponse, error)
+	LoadSession(ctx context.Context, req acp.LoadSessionRequest) (acp.LoadSessionResponse, error)
 	Prompt(ctx context.Context, req acp.PromptRequest) (acp.PromptResponse, error)
 	Cancel(ctx context.Context, req acp.CancelNotification) error
 }
@@ -61,6 +62,21 @@ func (ui *ChatUI) newSession() tea.Msg {
 		return QuitError{Error: fmt.Errorf("new session error: %w", err)}
 	}
 	ui.sessionID = resp.SessionId
+
+	return nil
+}
+
+// loadSession 加载会话
+func (ui *ChatUI) loadSession() tea.Msg {
+	_, err := ui.conn.LoadSession(ui.ctx, acp.LoadSessionRequest{
+		SessionId:  acp.SessionId(ui.resumeSessionID),
+		Cwd:        ui.cwd,
+		McpServers: []acp.McpServer{},
+	})
+	if err != nil {
+		return QuitError{Error: fmt.Errorf("load session error: %w", err)}
+	}
+	ui.sessionID = acp.SessionId(ui.resumeSessionID)
 
 	return nil
 }

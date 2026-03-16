@@ -33,6 +33,10 @@ var (
 		ID:    "commands.RootOptsPrintAndExitDesc",
 		Other: "Print answer and exit after responding",
 	}
+	MsgRootOptsResumeDesc = &i18n.Message{
+		ID:    "commands.RootOptsResumeDesc",
+		Other: "Resume a previous session by session ID",
+	}
 
 	MsgCmdShortDescModels     = &i18n.Message{ID: "commands.CmdShortDescModels", Other: "Manage LLMs used by the agent"}
 	MsgCmdShortDescModelsList = &i18n.Message{ID: "commands.CmdShortDescModelsList", Other: "List available models"}

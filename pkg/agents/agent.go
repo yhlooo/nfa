@@ -2,6 +2,7 @@ package agents
 
 import (
 	"context"
+	"path/filepath"
 	"sync"
 
 	"github.com/coder/acp-go-sdk"
@@ -56,7 +57,8 @@ func NewNFA(opts Options) *NFAAgent {
 		defaultModels:  opts.DefaultModels,
 		dataRoot:       opts.DataRoot,
 
-		sessions: map[acp.SessionId]*Session{},
+		sessions:    map[acp.SessionId]*Session{},
+		sessionsDir: filepath.Join(opts.DataRoot, SessionsDirName),
 	}
 }
 
@@ -82,7 +84,8 @@ type NFAAgent struct {
 	routingFlow   flows.TopicRoutingFlow
 	summarizeFlow flows.SummarizeFlow
 
-	sessions map[acp.SessionId]*Session
+	sessions    map[acp.SessionId]*Session
+	sessionsDir string
 }
 
 // Session 会话

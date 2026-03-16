@@ -66,6 +66,7 @@ func NewOptions() Options {
 		Model:        "",
 		LightModel:   "",
 		PrintAndExit: false,
+		Resume:       "",
 	}
 }
 
@@ -74,6 +75,7 @@ type Options struct {
 	Model        string
 	LightModel   string
 	PrintAndExit bool
+	Resume       string
 }
 
 // AddPFlags 将选项绑定到命令行参数
@@ -81,6 +83,7 @@ func (o *Options) AddPFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.Model, "model", o.Model, i18n.T(MsgRootOptsModelDesc))
 	fs.StringVar(&o.LightModel, "light-model", o.LightModel, i18n.T(MsgRootOptsLightModelDesc))
 	fs.BoolVarP(&o.PrintAndExit, "print", "p", o.PrintAndExit, i18n.T(MsgRootOptsPrintAndExitDesc))
+	fs.StringVar(&o.Resume, "resume", o.Resume, i18n.T(MsgRootOptsResumeDesc))
 }
 
 // NewCommand 创建根命令
@@ -199,6 +202,7 @@ func NewCommand(name string) *cobra.Command {
 				AgentClientOut:        clientOut,
 				InitialPrompt:         initialPrompt,
 				AutoExitAfterResponse: opts.PrintAndExit,
+				ResumeSessionID:       opts.Resume,
 			}).Run(ctx)
 		},
 
