@@ -172,8 +172,8 @@ func (ui *ChatUI) Init() tea.Cmd {
 	}
 
 	cmds := []tea.Cmd{
-		sessionCmd,
 		ui.printHello(),
+		sessionCmd,
 		textarea.Blink,
 	}
 	if ui.initialPrompt != "" {

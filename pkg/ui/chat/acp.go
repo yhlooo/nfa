@@ -77,7 +77,6 @@ func (ui *ChatUI) loadSession() tea.Msg {
 		return QuitError{Error: fmt.Errorf("load session error: %w", err)}
 	}
 	ui.sessionID = acp.SessionId(ui.resumeSessionID)
-
 	return nil
 }
 

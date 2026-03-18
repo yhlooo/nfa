@@ -8,6 +8,7 @@ import (
 	"io"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/coder/acp-go-sdk"
 	"github.com/firebase/genkit/go/ai"
@@ -106,7 +107,7 @@ func (a *NFAAgent) NewSession(_ context.Context, _ acp.NewSessionRequest) (acp.N
 }
 
 // LoadSession 加载已有会话
-func (a *NFAAgent) LoadSession(_ context.Context, params acp.LoadSessionRequest) (acp.LoadSessionResponse, error) {
+func (a *NFAAgent) LoadSession(ctx context.Context, params acp.LoadSessionRequest) (acp.LoadSessionResponse, error) {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
@@ -120,6 +121,28 @@ func (a *NFAAgent) LoadSession(_ context.Context, params acp.LoadSessionRequest)
 	a.sessions[params.SessionId] = &Session{
 		id:      params.SessionId,
 		history: data.Messages,
+	}
+
+	// 回放历史消息
+	handleFn := a.handleStreamChunk(params.SessionId)
+	for _, msg := range data.Messages {
+		time.Sleep(5 * time.Millisecond) // TODO: 暂时不清楚什么原因，发送太快的话到达客户端是乱序的，所以这里略微 sleep 一下
+		switch msg.Role {
+		case ai.RoleUser:
+			if err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
+				SessionId: params.SessionId,
+				Update:    acp.UpdateUserMessageText(msg.Text()),
+			}); err != nil {
+				return acp.LoadSessionResponse{}, err
+			}
+		default:
+			if err := handleFn(ctx, &ai.ModelResponseChunk{
+				Content: msg.Content,
+				Role:    msg.Role,
+			}); err != nil {
+				return acp.LoadSessionResponse{}, err
+			}
+		}
 	}
 
 	return acp.LoadSessionResponse{}, nil
