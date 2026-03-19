@@ -16,6 +16,24 @@
 
 ### 通过二进制安装
 
+#### Linux / macOS
+
+```bash
+curl -L https://raw.githubusercontent.com/yhlooo/nfa/refs/heads/master/scripts/install.sh | bash
+```
+
+脚本将 `nfa` 安装到 `~/.local/bin`。如果该目录不在 `PATH` 中，请按照提示添加。
+
+#### Windows
+
+```powershell
+iex (irm https://raw.githubusercontent.com/yhlooo/nfa/refs/heads/master/scripts/install.ps1)
+```
+
+脚本将 `nfa` 安装到 `$env:LOCALAPPDATA\nfa`。如果该目录不在 `PATH` 中，请按照提示添加。
+
+#### 手动安装
+
 通过 [Releases](https://github.com/yhlooo/nfa/releases) 页面下载可执行二进制，解压并将其中 `nfa` 文件放置到任意 `$PATH` 目录下。
 
 ### Docker

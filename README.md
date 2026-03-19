@@ -16,6 +16,24 @@ A financial trading LLM AI Agent.
 
 ### Binaries
 
+#### Linux / macOS
+
+```bash
+curl -L https://raw.githubusercontent.com/yhlooo/nfa/refs/heads/master/scripts/install.sh | bash
+```
+
+The script installs `nfa` to `~/.local/bin`. If this directory is not in your `PATH`, follow the prompts to add it.
+
+#### Windows
+
+```powershell
+iex (irm https://raw.githubusercontent.com/yhlooo/nfa/refs/heads/master/scripts/install.ps1)
+```
+
+The script installs `nfa` to `$env:LOCALAPPDATA\nfa`. If this directory is not in your `PATH`, follow the prompts to add it.
+
+#### Manual Installation
+
 Download the executable binary from the [Releases](https://github.com/yhlooo/nfa/releases) page, extract it, and place the `nfa` file into any directory in your `$PATH`.
 
 ### Docker
