@@ -12,7 +12,7 @@ NFA 的配置文件位于 `~/.nfa/nfa.json`。
 {
   "modelProviders": [...],
   "defaultModels": {...},
-  "dataProviders": [...]
+  "dataProviders": {...}
 }
 ```
 
@@ -224,19 +224,17 @@ Select primary model
 
 ### dataProviders
 
-数据提供商配置数组。支持以下提供商：
+数据提供商配置对象。每种数据提供商最多配置一个实例。支持以下提供商：
 
 #### Alpha Vantage
 
 ```json
 {
-  "dataProviders": [
-    {
-      "alphaVantage": {
-        "apiKey": "your-api-key"
-      }
+  "dataProviders": {
+    "alphaVantage": {
+      "apiKey": "your-api-key"
     }
-  ]
+  }
 }
 ```
 
@@ -244,15 +242,13 @@ Select primary model
 
 ```json
 {
-  "dataProviders": [
-    {
-      "tcloudWSA": {
-        "secretID": "your-secret-id",
-        "secretKey": "your-secret-key",
-        "endpoint": ""
-      }
+  "dataProviders": {
+    "tcloudWSA": {
+      "secretID": "your-secret-id",
+      "secretKey": "your-secret-key",
+      "endpoint": ""
     }
-  ]
+  }
 }
 ```
 
@@ -291,19 +287,15 @@ Select primary model
     "light": "ollama/llama2",
     "vision": ""
   },
-  "dataProviders": [
-    {
-      "alphaVantage": {
-        "apiKey": "your-alpha-vantage-api-key"
-      }
+  "dataProviders": {
+    "alphaVantage": {
+      "apiKey": "your-alpha-vantage-api-key"
     },
-    {
-      "tcloudWSA": {
-        "secretID": "your-secret-id",
-        "secretKey": "your-secret-key",
-        "endpoint": ""
-      }
+    "tcloudWSA": {
+      "secretID": "your-secret-id",
+      "secretKey": "your-secret-key",
+      "endpoint": ""
     }
-  ]
+  }
 }
 ```

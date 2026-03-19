@@ -25,13 +25,13 @@ type Options struct {
 	Logger         logr.Logger
 	Localizer      *i18n.Localizer
 	ModelProviders []models.ModelProvider
-	DataProviders  []DataProvider
+	DataProviders  DataProviders
 	DefaultModels  models.Models
 	DataRoot       string
 }
 
-// DataProvider 数据供应商配置
-type DataProvider struct {
+// DataProviders 数据供应商配置
+type DataProviders struct {
 	AlphaVantage    *alphavantage.Options             `json:"alphaVantage,omitempty"`
 	TencentCloudWSA *websearch.TencentCloudWSAOptions `json:"tcloudWSA,omitempty"`
 }
@@ -69,7 +69,7 @@ type NFAAgent struct {
 	logger         logr.Logger
 	localizer      *i18n.Localizer
 	modelProviders []models.ModelProvider
-	dataProviders  []DataProvider
+	dataProviders  DataProviders
 	defaultModels  models.Models
 	dataRoot       string
 

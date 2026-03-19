@@ -172,7 +172,7 @@ func (ui *ChatUI) Init() tea.Cmd {
 	}
 
 	cmds := []tea.Cmd{
-		ui.printHello(),
+		ui.printHello,
 		sessionCmd,
 		textarea.Blink,
 	}
@@ -392,7 +392,7 @@ func (ui *ChatUI) View() string {
 }
 
 // printHello 输出欢迎信息
-func (ui *ChatUI) printHello() tea.Cmd {
+func (ui *ChatUI) printHello() tea.Msg {
 	bannerLines := strings.Split(otter.MustOtter(true, false, 1), "\n")
 	if len(bannerLines) < 5 {
 		return nil
@@ -413,9 +413,7 @@ func (ui *ChatUI) printHello() tea.Cmd {
 	}
 	bannerLines[i] += fmt.Sprintf("\r\033[36C\033[1;33m%s\033[0m", i18nutil.TContext(ui.ctx, MsgNFANote))
 
-	return func() tea.Msg {
-		return tea.Println("\n" + strings.Join(bannerLines, "\n"))()
-	}
+	return tea.Println("\n" + strings.Join(bannerLines, "\n") + "\n")
 }
 
 // intWithSeparator 每 step 位带分隔符 sep 的表示整数的字符串

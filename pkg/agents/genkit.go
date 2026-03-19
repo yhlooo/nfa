@@ -36,21 +36,19 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	}
 
 	// 注册工具
-	for _, p := range a.dataProviders {
-		switch {
-		case p.AlphaVantage != nil:
-			alphaVantageTools, err := p.AlphaVantage.RegisterTools(ctx, a.g)
-			if err != nil {
-				a.logger.Error(err, "register alpha vantage tools error")
-				continue
-			}
+	if a.dataProviders.AlphaVantage != nil {
+		alphaVantageTools, err := a.dataProviders.AlphaVantage.RegisterTools(ctx, a.g)
+		if err != nil {
+			a.logger.Error(err, "register alpha vantage tools error")
+		} else {
 			a.availableTools = append(a.availableTools, alphaVantageTools...)
-		case p.TencentCloudWSA != nil:
-			searchTool, err := p.TencentCloudWSA.RegisterTool(ctx, a.g)
-			if err != nil {
-				a.logger.Error(err, "register tencent cloud wsa search tool error")
-				continue
-			}
+		}
+	}
+	if a.dataProviders.TencentCloudWSA != nil {
+		searchTool, err := a.dataProviders.TencentCloudWSA.RegisterTool(ctx, a.g)
+		if err != nil {
+			a.logger.Error(err, "register tencent cloud wsa search tool error")
+		} else {
 			a.availableTools = append(a.availableTools, searchTool)
 		}
 	}
