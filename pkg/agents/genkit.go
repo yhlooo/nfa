@@ -103,8 +103,16 @@ func NewGenkitWithModels(
 			plugin := p.Qwen.Plugin()
 			plugins = append(plugins, plugin)
 			oaiPlugins[i] = plugin
+		case p.Moonshot != nil:
+			plugin := p.Moonshot.Plugin()
+			plugins = append(plugins, plugin)
+			oaiPlugins[i] = plugin
 		case p.Deepseek != nil:
 			plugin := p.Deepseek.Plugin()
+			plugins = append(plugins, plugin)
+			oaiPlugins[i] = plugin
+		case p.Minimax != nil:
+			plugin := p.Minimax.Plugin()
 			plugins = append(plugins, plugin)
 			oaiPlugins[i] = plugin
 		case p.OpenAICompatible != nil:
@@ -146,10 +154,24 @@ func NewGenkitWithModels(
 				continue
 			}
 			modelConfigs = append(modelConfigs, registeredModels...)
+		case p.Moonshot != nil:
+			registeredModels, err := p.Moonshot.RegisterModels(ctx, g, oaiPlugins[i])
+			if err != nil {
+				logger.Error(err, "define moonshot models error")
+				continue
+			}
+			modelConfigs = append(modelConfigs, registeredModels...)
 		case p.Deepseek != nil:
 			registeredModels, err := p.Deepseek.RegisterModels(ctx, g, oaiPlugins[i])
 			if err != nil {
 				logger.Error(err, "define deepseek models error")
+				continue
+			}
+			modelConfigs = append(modelConfigs, registeredModels...)
+		case p.Minimax != nil:
+			registeredModels, err := p.Minimax.RegisterModels(ctx, g, oaiPlugins[i])
+			if err != nil {
+				logger.Error(err, "define minimax models error")
 				continue
 			}
 			modelConfigs = append(modelConfigs, registeredModels...)

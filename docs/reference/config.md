@@ -78,6 +78,51 @@ NFA 的配置文件位于 `~/.nfa/nfa.json`。
 - `baseURL` - API 基础地址
 - `apiKey` - API 密钥
 
+#### MiniMax
+
+```json
+{
+  "modelProviders": [
+    {
+      "minimax": {
+        "apiKey": "your-api-key"
+      }
+    }
+  ]
+}
+```
+
+字段说明：
+- `apiKey` - API 密钥（必填）
+- `baseURL` - API 基础地址（可选，默认 `https://api.minimax.chat/v1`）
+- `models` - 模型配置列表（可选，默认使用预设模型）
+
+预设模型：
+- `minimax-m2.5` - 支持推理，128K 上下文
+- `minimax-m2.7` - 支持推理，256K 上下文
+
+#### Moonshot AI（月之暗面）
+
+```json
+{
+  "modelProviders": [
+    {
+      "moonshotai": {
+        "apiKey": "your-api-key"
+      }
+    }
+  ]
+}
+```
+
+字段说明：
+- `apiKey` - API 密钥（必填）
+- `baseURL` - API 基础地址（可选，默认 `https://api.moonshot.cn/v1`）
+- `models` - 模型配置列表（可选，默认使用预设模型）
+
+预设模型：
+- `kimi-k2.5` - 支持推理和视觉理解，256K 上下文，256K 最大输出
+
 **模型描述字段**:
 
 所有模型提供商都支持为每个模型添加描述信息，帮助你在交互式选择菜单中了解模型特点。

@@ -51,4 +51,16 @@ var (
 		ID:    "models.ModelDescGLM46VFlashX",
 		Other: "Zai's fast vision model tailored for real-time interaction",
 	}
+	MsgModelDescMinimaxM25 = &i18n.Message{
+		ID:    "models.ModelDescMinimaxM25",
+		Other: "MiniMax M2.5, strong reasoning with balanced performance",
+	}
+	MsgModelDescMinimaxM27 = &i18n.Message{
+		ID:    "models.ModelDescMinimaxM27",
+		Other: "MiniMax M2.7, advanced model with extended context and capabilities",
+	}
+	MsgModelDescKimiK25 = &i18n.Message{
+		ID:    "models.ModelDescKimiK25",
+		Other: "Moonshot AI's Kimi K2.5, supports reasoning and vision understanding",
+	}
 )

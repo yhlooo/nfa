@@ -5,7 +5,9 @@ type ModelProvider struct {
 	Ollama           *OllamaOptions           `json:"ollama,omitempty"`
 	ZAI              *ZAIOptions              `json:"z-ai,omitempty"`
 	Qwen             *QwenOptions             `json:"qwen,omitempty"`
+	Moonshot         *MoonshotOptions         `json:"moonshotai,omitempty"`
 	Deepseek         *DeepseekOptions         `json:"deepseek,omitempty"`
+	Minimax          *MinimaxOptions          `json:"minimax,omitempty"`
 	OpenAICompatible *OpenAICompatibleOptions `json:"openaiCompatible,omitempty"`
 }
 

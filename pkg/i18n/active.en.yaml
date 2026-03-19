@@ -28,6 +28,7 @@ models.ModelDescQwen3CoderPlus: Qwen's premium coder for full-stack and advanced
 models.ModelDescQwen3Max: Qwen's top flagship, rivaling global premier closed models
 models.ModelDescQwen3VLFlash: Qwen's lightweight vision model for fast, real-time perception
 models.ModelDescQwen3VLPlus: Qwen's vision flagship for high-res parsing and complex docs
+models.ModelDescKimiK25: Moonshot AI's Kimi K2.5, supports reasoning and vision understanding
 skills.ShortTermTrendForecastDesc: Analyze and predict short-term stock trends (within days, week, or month).
 ui.chat.BuiltinSkills: Builtin skills
 ui.chat.CmdDescClear: Start a fresh conversation

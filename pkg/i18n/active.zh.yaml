@@ -88,6 +88,8 @@ models.ModelDescQwen3VLFlash:
 models.ModelDescQwen3VLPlus:
     hash: sha1-81298d45eb0b49106b6ad518fe3ac0ccc4fa63e1
     other: 阿里通义千问视觉旗舰，擅长高清图文解析与复杂文档
+models.ModelDescKimiK25:
+    other: 月之暗面 Kimi K2.5，支持推理与视觉理解
 skills.ShortTermTrendForecastDesc:
     hash: sha1-d1f1ca49c1c0c3a0326b93049b3bcfb9e1753759
     other: 对股票短期趋势（数天、一周、一个月内）进行分析和预测
