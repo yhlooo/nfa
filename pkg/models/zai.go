@@ -10,14 +10,14 @@ import (
 )
 
 const (
-	// BigModelProviderName 智谱模型供应商名（又称 bigmodel ）
-	BigModelProviderName = "zhipu"
-	// BigModelBaseURL 智谱默认 API 地址
-	BigModelBaseURL = "https://open.bigmodel.cn/api/paas/v4/"
+	// ZAIProviderName 智谱模型供应商名
+	ZAIProviderName = "z-ai"
+	// ZAIBaseURL 智谱默认 API 地址
+	ZAIBaseURL = "https://open.bigmodel.cn/api/paas/v4/"
 )
 
-// BigModelModels 建议的智谱模型
-func BigModelModels(ctx context.Context) []ModelConfig {
+// ZAIModels 建议的智谱 AI 模型
+func ZAIModels(ctx context.Context) []ModelConfig {
 	return []ModelConfig{
 		{
 			Name:        "glm-5",
@@ -84,8 +84,8 @@ func BigModelModels(ctx context.Context) []ModelConfig {
 	}
 }
 
-// BigModelOptions 智谱选项
-type BigModelOptions struct {
+// ZAIOptions 智谱 AI 模型选项
+type ZAIOptions struct {
 	// API 地址
 	BaseURL string `json:"baseURL,omitempty"`
 	// API 密钥
@@ -95,24 +95,24 @@ type BigModelOptions struct {
 }
 
 // Complete 使用默认值补全选项
-func (opts *BigModelOptions) Complete() {
+func (opts *ZAIOptions) Complete() {
 	if opts.BaseURL == "" {
-		opts.BaseURL = BigModelBaseURL
+		opts.BaseURL = ZAIBaseURL
 	}
 }
 
 // Plugin 基于选项创建 OpenAICompatible 插件
-func (opts *BigModelOptions) Plugin() *oai.OpenAICompatible {
+func (opts *ZAIOptions) Plugin() *oai.OpenAICompatible {
 	opts.Complete()
 	return &oai.OpenAICompatible{
-		Provider: BigModelProviderName,
+		Provider: ZAIProviderName,
 		BaseURL:  opts.BaseURL,
 		APIKey:   opts.APIKey,
 	}
 }
 
 // RegisterModels 注册模型
-func (opts *BigModelOptions) RegisterModels(
+func (opts *ZAIOptions) RegisterModels(
 	ctx context.Context,
 	g *genkit.Genkit,
 	plugin *oai.OpenAICompatible,
@@ -123,14 +123,14 @@ func (opts *BigModelOptions) RegisterModels(
 	}
 
 	// 注册建议模型
-	for _, m := range BigModelModels(ctx) {
+	for _, m := range ZAIModels(ctx) {
 		if _, ok := definedModels[m.Name]; !ok {
 			opts.Models = append(opts.Models, m)
 		}
 	}
 
 	return (&OpenAICompatibleOptions{
-		Name:    BigModelProviderName,
+		Name:    ZAIProviderName,
 		BaseURL: opts.BaseURL,
 		APIKey:  opts.APIKey,
 		Models:  opts.Models,

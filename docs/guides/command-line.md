@@ -94,7 +94,7 @@ nfa --model "deepseek-chat" "分析一下当前市场"
 nfa --model "ollama/llama2" "介绍一下 ETF"
 
 # 使用自定义提供商的模型
-nfa --model "aliyun/qwen-max" "写一个投资策略"
+nfa --model "qwen/qwen-max" "写一个投资策略"
 ```
 
 **优先级**: 命令行参数 > 配置文件 > 默认值
@@ -192,8 +192,8 @@ nfa --light-model "ollama/mistral" "这是什么？"
 模型名称必须使用 `<provider>/<name>` 格式：
 - `ollama/llama3.2`
 - `deepseek/deepseek-chat`
-- `zhipu/glm-4`
-- `aliyun/qwen-max`
+- `z-ai/glm-4`
+- `qwen/qwen-max`
 
 #### 配置持久化
 

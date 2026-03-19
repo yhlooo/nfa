@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"time"
 
 	"github.com/chromedp/chromedp"
 	"github.com/firebase/genkit/go/ai"
@@ -48,6 +49,8 @@ type BrowseInput struct {
 	URL string `json:"url"`
 	// 浏览网页时希望解答的问题
 	Question string `json:"question,omitempty"`
+	// 超时时间（秒），默认 60
+	Timeout int `json:"timeout,omitempty"`
 }
 
 // BrowseOutput 网页浏览输出
@@ -74,13 +77,22 @@ func (wb *WebBrowser) DefineBrowseTool(g *genkit.Genkit) ai.ToolRef {
 以 JSON 格式输入：
 - **url**: (string,required) 浏览的网页 URL
 - **question**: (string) 针对网页内容的提问。工具可通过视觉方式浏览网页完整内容并回答该问题。该字段为空时工具返回网页中的文本内容（不含布局、图表等视觉元素信息），建议使用该字段获取页面中的细节信息。
+- **timeout**: (int) 超时时间（秒），默认 60。
 `,
 		func(ctx *ai.ToolContext, in BrowseInput) (BrowseOutput, error) {
 			wb.lock.Lock()
 			defer wb.lock.Unlock()
 
-			chromeCtx, cancel := chromedp.NewContext(ctx)
+			// 设置整体超时
+			timeout := in.Timeout
+			if timeout <= 0 {
+				timeout = 60
+			}
+			ctx2, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
 			defer cancel()
+
+			chromeCtx, chromeCancel := chromedp.NewContext(ctx2)
+			defer chromeCancel()
 
 			if in.URL == "" {
 				return BrowseOutput{}, fmt.Errorf("url is required")
@@ -105,8 +117,8 @@ func (wb *WebBrowser) DefineBrowseTool(g *genkit.Genkit) ai.ToolRef {
 			}
 
 			// 使用视觉模型读取图片内容
-			m, _ := ctxutil.ModelsFromContext(ctx)
-			resp, err := genkit.Generate(ctx, g,
+			m, _ := ctxutil.ModelsFromContext(ctx2)
+			resp, err := genkit.Generate(ctx2, g,
 				ai.WithModelName(m.GetVision()),
 				ai.WithMessages(
 					ai.NewUserMessage(

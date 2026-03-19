@@ -83,8 +83,8 @@ TBD - created by archiving change add-model-command. Update Purpose after archiv
 - **AND** 显示成功消息
 
 #### Scenario: Set vision model directly
-- **WHEN** 用户输入 `/model :vision aliyun/qwen3-vl-plus` 并按回车
-- **THEN** 系统设置视觉模型为 "aliyun/qwen3-vl-plus"
+- **WHEN** 用户输入 `/model :vision qwen/qwen3-vl-plus` 并按回车
+- **THEN** 系统设置视觉模型为 "qwen/qwen3-vl-plus"
 - **AND** 保存配置
 - **AND** 显示成功消息
 

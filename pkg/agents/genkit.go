@@ -95,12 +95,12 @@ func NewGenkitWithModels(
 		case p.Ollama != nil:
 			ollamaPlugin = p.Ollama.OllamaPlugin()
 			plugins = append(plugins, ollamaPlugin)
-		case p.Zhipu != nil:
-			plugin := p.Zhipu.Plugin()
+		case p.ZAI != nil:
+			plugin := p.ZAI.Plugin()
 			plugins = append(plugins, plugin)
 			oaiPlugins[i] = plugin
-		case p.Aliyun != nil:
-			plugin := p.Aliyun.Plugin()
+		case p.Qwen != nil:
+			plugin := p.Qwen.Plugin()
 			plugins = append(plugins, plugin)
 			oaiPlugins[i] = plugin
 		case p.Deepseek != nil:
@@ -132,17 +132,17 @@ func NewGenkitWithModels(
 				continue
 			}
 			modelConfigs = append(modelConfigs, registeredModels...)
-		case p.Zhipu != nil:
-			registeredModels, err := p.Zhipu.RegisterModels(ctx, g, oaiPlugins[i])
+		case p.ZAI != nil:
+			registeredModels, err := p.ZAI.RegisterModels(ctx, g, oaiPlugins[i])
 			if err != nil {
-				logger.Error(err, "define zhipu models error")
+				logger.Error(err, "define z-ai models error")
 				continue
 			}
 			modelConfigs = append(modelConfigs, registeredModels...)
-		case p.Aliyun != nil:
-			registeredModels, err := p.Aliyun.RegisterModels(ctx, g, oaiPlugins[i])
+		case p.Qwen != nil:
+			registeredModels, err := p.Qwen.RegisterModels(ctx, g, oaiPlugins[i])
 			if err != nil {
-				logger.Error(err, "define aliyun models error")
+				logger.Error(err, "define qwen models error")
 				continue
 			}
 			modelConfigs = append(modelConfigs, registeredModels...)

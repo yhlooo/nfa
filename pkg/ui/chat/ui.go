@@ -172,7 +172,7 @@ func (ui *ChatUI) Init() tea.Cmd {
 	}
 
 	cmds := []tea.Cmd{
-		ui.printHello,
+		ui.printHello(),
 		sessionCmd,
 		textarea.Blink,
 	}
@@ -392,7 +392,7 @@ func (ui *ChatUI) View() string {
 }
 
 // printHello 输出欢迎信息
-func (ui *ChatUI) printHello() tea.Msg {
+func (ui *ChatUI) printHello() tea.Cmd {
 	bannerLines := strings.Split(otter.MustOtter(true, false, 1), "\n")
 	if len(bannerLines) < 5 {
 		return nil

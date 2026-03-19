@@ -11,14 +11,14 @@ import (
 )
 
 const (
-	// DashScopeProviderName 阿里云模型供应商名（又称 dashscope 、灵积）
-	DashScopeProviderName = "aliyun"
-	// DashScopeBaseURL 阿里云默认 API 地址
-	DashScopeBaseURL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+	// QwenProviderName 通义千问模型供应商名
+	QwenProviderName = "qwen"
+	// QwenBaseURL 通义千问默认 API 地址（也可称 dashscope 、灵积）
+	QwenBaseURL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 )
 
-// DashScopeModels 建议的阿里云模型
-func DashScopeModels(ctx context.Context) []ModelConfig {
+// QwenModels 建议的通义千问模型
+func QwenModels(ctx context.Context) []ModelConfig {
 	return []ModelConfig{
 		{
 			Name:        "qwen3-max",
@@ -83,8 +83,8 @@ func DashScopeModels(ctx context.Context) []ModelConfig {
 	}
 }
 
-// DashScopeOptions 阿里云模型选项
-type DashScopeOptions struct {
+// QwenOptions 通义千问模型选项
+type QwenOptions struct {
 	// API 地址
 	BaseURL string `json:"baseURL,omitempty"`
 	// API 密钥
@@ -94,24 +94,24 @@ type DashScopeOptions struct {
 }
 
 // Complete 使用默认值补全选项
-func (opts *DashScopeOptions) Complete() {
+func (opts *QwenOptions) Complete() {
 	if opts.BaseURL == "" {
-		opts.BaseURL = DashScopeBaseURL
+		opts.BaseURL = QwenBaseURL
 	}
 }
 
 // Plugin 基于选项创建 OpenAICompatible 插件
-func (opts *DashScopeOptions) Plugin() *oai.OpenAICompatible {
+func (opts *QwenOptions) Plugin() *oai.OpenAICompatible {
 	opts.Complete()
 	return &oai.OpenAICompatible{
-		Provider: DashScopeProviderName,
+		Provider: QwenProviderName,
 		BaseURL:  opts.BaseURL,
 		APIKey:   opts.APIKey,
 	}
 }
 
 // RegisterModels 注册模型
-func (opts *DashScopeOptions) RegisterModels(
+func (opts *QwenOptions) RegisterModels(
 	ctx context.Context,
 	g *genkit.Genkit,
 	plugin *oai.OpenAICompatible,
@@ -122,7 +122,7 @@ func (opts *DashScopeOptions) RegisterModels(
 	}
 
 	// 注册建议模型
-	for _, m := range DashScopeModels(ctx) {
+	for _, m := range QwenModels(ctx) {
 		if _, ok := definedModels[m.Name]; !ok {
 			opts.Models = append(opts.Models, m)
 		}

@@ -174,7 +174,7 @@ Deepseek 提供高性价比的中文大模型服务。
 
 ### OpenAI Compatible
 
-支持任何兼容 OpenAI API 的服务，如阿里云通义千问、智谱 AI 等。
+支持任何兼容 OpenAI API 的服务，如通义千问、智谱 AI 等。
 
 **配置示例**:
 ```json
@@ -182,9 +182,9 @@ Deepseek 提供高性价比的中文大模型服务。
   "modelProviders": [
     {
       "openaiCompatible": {
-        "name": "aliyun",
+        "name": "qwen",
         "baseURL": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "apiKey": "your-aliyun-api-key",
+        "apiKey": "your-qwen-api-key",
         "models": [
           {
             "name": "qwen-max",
@@ -206,9 +206,9 @@ Deepseek 提供高性价比的中文大模型服务。
     }
   ],
   "defaultModels": {
-    "primary": "aliyun/qwen-max",
-    "light": "aliyun/qwen-turbo",
-    "vision": "aliyun/qwen-vl-plus"
+    "primary": "qwen/qwen-max",
+    "light": "qwen/qwen-turbo",
+    "vision": "qwen/qwen-vl-plus"
   }
 }
 ```
@@ -223,7 +223,7 @@ Deepseek 提供高性价比的中文大模型服务。
 | `models` | array | 否 | 模型配置列表，空列表表示不注册任何模型 |
 
 **模型命名规则**:
-模型名称使用 `provider/model-name` 格式，如 `aliyun/qwen-max`。
+模型名称使用 `provider/model-name` 格式，如 `qwen/qwen-max`。
 
 **使用场景**:
 - 使用其他云服务商的模型
