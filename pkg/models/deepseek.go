@@ -24,8 +24,9 @@ func DeepSeekModels(ctx context.Context) []ModelConfig {
 			Description: i18n.TContext(ctx, MsgModelDescDeepseekReasoner),
 			Reasoning:   true,
 			Cost: ModelCost{
-				Input:  0.002,
-				Output: 0.003,
+				Input:  2,
+				Output: 3,
+				Cached: 0.2,
 			},
 			ContextWindow:   128000,
 			MaxOutputTokens: 64000,
@@ -34,8 +35,9 @@ func DeepSeekModels(ctx context.Context) []ModelConfig {
 			Name:        "deepseek-chat",
 			Description: i18n.TContext(ctx, MsgModelDescDeepseekChat),
 			Cost: ModelCost{
-				Input:  0.002,
-				Output: 0.003,
+				Input:  2,
+				Output: 3,
+				Cached: 0.2,
 			},
 			ContextWindow:   128000,
 			MaxOutputTokens: 8000,

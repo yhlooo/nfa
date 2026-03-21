@@ -3,64 +3,76 @@ package models
 import "github.com/nicksnyder/go-i18n/v2/i18n"
 
 var (
-	MsgModelDescQwen3Max = &i18n.Message{
-		ID:    "models.ModelDescQwen3Max",
-		Other: "Qwen's top flagship, rivaling global premier closed models",
-	}
-	MsgModelDescQwen3CoderPlus = &i18n.Message{
-		ID:    "models.ModelDescQwen3CoderPlus",
-		Other: "Qwen's premium coder for full-stack and advanced algorithms",
-	}
-	MsgModelDescQwen3CoderFlash = &i18n.Message{
-		ID:    "models.ModelDescQwen3CoderFlash",
-		Other: "Qwen's high-speed coding assistant for near-instant completion",
-	}
-	MsgModelDescQwen3VLPlus = &i18n.Message{
-		ID:    "models.ModelDescQwen3VLPlus",
-		Other: "Qwen's vision flagship for high-res parsing and complex docs",
-	}
-	MsgModelDescQwen3VLFlash = &i18n.Message{
-		ID:    "models.ModelDescQwen3VLFlash",
-		Other: "Qwen's lightweight vision model for fast, real-time perception",
-	}
 	MsgModelDescDeepseekReasoner = &i18n.Message{
 		ID:    "models.ModelDescDeepseekReasoner",
-		Other: "DeepSeek's CoT reasoning model for complex logic, math, and coding",
+		Other: "DeepSeek-V3.2 reasoning mode, optimized for complex reasoning tasks",
 	}
 	MsgModelDescDeepseekChat = &i18n.Message{
 		ID:    "models.ModelDescDeepseekChat",
-		Other: "DeepSeek's flagship, balancing top-tier performance and cost-efficiency",
+		Other: "DeepSeek-V3.2 standard mode, suitable for simple and general tasks",
+	}
+
+	MsgModelDescQwen35Plus = &i18n.Message{
+		ID:    "models.ModelDescQwen35Plus",
+		Other: "Alibaba Qwen3.5 series Plus model, native multimodal. Rivals top-tier frontier models in various benchmarks and significantly outperforms the Qwen3 series",
+	}
+	MsgModelDescQwen35_397B_A17B = &i18n.Message{
+		ID:    "models.ModelDescQwen35_397B_A17B",
+		Other: "Alibaba Qwen3.5 series 397B-A17B open-source model, with performance slightly exceeding qwen3.5-plus",
+	}
+	MsgModelDescQwen35Flash = &i18n.Message{
+		ID:    "models.ModelDescQwen35Flash",
+		Other: "Alibaba Qwen3.5 series lightweight high-speed version; optimized for speed and cost, suitable for simple tasks",
+	}
+	MsgModelDescQwen3Max = &i18n.Message{
+		ID:    "models.ModelDescQwen3Max",
+		Other: "Alibaba Qwen3 series text reasoning model",
+	}
+	MsgModelDescQwen3VLPlus = &i18n.Message{
+		ID:    "models.ModelDescQwen3VLPlus",
+		Other: "Alibaba Qwen3 series visual understanding model",
+	}
+	MsgModelDescQwen3VLFlash = &i18n.Message{
+		ID:    "models.ModelDescQwen3VLFlash",
+		Other: "Alibaba Qwen3 series lightweight high-speed visual understanding model, offering superior speed and cost-efficiency compared to qwen3-vl-plus",
+	}
+
+	MsgModelDescGLM5Turbo = &i18n.Message{
+		ID:    "models.ModelDescGLM5Turbo",
+		Other: "Z-AI's latest flagship for Coding and Agents. Enhanced core capabilities in tool calling, instruction following, scheduled/persistent tasks, and long-chain execution",
 	}
 	MsgModelDescGLM5 = &i18n.Message{
 		ID:    "models.ModelDescGLM5",
-		Other: "Zai's Coding/Agent flagship, SOTA in complex system engineering",
+		Other: "Z-AI's next-generation flagship base model, built for Agentic Engineering. Achieves open-source SOTA performance in Coding and Agent capabilities",
 	}
 	MsgModelDescGLM47 = &i18n.Message{
 		ID:    "models.ModelDescGLM47",
-		Other: "Zai's versatile flagship with elite logic and long-context parsing",
+		Other: "Z-AI's flagship model, designed for Agentic Coding scenarios with enhanced programming, long-range task planning, and tool coordination",
 	}
 	MsgModelDescGLM47FlashX = &i18n.Message{
 		ID:    "models.ModelDescGLM47FlashX",
-		Other: "Zai's high-speed 4.7 model, optimized for ultra-low latency",
+		Other: "Lightweight high-speed version of the GLM-4.7 series; optimized for speed and cost, suitable for simple tasks",
 	}
 	MsgModelDescGLM46V = &i18n.Message{
 		ID:    "models.ModelDescGLM46V",
-		Other: "Zai's multimodal flagship for high-precision image/video analysis",
+		Other: "Z-AI's multimodal flagship model, achieving SOTA visual understanding accuracy at its parameter scale",
 	}
 	MsgModelDescGLM46VFlashX = &i18n.Message{
 		ID:    "models.ModelDescGLM46VFlashX",
-		Other: "Zai's fast vision model tailored for real-time interaction",
+		Other: "Lightweight high-speed version of the GLM-4.6V series; optimized for speed and cost, suitable for simple tasks",
+	}
+
+	MsgModelDescMinimaxM27 = &i18n.Message{
+		ID:    "models.ModelDescMinimaxM27",
+		Other: "MiniMax's latest flagship text reasoning model; significantly outperforms MiniMax M2.5 in complex environment skill following",
 	}
 	MsgModelDescMinimaxM25 = &i18n.Message{
 		ID:    "models.ModelDescMinimaxM25",
-		Other: "MiniMax M2.5, strong reasoning with balanced performance",
+		Other: "MiniMax's flagship text reasoning model",
 	}
-	MsgModelDescMinimaxM27 = &i18n.Message{
-		ID:    "models.ModelDescMinimaxM27",
-		Other: "MiniMax M2.7, advanced model with extended context and capabilities",
-	}
+
 	MsgModelDescKimiK25 = &i18n.Message{
 		ID:    "models.ModelDescKimiK25",
-		Other: "Moonshot AI's Kimi K2.5, supports reasoning and vision understanding",
+		Other: "Moonshot AI's latest Kimi flagship, supporting text reasoning and visual understanding. Achieves open-source SOTA in Agent tasks, code, vision, and general intelligence",
 	}
 )

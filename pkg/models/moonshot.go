@@ -25,9 +25,9 @@ func MoonshotModels(ctx context.Context) []ModelConfig {
 			Reasoning:   true,
 			Vision:      true,
 			Cost: ModelCost{
-				Input:  0.004,
-				Output: 0.021,
-				Cached: 0.0007,
+				Input:  4,
+				Output: 21,
+				Cached: 0.7,
 			},
 			ContextWindow:   256000,
 			MaxOutputTokens: 256000,

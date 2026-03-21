@@ -35,10 +35,10 @@ type ModelConfig struct {
 
 // ModelCost 价格信息
 type ModelCost struct {
-	// 每千输入 Token 价格
+	// 每百万输入 Token 价格
 	Input float64 `json:"input,omitempty"`
-	// 每千输出 Token 价格
+	// 每百万输出 Token 价格
 	Output float64 `json:"output,omitempty"`
-	// 每千缓存 Token 价格
+	// 每百万缓存 Token 价格
 	Cached float64 `json:"cached,omitempty"`
 }

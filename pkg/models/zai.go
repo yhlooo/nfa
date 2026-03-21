@@ -20,13 +20,25 @@ const (
 func ZAIModels(ctx context.Context) []ModelConfig {
 	return []ModelConfig{
 		{
+			Name:        "glm-5-turbo",
+			Description: i18n.TContext(ctx, MsgModelDescGLM5Turbo),
+			Reasoning:   true,
+			Cost: ModelCost{
+				Input:  7, // 128K-256K
+				Output: 26,
+				Cached: 1.8,
+			},
+			ContextWindow:   200000,
+			MaxOutputTokens: 128000,
+		},
+		{
 			Name:        "glm-5",
 			Description: i18n.TContext(ctx, MsgModelDescGLM5),
 			Reasoning:   true,
 			Cost: ModelCost{
-				Input:  0.006,
-				Output: 0.022,
-				Cached: 0.0015,
+				Input:  6, // 128K-256K
+				Output: 22,
+				Cached: 1.5,
 			},
 			ContextWindow:   200000,
 			MaxOutputTokens: 128000,
@@ -36,9 +48,9 @@ func ZAIModels(ctx context.Context) []ModelConfig {
 			Description: i18n.TContext(ctx, MsgModelDescGLM47),
 			Reasoning:   true,
 			Cost: ModelCost{
-				Input:  0.004,
-				Output: 0.016,
-				Cached: 0.0008,
+				Input:  4, // 128K-256K
+				Output: 16,
+				Cached: 0.8,
 			},
 			ContextWindow:   200000,
 			MaxOutputTokens: 128000,
@@ -48,9 +60,9 @@ func ZAIModels(ctx context.Context) []ModelConfig {
 			Description: i18n.TContext(ctx, MsgModelDescGLM47FlashX),
 			Reasoning:   true,
 			Cost: ModelCost{
-				Input:  0.0005,
-				Output: 0.003,
-				Cached: 0.0001,
+				Input:  0.5,
+				Output: 3,
+				Cached: 0.1,
 			},
 			ContextWindow:   200000,
 			MaxOutputTokens: 128000,
@@ -61,9 +73,9 @@ func ZAIModels(ctx context.Context) []ModelConfig {
 			Reasoning:   true,
 			Vision:      true,
 			Cost: ModelCost{
-				Input:  0.002,
-				Output: 0.006,
-				Cached: 0.0004,
+				Input:  2, // 128K-256K
+				Output: 6,
+				Cached: 0.4,
 			},
 			ContextWindow:   128000,
 			MaxOutputTokens: 32000,
@@ -74,9 +86,9 @@ func ZAIModels(ctx context.Context) []ModelConfig {
 			Reasoning:   true,
 			Vision:      true,
 			Cost: ModelCost{
-				Input:  0.0003,
-				Output: 0.003,
-				Cached: 0.00003,
+				Input:  0.3, // 128K-256K
+				Output: 3,
+				Cached: 0.03,
 			},
 			ContextWindow:   128000,
 			MaxOutputTokens: 32000,

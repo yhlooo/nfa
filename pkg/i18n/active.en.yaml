@@ -10,25 +10,30 @@ commands.OtterOptsBackgroundDesc: Print with background
 commands.OtterOptsColorDesc: Print with color
 commands.OtterOptsScaleDesc: Scaling factor
 commands.ReasoningTag: Reasoning
-commands.RootOptsLightModelDesc: Default light model for the current session
-commands.RootOptsModelDesc: Default primary model for the current session
+commands.RootOptsLightModelDesc: Light model for the current session
+commands.RootOptsModelDesc: Primary model for the current session
 commands.RootOptsPrintAndExitDesc: Print answer and exit after responding
 commands.RootOptsResumeDesc: Resume a previous session by session ID
+commands.RootOptsVisionModelDesc: Vision model for the current session
 commands.VersionOptsOutputFormatDesc: Output format. One of (json)
 commands.VisionTag: Vision
-models.ModelDescDeepseekChat: DeepSeek's flagship, balancing top-tier performance and cost-efficiency
-models.ModelDescDeepseekReasoner: DeepSeek's CoT reasoning model for complex logic, math, and coding
-models.ModelDescGLM5: Zai's Coding/Agent flagship, SOTA in complex system engineering
-models.ModelDescGLM46V: Zai's multimodal flagship for high-precision image/video analysis
-models.ModelDescGLM46VFlashX: Zai's fast vision model tailored for real-time interaction
-models.ModelDescGLM47: Zai's versatile flagship with elite logic and long-context parsing
-models.ModelDescGLM47FlashX: Zai's high-speed 4.7 model, optimized for ultra-low latency
-models.ModelDescQwen3CoderFlash: Qwen's high-speed coding assistant for near-instant completion
-models.ModelDescQwen3CoderPlus: Qwen's premium coder for full-stack and advanced algorithms
-models.ModelDescQwen3Max: Qwen's top flagship, rivaling global premier closed models
-models.ModelDescQwen3VLFlash: Qwen's lightweight vision model for fast, real-time perception
-models.ModelDescQwen3VLPlus: Qwen's vision flagship for high-res parsing and complex docs
-models.ModelDescKimiK25: Moonshot AI's Kimi K2.5, supports reasoning and vision understanding
+models.ModelDescDeepseekChat: DeepSeek-V3.2 standard mode, suitable for simple and general tasks
+models.ModelDescDeepseekReasoner: DeepSeek-V3.2 reasoning mode, optimized for complex reasoning tasks
+models.ModelDescGLM5: Z-AI's next-generation flagship base model, built for Agentic Engineering. Achieves open-source SOTA performance in Coding and Agent capabilities
+models.ModelDescGLM5Turbo: Z-AI's latest flagship for Coding and Agents. Enhanced core capabilities in tool calling, instruction following, scheduled/persistent tasks, and long-chain execution
+models.ModelDescGLM46V: Z-AI's multimodal flagship model, achieving SOTA visual understanding accuracy at its parameter scale
+models.ModelDescGLM46VFlashX: Lightweight high-speed version of the GLM-4.6V series; optimized for speed and cost, suitable for simple tasks
+models.ModelDescGLM47: Z-AI's flagship model, designed for Agentic Coding scenarios with enhanced programming, long-range task planning, and tool coordination
+models.ModelDescGLM47FlashX: Lightweight high-speed version of the GLM-4.7 series; optimized for speed and cost, suitable for simple tasks
+models.ModelDescKimiK25: Moonshot AI's latest Kimi flagship, supporting text reasoning and visual understanding. Achieves open-source SOTA in Agent tasks, code, vision, and general intelligence
+models.ModelDescMinimaxM25: MiniMax's flagship text reasoning model
+models.ModelDescMinimaxM27: MiniMax's latest flagship text reasoning model; significantly outperforms MiniMax M2.5 in complex environment skill following
+models.ModelDescQwen3Max: Alibaba Qwen3 series text reasoning model
+models.ModelDescQwen3VLFlash: Alibaba Qwen3 series lightweight high-speed visual understanding model, offering superior speed and cost-efficiency compared to qwen3-vl-plus
+models.ModelDescQwen3VLPlus: Alibaba Qwen3 series visual understanding model
+models.ModelDescQwen35Flash: Alibaba Qwen3.5 series lightweight high-speed version; optimized for speed and cost, suitable for simple tasks
+models.ModelDescQwen35Plus: Alibaba Qwen3.5 series Plus model, native multimodal. Rivals top-tier frontier models in various benchmarks and significantly outperforms the Qwen3 series
+models.ModelDescQwen35_397B_A17B: Alibaba Qwen3.5 series 397B-A17B open-source model, with performance slightly exceeding qwen3.5-plus
 skills.ShortTermTrendForecastDesc: Analyze and predict short-term stock trends (within days, week, or month).
 ui.chat.BuiltinSkills: Builtin skills
 ui.chat.CmdDescClear: Start a fresh conversation

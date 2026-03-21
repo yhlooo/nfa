@@ -21,37 +21,51 @@ const (
 func QwenModels(ctx context.Context) []ModelConfig {
 	return []ModelConfig{
 		{
-			Name:        "qwen3-max",
-			Description: i18n.TContext(ctx, MsgModelDescQwen3Max),
+			Name:        "qwen3.5-plus",
+			Description: i18n.TContext(ctx, MsgModelDescQwen35Plus),
 			Reasoning:   true,
+			Vision:      true,
 			Cost: ModelCost{
-				Input:  0.0025,
-				Output: 0.01,
-				Cached: 0.0005,
+				Input:  2, // 128K-256K
+				Output: 12,
+			},
+			ContextWindow:   1000000,
+			MaxOutputTokens: 64000,
+		},
+		{
+			Name:        "qwen3.5-397b-a17b",
+			Description: i18n.TContext(ctx, MsgModelDescQwen35_397B_A17B),
+			Reasoning:   true,
+			Vision:      true,
+			Cost: ModelCost{
+				Input:  3, // 128K-256K
+				Output: 18,
 			},
 			ContextWindow:   256000,
 			MaxOutputTokens: 64000,
 		},
 		{
-			Name:        "qwen3-coder-plus",
-			Description: i18n.TContext(ctx, MsgModelDescQwen3CoderPlus),
+			Name:        "qwen3.5-flash",
+			Description: i18n.TContext(ctx, MsgModelDescQwen35Flash),
+			Reasoning:   true,
+			Vision:      true,
 			Cost: ModelCost{
-				Input:  0.004,
-				Output: 0.016,
-				Cached: 0.0008,
+				Input:  0.8, // 128K-256K
+				Output: 8,
 			},
 			ContextWindow:   1000000,
 			MaxOutputTokens: 64000,
 		},
 		{
-			Name:        "qwen3-coder-flash",
-			Description: i18n.TContext(ctx, MsgModelDescQwen3CoderFlash),
+			Name:        "qwen3-max",
+			Description: i18n.TContext(ctx, MsgModelDescQwen3Max),
+			Reasoning:   true,
 			Cost: ModelCost{
-				Input:  0.001,
-				Output: 0.004,
-				Cached: 0.0002,
+				Input:  2.5,
+				Output: 10,
+				Cached: 0.5,
 			},
-			ContextWindow:   1000000,
+			ContextWindow:   256000,
 			MaxOutputTokens: 64000,
 		},
 		{
@@ -60,9 +74,9 @@ func QwenModels(ctx context.Context) []ModelConfig {
 			Reasoning:   true,
 			Vision:      true,
 			Cost: ModelCost{
-				Input:  0.001,
-				Output: 0.01,
-				Cached: 0.0002,
+				Input:  1,
+				Output: 10,
+				Cached: 0.2,
 			},
 			ContextWindow:   256000,
 			MaxOutputTokens: 32000,
@@ -73,9 +87,9 @@ func QwenModels(ctx context.Context) []ModelConfig {
 			Reasoning:   true,
 			Vision:      true,
 			Cost: ModelCost{
-				Input:  0.00015,
-				Output: 0.0015,
-				Cached: 0.00003,
+				Input:  0.15,
+				Output: 1.5,
+				Cached: 0.03,
 			},
 			ContextWindow:   256000,
 			MaxOutputTokens: 32000,

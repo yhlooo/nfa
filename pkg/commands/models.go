@@ -63,12 +63,17 @@ func runModelsList(ctx context.Context) error {
 
 // outputModelList 输出模型列表
 func outputModelList(ctx context.Context, modelList []models.ModelConfig) error {
-	t := tablewriter.NewTable(os.Stdout, tablewriter.WithRendition(tw.Rendition{
-		Borders: tw.BorderNone,
-		Settings: tw.Settings{
-			Separators: tw.Separators{BetweenColumns: tw.Off},
-		},
-	}))
+	t := tablewriter.NewTable(os.Stdout,
+		tablewriter.WithRendition(tw.Rendition{
+			Borders: tw.BorderNone,
+			Settings: tw.Settings{
+				Separators: tw.Separators{BetweenColumns: tw.Off},
+			},
+		}),
+		tablewriter.WithWidths(tw.CellWidth{
+			PerColumn: tw.Mapper[int, int]{2: 100},
+		}),
+	)
 	defer func() { _ = t.Close() }()
 
 	for _, model := range modelList {

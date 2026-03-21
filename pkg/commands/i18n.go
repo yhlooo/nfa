@@ -23,11 +23,15 @@ var (
 
 	MsgRootOptsModelDesc = &i18n.Message{
 		ID:    "commands.RootOptsModelDesc",
-		Other: "Default primary model for the current session",
+		Other: "Primary model for the current session",
 	}
 	MsgRootOptsLightModelDesc = &i18n.Message{
 		ID:    "commands.RootOptsLightModelDesc",
-		Other: "Default light model for the current session",
+		Other: "Light model for the current session",
+	}
+	MsgRootOptsVisionModelDesc = &i18n.Message{
+		ID:    "commands.RootOptsVisionModelDesc",
+		Other: "Vision model for the current session",
 	}
 	MsgRootOptsPrintAndExitDesc = &i18n.Message{
 		ID:    "commands.RootOptsPrintAndExitDesc",
