@@ -22,6 +22,8 @@ func NewInputBox(ctx context.Context, commands []SelectorOption, hist *history.H
 	input.ShowLineNumbers = false
 	input.SetWidth(100)
 	input.FocusedStyle.Base = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true, false)
+	input.FocusedStyle.CursorLine = lipgloss.NewStyle()
+	input.BlurredStyle.CursorLine = lipgloss.NewStyle()
 	input.Focus()
 
 	commandSelector := NewSelector(commands, "/", 8, 100)
