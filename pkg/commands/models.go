@@ -20,8 +20,9 @@ import (
 // newModelsCommand 创建 models 子命令
 func newModelsCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "models",
-		Short: i18n.T(MsgCmdShortDescModels),
+		Use:     "models",
+		Aliases: []string{"model"},
+		Short:   i18n.T(MsgCmdShortDescModels),
 	}
 
 	cmd.AddCommand(
