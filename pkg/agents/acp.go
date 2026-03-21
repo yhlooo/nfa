@@ -200,6 +200,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	if m.Primary == "" {
 		return acp.PromptResponse{StopReason: acp.StopReasonRefusal}, fmt.Errorf("no available model")
 	}
+	m.SetAllModels(a.availableModels)
 
 	prompt := ""
 	for _, content := range params.Prompt {

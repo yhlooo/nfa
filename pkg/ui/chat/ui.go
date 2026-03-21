@@ -407,7 +407,7 @@ func (ui *ChatUI) printHello() tea.Cmd {
 		bannerLines[i] += fmt.Sprintf("\r\033[36C\033[2m%s (light)\033[0m", ui.curModels.GetLight())
 		i++
 	}
-	if ui.curModels.GetVision() != ui.curModels.GetPrimary() {
+	if visionModel := ui.curModels.GetVision(); visionModel != "" && visionModel != ui.curModels.GetPrimary() {
 		bannerLines[i] += fmt.Sprintf("\r\033[36C\033[2m%s (vision)\033[0m", ui.curModels.GetVision())
 		i++
 	}
