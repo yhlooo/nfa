@@ -47,11 +47,11 @@ func (auth AuthInfo) SetL2AuthHeader(req *http.Request, body []byte) error {
 		return fmt.Errorf("%w: %w", ErrSignError, err)
 	}
 
-	req.Header["POLY_ADDRESS"] = []string{auth.Address}
-	req.Header["POLY_SIGNATURE"] = []string{sign}
-	req.Header["POLY_TIMESTAMP"] = []string{ts}
-	req.Header["POLY_API_KEY"] = []string{auth.APIKey}
-	req.Header["POLY_PASSPHRASE"] = []string{auth.Passphrase}
+	req.Header.Set("POLY_ADDRESS", auth.Address)
+	req.Header.Set("POLY_SIGNATURE", sign)
+	req.Header.Set("POLY_TIMESTAMP", ts)
+	req.Header.Set("POLY_API_KEY", auth.APIKey)
+	req.Header.Set("POLY_PASSPHRASE", auth.Passphrase)
 
 	return nil
 }
