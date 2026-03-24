@@ -16,6 +16,10 @@ var (
 	ErrUnexpectedStatusCode = errors.New("UnexpectedStatusCode")
 	// ErrSignError 签名错误
 	ErrSignError = errors.New("SignError")
+	// ErrNonceAlreadyUsed 用于生成密钥的 nonce 已经被使用
+	ErrNonceAlreadyUsed = errors.New("NonceAlreadyUsed")
+	// ErrInvalidAuthInfo 非法的认证信息
+	ErrInvalidAuthInfo = errors.New("InvalidAuthInfo")
 )
 
 // HTTPStatusCodeError HTTP 状态码错误

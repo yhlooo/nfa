@@ -2,6 +2,7 @@ package polymarket
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/url"
 )
@@ -24,7 +25,7 @@ type Client struct {
 	*CommonClient
 }
 
-var _ FullClient = (*Client)(nil)
+var _ ClientInterface = (*Client)(nil)
 
 // GetEventBySlug 通过 slug 获取事件
 func (c *Client) GetEventBySlug(ctx context.Context, req *GetEventBySlugRequest) (*Event, error) {
@@ -47,6 +48,52 @@ func (c *Client) GetEventBySlug(ctx context.Context, req *GetEventBySlugRequest)
 		return nil, err
 	}
 	return event, nil
+}
+
+// CreateOrDeriveAPIKey 创建或派生 API 密钥
+//
+// 如果指定 nonce 还未生成密钥则创建密钥，若已生成则获取已有密钥
+func (c *Client) CreateOrDeriveAPIKey(ctx context.Context, nonce int64) (*APIKeyInfo, error) {
+	info, err := c.CreateAPIKey(ctx, nonce)
+	if err != nil {
+		if errors.Is(err, ErrNonceAlreadyUsed) {
+			return c.DeriveAPIKey(ctx, nonce)
+		}
+		return nil, err
+	}
+	return info, nil
+}
+
+// CreateAPIKey 创建 API 密钥
+func (c *Client) CreateAPIKey(ctx context.Context, nonce int64) (*APIKeyInfo, error) {
+	info := &APIKeyInfo{}
+	err := c.Do(ctx, &RawRequest{
+		Method:     http.MethodPost,
+		Endpoint:   CLOBEndpoint,
+		URI:        "/auth/api-key",
+		WithL1Auth: true,
+		L1Nonce:    nonce,
+	}, info)
+	if err != nil {
+		return nil, err
+	}
+	return info, nil
+}
+
+// DeriveAPIKey 获取已有 API 密钥
+func (c *Client) DeriveAPIKey(ctx context.Context, nonce int64) (*APIKeyInfo, error) {
+	info := &APIKeyInfo{}
+	err := c.Do(ctx, &RawRequest{
+		Method:     http.MethodGet,
+		Endpoint:   CLOBEndpoint,
+		URI:        "/auth/derive-api-key",
+		WithL1Auth: true,
+		L1Nonce:    nonce,
+	}, info)
+	if err != nil {
+		return nil, err
+	}
+	return info, nil
 }
 
 // SendHeartbeat 发送心跳

@@ -2,11 +2,13 @@ package polymarket
 
 import "context"
 
-// FullClient PolyMarket 客户端
-type FullClient interface {
+// ClientInterface PolyMarket 客户端
+type ClientInterface interface {
+	CommonClientInterface
 	GammaAPIClient
 	DataAPIClient
-	CLOBClient
+	CLOBReaderClient
+	CLOBWriterClient
 }
 
 // GammaAPIClient Gamma API 客户端
@@ -18,12 +20,31 @@ type GammaAPIClient interface {
 // DataAPIClient Data API 客户端
 type DataAPIClient interface{}
 
-// CLOBClient CLOB API 客户端
-type CLOBClient interface {
+// CLOBReaderClient CLOB 读 API 客户端
+type CLOBReaderClient interface {
+}
+
+// CLOBWriterClient CLOB 写 API 客户端
+type CLOBWriterClient interface {
 	// SendHeartbeat 发送心跳
 	SendHeartbeat(ctx context.Context) (*HeartbeatStatus, error)
 	// GetUserOrders 获取用户订单
 	GetUserOrders(ctx context.Context, req *GetUserOrdersRequest) (*OrdersList, error)
+}
+
+// CommonClientInterface 通用客户端
+type CommonClientInterface interface {
+	// AuthInfo 获取认证信息
+	AuthInfo() AuthInfo
+	// SetAuthInfo 设置认证信息
+	SetAuthInfo(authInfo AuthInfo)
+}
+
+// APIKeyInfo API 密钥信息
+type APIKeyInfo struct {
+	APIKey     string `json:"apiKey"`
+	Secret     string `json:"secret"`
+	Passphrase string `json:"passphrase"`
 }
 
 // ListMeta 列表元信息

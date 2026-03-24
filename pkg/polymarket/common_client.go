@@ -35,6 +35,8 @@ type RawRequest struct {
 	BodyData any
 	Headers  http.Header
 
+	WithL1Auth bool
+	L1Nonce    int64
 	WithL2Auth bool
 }
 
@@ -45,6 +47,16 @@ func (req RawRequest) URL() string {
 		u += "?" + req.Query.Encode()
 	}
 	return u
+}
+
+// AuthInfo 获取认证信息
+func (c *CommonClient) AuthInfo() AuthInfo {
+	return c.authInfo
+}
+
+// SetAuthInfo 设置认证信息
+func (c *CommonClient) SetAuthInfo(authInfo AuthInfo) {
+	c.authInfo = authInfo
 }
 
 // SendRawRequest 发送原始请求，返回响应
@@ -73,9 +85,13 @@ func (c *CommonClient) SendRawRequest(ctx context.Context, req *RawRequest) (*ht
 	}
 
 	// 设置认证头
-	if req.WithL2Auth {
+	if req.WithL1Auth {
+		if err := c.authInfo.SetL1AuthHeader(httpReq, req.L1Nonce); err != nil {
+			return nil, fmt.Errorf("set l1 auth header error: %w", err)
+		}
+	} else if req.WithL2Auth {
 		if err := c.authInfo.SetL2AuthHeader(httpReq, bodyRaw); err != nil {
-			return nil, fmt.Errorf("set l2 auth header: %w", err)
+			return nil, fmt.Errorf("set l2 auth header error: %w", err)
 		}
 	}
 

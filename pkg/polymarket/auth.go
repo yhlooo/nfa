@@ -4,11 +4,16 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/binary"
 	"fmt"
 	"math/big"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 // AuthInfo 认证信息
@@ -37,8 +42,81 @@ func (auth AuthInfo) HasL1Auth() bool {
 }
 
 // L1Sign 生成 L1 签名 (CLOB EIP-712 签名)
-func (auth AuthInfo) L1Sign(ts string, nonce *big.Int, message string) (string, error) {
-	return "", nil
+func (auth AuthInfo) L1Sign(ts string, nonce int64) (string, error) {
+	if !auth.HasL1Auth() {
+		return "", fmt.Errorf("%w: l1 auth info missing", ErrInvalidAuthInfo)
+	}
+
+	// 解析私钥
+	privateKeyHex := strings.TrimPrefix(auth.PrivateKey, "0x")
+	privateKey, err := crypto.HexToECDSA(privateKeyHex)
+	if err != nil {
+		return "", fmt.Errorf("invalid private key: %w", err)
+	}
+
+	// Polygon Chain ID
+	chainID := big.NewInt(137)
+
+	// 构建 EIP-712 Domain Separator
+	// domain = { name: "ClobAuthDomain", version: "1", chainId: 137 }
+	domainSeparatorData := make([]byte, 0, 32*4)
+	domainSeparatorData = append(domainSeparatorData, crypto.Keccak256([]byte(
+		"EIP712Domain(string name,string version,uint256 chainId)",
+	))...)
+	domainSeparatorData = append(domainSeparatorData, crypto.Keccak256([]byte("ClobAuthDomain"))...)
+	domainSeparatorData = append(domainSeparatorData, crypto.Keccak256([]byte("1"))...)
+	domainSeparatorData = append(domainSeparatorData, common.LeftPadBytes(chainID.Bytes(), 32)...)
+	domainSeparator := crypto.Keccak256(domainSeparatorData)
+
+	// 构建 ClobAuth 结构哈希
+	structData := make([]byte, 0, 32*5)
+	structData = append(structData, crypto.Keccak256([]byte(
+		"ClobAuth(address address,string timestamp,uint256 nonce,string message)",
+	))...)
+	structData = append(structData, common.LeftPadBytes(common.HexToAddress(auth.Address).Bytes(), 32)...)
+	structData = append(structData, crypto.Keccak256([]byte(ts))...)
+	structData = append(structData, common.LeftPadBytes(binary.BigEndian.AppendUint64(nil, uint64(nonce)), 32)...)
+	structData = append(structData, crypto.Keccak256([]byte(
+		"This message attests that I control the given wallet",
+	))...)
+	structHash := crypto.Keccak256(structData)
+
+	// 构建最终签名数据: keccak256("\x19\x01" ‖ domainSeparator ‖ structHash)
+	signData := make([]byte, 0, 2+32+32)
+	signData = append(signData, []byte("\x19\x01")...)
+	signData = append(signData, domainSeparator...)
+	signData = append(signData, structHash...)
+	signDataHash := crypto.Keccak256Hash(signData)
+
+	// 使用私钥签名
+	signature, err := crypto.Sign(signDataHash.Bytes(), privateKey)
+	if err != nil {
+		return "", fmt.Errorf("sign error: %w", err)
+	}
+
+	// 调整 v 值 (EIP-155 兼容签名 v = 27 或 28)
+	if signature[64] < 27 {
+		signature[64] += 27
+	}
+
+	return "0x" + common.Bytes2Hex(signature), nil
+}
+
+// SetL1AuthHeader 设置 L1 认证请求头
+func (auth AuthInfo) SetL1AuthHeader(req *http.Request, nonce int64) error {
+	ts := strconv.FormatInt(time.Now().Unix(), 10)
+
+	sign, err := auth.L1Sign(ts, nonce)
+	if err != nil {
+		return fmt.Errorf("%w: %w", ErrSignError, err)
+	}
+
+	req.Header.Set("POLY_ADDRESS", auth.Address)
+	req.Header.Set("POLY_SIGNATURE", sign)
+	req.Header.Set("POLY_TIMESTAMP", ts)
+	req.Header.Set("POLY_NONCE", strconv.FormatInt(nonce, 10))
+
+	return nil
 }
 
 // WithL2Auth 返回加上 L2 的认证信息
@@ -57,6 +135,10 @@ func (auth AuthInfo) HasL2Auth() bool {
 
 // L2Sign 生成 L2 签名 (请求的 HMAC 签名)
 func (auth AuthInfo) L2Sign(method, uri, ts string, body []byte) (string, error) {
+	if !auth.HasL2Auth() {
+		return "", fmt.Errorf("%w: l2 auth info missing", ErrInvalidAuthInfo)
+	}
+
 	secretRaw, err := base64.URLEncoding.DecodeString(auth.Secret)
 	if err != nil {
 		return "", fmt.Errorf("invalid secret: %w", err)
