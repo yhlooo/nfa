@@ -47,11 +47,11 @@ func TestAuthInfo_L2Sign(t *testing.T) {
 	a := assert.New(t)
 
 	auth := AuthInfo{
-		Secret: "iO5A44JWuUPsfZ0pzKEX11ez4eLg_yvNLnuXwm96iD8=", // 随机生成的密钥，无任何实际作用
+		Secret: "0000000000000000000000000000000000000000000=",
 	}
 	s, err := auth.L2Sign(http.MethodGet, "/test", "1774178860", []byte(`{"key":"value"}`))
 	a.NoError(err)
-	a.Equal("_-XiITiB2hE2ekY4d_urRAa3GOZXVYiysVvmAyMYxw8=", s)
+	a.Equal("6wSe9QjNN_grhxOt_20RRBMcVUo0yQKAAa4iFdIvLQc=", s)
 }
 
 // TestAuthInfo_SetL2AuthHeader 测试 AuthInfo.SetL2AuthHeader 方法
@@ -68,7 +68,7 @@ func TestAuthInfo_SetL2AuthHeader(t *testing.T) {
 	auth := AuthInfo{
 		Address:    "0x1234567890ABCDEF01234567890ABCDEF1234567",
 		APIKey:     "12345678-1234-1234-1234-123456789012",
-		Secret:     "iO5A44JWuUPsfZ0pzKEX11ez4eLg_yvNLnuXwm96iD8=",
+		Secret:     "0000000000000000000000000000000000000000000=",
 		Passphrase: "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
 	}
 
