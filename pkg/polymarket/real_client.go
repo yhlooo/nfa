@@ -3,8 +3,11 @@ package polymarket
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
+
+	"github.com/go-logr/logr"
 )
 
 const (
@@ -77,6 +80,12 @@ func (c *Client) CreateAPIKey(ctx context.Context, nonce int64) (*APIKeyInfo, er
 	if err != nil {
 		return nil, err
 	}
+
+	logger := logr.FromContextOrDiscard(ctx)
+	logger.V(1).Info(fmt.Sprintf(
+		"created api key: apiKey: %s, secret: %s, passphrase: %s",
+		info.APIKey, info.Secret, info.Passphrase,
+	))
 	return info, nil
 }
 
@@ -93,6 +102,12 @@ func (c *Client) DeriveAPIKey(ctx context.Context, nonce int64) (*APIKeyInfo, er
 	if err != nil {
 		return nil, err
 	}
+
+	logger := logr.FromContextOrDiscard(ctx)
+	logger.V(1).Info(fmt.Sprintf(
+		"derived api key: apiKey: %s, secret: %s, passphrase: %s",
+		info.APIKey, info.Secret, info.Passphrase,
+	))
 	return info, nil
 }
 
