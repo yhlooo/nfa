@@ -109,3 +109,7 @@ go run ./cmd/nfa tools
 原则上对用户展示的文本（不含日志）都需要支持中文和英文两种语言。这些需要支持国际化的文本需要以 `i18n.Message` 结构体的形式定义在同一个包中的 `i18n.go` 文件中，比如 CLI 命令相关的描述文本定义在 `pkg/commands/i18n.go` 中。
 
 翻译文件在 `pkg/i18n/active.en.yaml` 和 `pkg/i18n/active.zh.yaml` 中，但是这两个文件 **不能直接修改** ，需要通过 Skill `i18n-translate` 从代码中提取 `i18n.Message` 生成。
+
+## 外部参考资料
+
+- PolyMarket: https://docs.polymarket.com/llms.txt
