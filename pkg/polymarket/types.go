@@ -1,6 +1,10 @@
 package polymarket
 
-import "context"
+import (
+	"context"
+
+	"github.com/gorilla/websocket"
+)
 
 // ClientInterface PolyMarket 客户端
 type ClientInterface interface {
@@ -15,6 +19,8 @@ type ClientInterface interface {
 type GammaAPIClient interface {
 	// GetEventBySlug 通过 slug 获取事件
 	GetEventBySlug(ctx context.Context, req *GetEventBySlugRequest) (*Event, error)
+	// GetMarketBySlug 通过 slug 获取市场
+	GetMarketBySlug(ctx context.Context, slug string) (*Market, error)
 }
 
 // DataAPIClient Data API 客户端
@@ -22,6 +28,8 @@ type DataAPIClient interface{}
 
 // CLOBReaderClient CLOB 读 API 客户端
 type CLOBReaderClient interface {
+	// ConnectMarketChannel WebSocket 连接市场信道
+	ConnectMarketChannel(ctx context.Context) (*websocket.Conn, error)
 }
 
 // CLOBWriterClient CLOB 写 API 客户端
@@ -108,4 +116,17 @@ type Order struct {
 // HeartbeatStatus 心跳状态
 type HeartbeatStatus struct {
 	Status string `json:"status"`
+}
+
+// Market 市场信息
+type Market struct {
+	ID           string `json:"id"`
+	Question     string `json:"question"`
+	Description  string `json:"description"`
+	ConditionID  string `json:"conditionId"`
+	Slug         string `json:"slug"`
+	ClobTokenIDs string `json:"clobTokenIds"` // JSON 字符串数组
+	Outcomes     string `json:"outcomes"`     // JSON 字符串数组
+	Active       bool   `json:"active"`
+	Closed       bool   `json:"closed"`
 }

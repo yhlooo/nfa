@@ -8,12 +8,14 @@ import (
 	"net/url"
 
 	"github.com/go-logr/logr"
+	"github.com/gorilla/websocket"
 )
 
 const (
-	GammaAPIEndpoint = "https://gamma-api.polymarket.com"
-	DataAPIEndpoint  = "https://data-api.polymarket.com"
-	CLOBEndpoint     = "https://clob.polymarket.com"
+	GammaAPIEndpoint      = "https://gamma-api.polymarket.com"
+	DataAPIEndpoint       = "https://data-api.polymarket.com"
+	CLOBEndpoint          = "https://clob.polymarket.com"
+	CLOBWebSocketEndpoint = "wss://ws-subscriptions-clob.polymarket.com"
 )
 
 // NewClient 创建 PolyMarket 客户端
@@ -154,4 +156,27 @@ func (c *Client) GetUserOrders(ctx context.Context, req *GetUserOrdersRequest) (
 		return nil, err
 	}
 	return orders, nil
+}
+
+// GetMarketBySlug 通过 slug 获取市场
+func (c *Client) GetMarketBySlug(ctx context.Context, slug string) (*Market, error) {
+	market := &Market{}
+	err := c.Do(ctx, &RawRequest{
+		Method:   http.MethodGet,
+		Endpoint: GammaAPIEndpoint,
+		URI:      "/markets/slug/" + slug,
+	}, market)
+	if err != nil {
+		return nil, err
+	}
+	return market, nil
+}
+
+// ConnectMarketChannel WebSocket 连接市场信道
+func (c *Client) ConnectMarketChannel(ctx context.Context) (*websocket.Conn, error) {
+	return c.ConnectWebSocket(ctx, &RawRequest{
+		Method:   http.MethodGet,
+		Endpoint: CLOBWebSocketEndpoint,
+		URI:      "/ws/market",
+	})
 }

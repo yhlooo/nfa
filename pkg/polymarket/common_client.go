@@ -10,12 +10,14 @@ import (
 	"net/url"
 
 	"github.com/go-logr/logr"
+	"github.com/gorilla/websocket"
 )
 
 // NewCommonClient 创建通用客户端
 func NewCommonClient(authInfo AuthInfo) *CommonClient {
 	return &CommonClient{
 		httpClient: http.DefaultClient,
+		wsDialer:   websocket.DefaultDialer,
 		authInfo:   authInfo,
 	}
 }
@@ -23,6 +25,7 @@ func NewCommonClient(authInfo AuthInfo) *CommonClient {
 // CommonClient 通用客户端
 type CommonClient struct {
 	httpClient *http.Client
+	wsDialer   *websocket.Dialer
 	authInfo   AuthInfo
 }
 
@@ -150,4 +153,26 @@ func (c *CommonClient) Do(ctx context.Context, req *RawRequest, respData any) er
 	}
 
 	return nil
+}
+
+// ConnectWebSocket 连接 WebSocket
+func (c *CommonClient) ConnectWebSocket(ctx context.Context, req *RawRequest) (*websocket.Conn, error) {
+	logger := logr.FromContextOrDiscard(ctx)
+
+	u := req.URL()
+	logger.V(1).Info(fmt.Sprintf("connecting to websocket: %s", u))
+	conn, resp, err := c.wsDialer.DialContext(ctx, u, nil)
+	if err != nil {
+		if resp == nil {
+			return nil, fmt.Errorf("dial websocket error: %w", err)
+		}
+		respContent, _ := io.ReadAll(io.LimitReader(resp.Body, 4<<10)) // 读取前 4K
+		_ = resp.Body.Close()
+		return nil, fmt.Errorf(
+			"%w: dial websocket error, status code: %d, body: %s",
+			HTTPStatusCodeError(resp.StatusCode), resp.StatusCode, string(respContent),
+		)
+	}
+
+	return conn, nil
 }

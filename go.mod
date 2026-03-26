@@ -14,6 +14,7 @@ require (
 	github.com/firebase/genkit/go v1.4.0
 	github.com/go-logr/logr v1.4.3
 	github.com/google/uuid v1.6.0
+	github.com/gorilla/websocket v1.5.3
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/olekukonko/tablewriter v1.1.3
 	github.com/openai/openai-go v1.8.2

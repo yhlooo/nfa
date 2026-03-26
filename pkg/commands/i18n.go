@@ -56,4 +56,8 @@ var (
 
 	MsgCmdShortDescVersion         = &i18n.Message{ID: "commands.CmdShortDescVersion", Other: "Print the version information"}
 	MsgVersionOptsOutputFormatDesc = &i18n.Message{ID: "commands.VersionOptsOutputFormatDesc", Other: "Output format. One of (json)"}
+
+	MsgCmdShortDescTools                = &i18n.Message{ID: "commands.CmdShortDescTools", Other: "External tools"}
+	MsgCmdShortDescToolsPolyMarket      = &i18n.Message{ID: "commands.CmdShortDescToolsPolyMarket", Other: "PolyMarket tools"}
+	MsgCmdShortDescToolsPolyMarketWatch = &i18n.Message{ID: "commands.CmdShortDescToolsPolyMarketWatch", Other: "Watch a PolyMarket market in real-time"}
 )
