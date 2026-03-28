@@ -21,11 +21,14 @@ type MarketPage struct {
 	market  *pm.Market
 	watcher *pm.Watcher
 
-	bestBids   map[string]string
-	bestAsks   map[string]string
-	lastUpdate time.Time
-	connected  bool
-	width      int
+	bestBids        map[string]string
+	bestAsks        map[string]string
+	lastUpdate      time.Time
+	connected       bool
+	underlyingPrice *float64 // 底层资产当前价格
+	priceToBeat     *float64 // 起始价格
+	underlyingSym   string   // 底层资产符号
+	width           int
 
 	started bool // Watcher 是否已启动
 }
@@ -50,6 +53,16 @@ func (p *MarketPage) SetContext(ctx context.Context) {
 func (p *MarketPage) Type() string { return "market" }
 
 func (p *MarketPage) OnPush() {
+	// 如果 Market 没有 events 数据，先同步加载市场完整信息
+	if len(p.market.Events) == 0 && p.market.Slug != "" {
+		if c, ok := p.client.(*pm.Client); ok {
+			market, err := c.GetMarketBySlug(p.ctx, p.market.Slug)
+			if err == nil {
+				p.market = market
+			}
+		}
+	}
+
 	// 解析 asset IDs
 	assetIDs := parseJSONStringArray(p.market.ClobTokenIDs)
 	if len(assetIDs) == 0 {
@@ -59,7 +72,7 @@ func (p *MarketPage) OnPush() {
 	// 创建并启动 Watcher
 	// 需要 *pm.Client（实现 Watcher 所需接口）
 	if c, ok := p.client.(*pm.Client); ok {
-		p.watcher = pm.NewWatcher(c, assetIDs)
+		p.watcher = pm.NewWatcher(c, p.market, assetIDs)
 		if err := p.watcher.Start(p.ctx); err != nil {
 			p.connected = false
 			return
@@ -124,6 +137,25 @@ func (p *MarketPage) View() string {
 	}
 
 	b.WriteString("\n")
+
+	// 底层资产价格区域
+	underlyingAsset := pm.ParseResolutionSource(p.market)
+	if underlyingAsset != nil {
+		priceStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("220"))
+		ptbStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("214"))
+
+		if p.underlyingPrice != nil {
+			b.WriteString(priceStyle.Render(fmt.Sprintf("%s Price: $%.2f", strings.ToUpper(p.underlyingSym), *p.underlyingPrice)))
+			b.WriteString("\n")
+		}
+
+		if p.priceToBeat != nil {
+			b.WriteString(ptbStyle.Render(fmt.Sprintf("Price to Beat: $%.2f", *p.priceToBeat)))
+			b.WriteString("\n")
+		}
+
+		b.WriteString("\n")
+	}
 
 	// 价格卡片
 	outcomes := parseJSONStringArray(p.market.Outcomes)
@@ -218,6 +250,19 @@ func (p *MarketPage) handleMarketEvent(event pm.MarketEvent) {
 			if pc.BestAsk != "" {
 				p.bestAsks[pc.AssetID] = pc.BestAsk
 			}
+		}
+
+	case "underlying_price":
+		if up, ok := event.Data.(*pm.UnderlyingPriceEvent); ok {
+			p.underlyingPrice = &up.Value
+			if p.underlyingSym == "" {
+				p.underlyingSym = up.Symbol
+			}
+		}
+
+	case "price_to_beat":
+		if ptb, ok := event.Data.(*pm.PriceToBeatEvent); ok {
+			p.priceToBeat = &ptb.PriceToBeat
 		}
 	}
 }

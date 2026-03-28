@@ -37,6 +37,11 @@ func NewUI(opts Options) *UI {
 	}
 }
 
+// hasUnderlyingAsset 是否有底层资产
+func (ui *UI) hasUnderlyingAsset() bool {
+	return polymarket.ParseResolutionSource(ui.market) != nil
+}
+
 // UI PolyMarket 市场监听 UI
 type UI struct {
 	ctx    context.Context
@@ -47,10 +52,13 @@ type UI struct {
 	outcomeNames []string
 	watcher      *polymarket.Watcher
 
-	bestBids   map[string]string
-	bestAsks   map[string]string
-	lastUpdate time.Time
-	connected  bool
+	bestBids        map[string]string
+	bestAsks        map[string]string
+	lastUpdate      time.Time
+	connected       bool
+	underlyingPrice *float64 // 底层资产当前价格
+	priceToBeat     *float64 // 起始价格
+	underlyingSym   string   // 底层资产符号
 
 	width int
 }
@@ -120,6 +128,37 @@ func (ui *UI) View() string {
 	}
 	b.WriteString(separatorStyle.Render(strings.Repeat("─", ui.width)))
 	b.WriteString("\n\n")
+
+	// 底层资产价格区域
+	if ui.hasUnderlyingAsset() {
+		underlyingStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("220")) // 黄色
+		priceToBeatStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("214"))           // 橙色
+
+		if ui.underlyingPrice != nil {
+			priceText := i18nutil.LocalizeContext(ui.ctx, &i18n.LocalizeConfig{
+				DefaultMessage: MsgUnderlyingPrice,
+				TemplateData: map[string]any{
+					"Symbol": strings.ToUpper(ui.underlyingSym),
+					"Value":  fmt.Sprintf("$%.2f", *ui.underlyingPrice),
+				},
+			})
+			b.WriteString(underlyingStyle.Render(priceText))
+			b.WriteString("\n")
+		}
+
+		if ui.priceToBeat != nil {
+			ptbText := i18nutil.LocalizeContext(ui.ctx, &i18n.LocalizeConfig{
+				DefaultMessage: MsgPriceToBeat,
+				TemplateData: map[string]any{
+					"Value": fmt.Sprintf("$%.2f", *ui.priceToBeat),
+				},
+			})
+			b.WriteString(priceToBeatStyle.Render(ptbText))
+			b.WriteString("\n")
+		}
+
+		b.WriteString("\n")
+	}
 
 	// 价格显示
 	cardStyle := lipgloss.NewStyle().
@@ -221,6 +260,19 @@ func (ui *UI) handleMarketEvent(event polymarket.MarketEvent) {
 			if pc.BestAsk != "" {
 				ui.bestAsks[pc.AssetID] = pc.BestAsk
 			}
+		}
+
+	case "underlying_price":
+		if up, ok := event.Data.(*polymarket.UnderlyingPriceEvent); ok {
+			ui.underlyingPrice = &up.Value
+			if ui.underlyingSym == "" {
+				ui.underlyingSym = up.Symbol
+			}
+		}
+
+	case "price_to_beat":
+		if ptb, ok := event.Data.(*polymarket.PriceToBeatEvent); ok {
+			ui.priceToBeat = &ptb.PriceToBeat
 		}
 	}
 }

@@ -14,8 +14,12 @@ import (
 const (
 	// 心跳间隔
 	pingInterval = 10 * time.Second
+	// RTDS 心跳间隔
+	rtdsPingInterval = 5 * time.Second
 	// 最大重连等待时间
 	maxReconnectDelay = 30 * time.Second
+	// priceToBeat 轮询间隔
+	priceToBeatPollInterval = 10 * time.Second
 )
 
 // ConnectionState 连接状态
@@ -35,26 +39,32 @@ type MarketEvent struct {
 
 // Watcher 市场监听器
 type Watcher struct {
-	ctx          context.Context
-	client       *Client
-	assetIDs     []string
-	conn         *websocket.Conn
-	connMu       sync.Mutex
-	eventCh      chan MarketEvent
-	stateCh      chan ConnectionState
-	stopCh       chan struct{}
-	wg           sync.WaitGroup
-	reconnectIdx int // 重连指数退避计数
+	ctx             context.Context
+	client          *Client
+	market          *Market
+	assetIDs        []string
+	underlyingAsset *ResolutionSourceInfo
+	conn            *websocket.Conn
+	connMu          sync.Mutex
+	rtdsConn        *websocket.Conn
+	rtdsConnMu      sync.Mutex
+	eventCh         chan MarketEvent
+	stateCh         chan ConnectionState
+	stopCh          chan struct{}
+	wg              sync.WaitGroup
+	reconnectIdx    int // 重连指数退避计数
 }
 
 // NewWatcher 创建市场监听器
-func NewWatcher(client *Client, assetIDs []string) *Watcher {
+func NewWatcher(client *Client, market *Market, assetIDs []string) *Watcher {
 	return &Watcher{
-		client:   client,
-		assetIDs: assetIDs,
-		eventCh:  make(chan MarketEvent, 100),
-		stateCh:  make(chan ConnectionState, 10),
-		stopCh:   make(chan struct{}),
+		client:          client,
+		market:          market,
+		assetIDs:        assetIDs,
+		underlyingAsset: ParseResolutionSource(market),
+		eventCh:         make(chan MarketEvent, 100),
+		stateCh:         make(chan ConnectionState, 10),
+		stopCh:          make(chan struct{}),
 	}
 }
 
@@ -68,10 +78,28 @@ func (w *Watcher) Start(ctx context.Context) error {
 		return fmt.Errorf("initial connection error: %w", err)
 	}
 
-	// 启动读取和心跳 goroutine
+	// 启动 Market Channel 读取和心跳 goroutine
 	w.wg.Add(2)
 	go w.readLoop(ctx)
 	go w.heartbeatLoop(ctx)
+
+	// 如果有底层资产，启动 RTDS 连接
+	if w.underlyingAsset != nil {
+		logger.V(1).Info(fmt.Sprintf("underlyingAsset detected: %+v, connecting to RTDS...", w.underlyingAsset))
+		if err := w.connectRTDS(ctx); err != nil {
+			logger.V(1).Info(fmt.Sprintf("RTDS connection error (non-fatal): %v", err))
+		} else {
+			logger.V(1).Info("RTDS connected successfully, starting read loop")
+			w.wg.Add(2)
+			go w.readRTDSLoop(ctx)
+			go w.rtdsHeartbeatLoop(ctx)
+		}
+		// 启动 priceToBeat 轮询
+		w.wg.Add(1)
+		go w.pollPriceToBeat(ctx)
+	} else {
+		logger.V(1).Info("no underlyingAsset, skipping RTDS")
+	}
 
 	logger.V(1).Info("watcher started")
 	return nil
@@ -87,6 +115,12 @@ func (w *Watcher) Stop() error {
 		_ = w.conn.Close()
 	}
 	w.connMu.Unlock()
+
+	w.rtdsConnMu.Lock()
+	if w.rtdsConn != nil {
+		_ = w.rtdsConn.Close()
+	}
+	w.rtdsConnMu.Unlock()
 
 	close(w.eventCh)
 	close(w.stateCh)
@@ -141,6 +175,45 @@ func (w *Watcher) connect(ctx context.Context) error {
 	// 重置重连计数
 	w.reconnectIdx = 0
 
+	return nil
+}
+
+// connectRTDS 建立 RTDS 连接并发送订阅
+func (w *Watcher) connectRTDS(ctx context.Context) error {
+	logger := logr.FromContextOrDiscard(ctx)
+
+	conn, err := w.client.ConnectRTDS(ctx)
+	if err != nil {
+		logger.V(1).Info(fmt.Sprintf("RTDS connection error (non-fatal): %v", err))
+		return err
+	}
+
+	w.rtdsConnMu.Lock()
+	w.rtdsConn = conn
+	w.rtdsConnMu.Unlock()
+
+	// 发送订阅请求
+	// 使用 ResolutionSourceInfo 中的 Topic 和 Symbol
+	// Chainlink 格式: filters 为 JSON 字符串 {"symbol":"btc/usd"}
+	subReq := RTDSSubscription{
+		Action: "subscribe",
+		Subscriptions: []RTDSSubscriptionItem{
+			{
+				Topic:   w.underlyingAsset.Topic,
+				Type:    "*",
+				Filters: fmt.Sprintf(`{"symbol":"%s"}`, w.underlyingAsset.Symbol),
+			},
+		},
+	}
+	if err := conn.WriteJSON(subReq); err != nil {
+		_ = conn.Close()
+		w.rtdsConnMu.Lock()
+		w.rtdsConn = nil
+		w.rtdsConnMu.Unlock()
+		return fmt.Errorf("RTDS subscribe error: %w", err)
+	}
+
+	logger.V(1).Info(fmt.Sprintf("RTDS connected and subscribed: %+v", subReq))
 	return nil
 }
 
@@ -270,6 +343,155 @@ func (w *Watcher) heartbeatLoop(ctx context.Context) {
 				if err := conn.WriteMessage(websocket.TextMessage, []byte("PING")); err != nil {
 					// 写入失败，触发重连
 					w.handleDisconnect(ctx)
+				}
+			}
+		}
+	}
+}
+
+// readRTDSLoop RTDS 消息读取循环
+func (w *Watcher) readRTDSLoop(ctx context.Context) {
+	defer w.wg.Done()
+	logger := logr.FromContextOrDiscard(ctx)
+
+	for {
+		select {
+		case <-w.stopCh:
+			return
+		case <-ctx.Done():
+			return
+		default:
+		}
+
+		w.rtdsConnMu.Lock()
+		conn := w.rtdsConn
+		w.rtdsConnMu.Unlock()
+
+		if conn == nil {
+			time.Sleep(100 * time.Millisecond)
+			continue
+		}
+
+		messageType, message, err := conn.ReadMessage()
+		if err != nil {
+			logger.V(1).Info(fmt.Sprintf("RTDS read error: %v", err))
+			// RTDS 断连不触发主连接重连
+			return
+		}
+
+		// DEBUG: 打印原始消息
+		logger.V(1).Info(fmt.Sprintf("RTDS raw message (type %d): %s", messageType, string(message)))
+
+		if messageType == websocket.TextMessage {
+			w.handleRTDSMessage(message)
+		}
+	}
+}
+
+// handleRTDSMessage 处理 RTDS 消息
+func (w *Watcher) handleRTDSMessage(message []byte) {
+	logger := logr.FromContextOrDiscard(w.ctx)
+
+	// RTDS 也使用 PING/PONG
+	if string(message) == "PONG" {
+		logger.V(2).Info("RTDS received PONG")
+		return
+	}
+
+	// DEBUG: 打印收到的消息
+	logger.V(1).Info(fmt.Sprintf("RTDS message: %s", string(message)))
+
+	var msg RTDSMessage
+	if err := json.Unmarshal(message, &msg); err != nil {
+		logger.V(1).Info(fmt.Sprintf("RTDS parse error: %v", err))
+		return
+	}
+
+	if msg.Type != "update" {
+		logger.V(1).Info(fmt.Sprintf("RTDS non-update type: %s", msg.Type))
+		return
+	}
+
+	logger.V(1).Info(fmt.Sprintf("RTDS update: symbol=%s value=%.2f", msg.Payload.Symbol, msg.Payload.Value))
+
+	w.eventCh <- MarketEvent{
+		Type: "underlying_price",
+		Data: &UnderlyingPriceEvent{
+			Symbol: msg.Payload.Symbol,
+			Value:  msg.Payload.Value,
+		},
+		Timestamp: time.Now(),
+	}
+}
+
+// rtdsHeartbeatLoop RTDS 心跳循环
+func (w *Watcher) rtdsHeartbeatLoop(ctx context.Context) {
+	defer w.wg.Done()
+
+	ticker := time.NewTicker(rtdsPingInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-w.stopCh:
+			return
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			w.rtdsConnMu.Lock()
+			conn := w.rtdsConn
+			w.rtdsConnMu.Unlock()
+
+			if conn != nil {
+				_ = conn.WriteMessage(websocket.TextMessage, []byte("PING"))
+			}
+		}
+	}
+}
+
+// pollPriceToBeat 轮询获取 priceToBeat
+func (w *Watcher) pollPriceToBeat(ctx context.Context) {
+	defer w.wg.Done()
+	logger := logr.FromContextOrDiscard(ctx)
+
+	if w.market == nil || w.market.Slug == "" {
+		return
+	}
+
+	ticker := time.NewTicker(priceToBeatPollInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-w.stopCh:
+			return
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			market, err := w.client.GetMarketBySlug(ctx, w.market.Slug)
+			if err != nil {
+				logger.V(1).Info(fmt.Sprintf("poll priceToBeat error: %v", err))
+				continue
+			}
+
+			// 市场已关闭，停止轮询
+			if market.Closed {
+				logger.V(1).Info("market closed, stopping priceToBeat poll")
+				return
+			}
+
+			// 检查 eventMetadata.priceToBeat
+			for _, e := range market.Events {
+				if e.EventMetadata.PriceToBeat != nil {
+					w.eventCh <- MarketEvent{
+						Type: "price_to_beat",
+						Data: &PriceToBeatEvent{
+							PriceToBeat: *e.EventMetadata.PriceToBeat,
+						},
+						Timestamp: time.Now(),
+					}
+					logger.V(1).Info(fmt.Sprintf("priceToBeat obtained: %f", *e.EventMetadata.PriceToBeat))
+					return
 				}
 			}
 		}

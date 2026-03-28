@@ -16,6 +16,7 @@ const (
 	DataAPIEndpoint       = "https://data-api.polymarket.com"
 	CLOBEndpoint          = "https://clob.polymarket.com"
 	CLOBWebSocketEndpoint = "wss://ws-subscriptions-clob.polymarket.com"
+	RTDSWebSocketEndpoint = "wss://ws-live-data.polymarket.com"
 )
 
 // NewClient 创建 PolyMarket 客户端
@@ -278,5 +279,13 @@ func (c *Client) ConnectMarketChannel(ctx context.Context) (*websocket.Conn, err
 		Method:   http.MethodGet,
 		Endpoint: CLOBWebSocketEndpoint,
 		URI:      "/ws/market",
+	})
+}
+
+// ConnectRTDS WebSocket 连接 RTDS 实时数据服务
+func (c *Client) ConnectRTDS(ctx context.Context) (*websocket.Conn, error) {
+	return c.ConnectWebSocket(ctx, &RawRequest{
+		Method:   http.MethodGet,
+		Endpoint: RTDSWebSocketEndpoint,
 	})
 }

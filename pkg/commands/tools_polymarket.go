@@ -90,7 +90,7 @@ func newPolyMarketWatchCommand() *cobra.Command {
 				market.Question, assetIDs, outcomeNames))
 
 			// 创建监听器
-			watcher := polymarket.NewWatcher(client, assetIDs)
+			watcher := polymarket.NewWatcher(client, market, assetIDs)
 			if err := watcher.Start(ctx); err != nil {
 				return fmt.Errorf("start watcher error: %w", err)
 			}

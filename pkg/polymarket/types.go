@@ -2,6 +2,9 @@ package polymarket
 
 import (
 	"context"
+	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/gorilla/websocket"
 )
@@ -135,27 +138,28 @@ type Pagination struct {
 
 // Event 事件
 type Event struct {
-	ID           string   `json:"id"`
-	Ticker       string   `json:"ticker,omitempty"`
-	Slug         string   `json:"slug,omitempty"`
-	Title        string   `json:"title,omitempty"`
-	SubTitle     string   `json:"subtitle,omitempty"`
-	Description  string   `json:"description,omitempty"`
-	StartDate    string   `json:"startDate,omitempty"`
-	EndDate      string   `json:"endDate,omitempty"`
-	Image        string   `json:"image,omitempty"`
-	Icon         string   `json:"icon,omitempty"`
-	Active       bool     `json:"active,omitempty"`
-	Closed       bool     `json:"closed,omitempty"`
-	Featured     bool     `json:"featured,omitempty"`
-	Volume       float64  `json:"volume,omitempty"`
-	Volume24hr   float64  `json:"volume24hr,omitempty"`
-	Liquidity    float64  `json:"liquidity,omitempty"`
-	OpenInterest float64  `json:"openInterest,omitempty"`
-	Category     string   `json:"category,omitempty"`
-	SeriesSlug   string   `json:"seriesSlug,omitempty"`
-	Markets      []Market `json:"markets,omitempty"`
-	Series       []Series `json:"series,omitempty"`
+	ID               string   `json:"id"`
+	Ticker           string   `json:"ticker,omitempty"`
+	Slug             string   `json:"slug,omitempty"`
+	Title            string   `json:"title,omitempty"`
+	SubTitle         string   `json:"subtitle,omitempty"`
+	Description      string   `json:"description,omitempty"`
+	StartDate        string   `json:"startDate,omitempty"`
+	EndDate          string   `json:"endDate,omitempty"`
+	Image            string   `json:"image,omitempty"`
+	Icon             string   `json:"icon,omitempty"`
+	Active           bool     `json:"active,omitempty"`
+	Closed           bool     `json:"closed,omitempty"`
+	Featured         bool     `json:"featured,omitempty"`
+	Volume           float64  `json:"volume,omitempty"`
+	Volume24hr       float64  `json:"volume24hr,omitempty"`
+	Liquidity        float64  `json:"liquidity,omitempty"`
+	OpenInterest     float64  `json:"openInterest,omitempty"`
+	Category         string   `json:"category,omitempty"`
+	SeriesSlug       string   `json:"seriesSlug,omitempty"`
+	ResolutionSource string   `json:"resolutionSource,omitempty"`
+	Markets          []Market `json:"markets,omitempty"`
+	Series           []Series `json:"series,omitempty"`
 }
 
 // Series 系列
@@ -217,19 +221,82 @@ type HeartbeatStatus struct {
 
 // Market 市场信息
 type Market struct {
-	ID            string  `json:"id"`
-	Question      string  `json:"question"`
-	Description   string  `json:"description"`
-	ConditionID   string  `json:"conditionId"`
-	Slug          string  `json:"slug"`
-	ClobTokenIDs  string  `json:"clobTokenIds"`  // JSON 字符串数组
-	Outcomes      string  `json:"outcomes"`      // JSON 字符串数组，例如 ["Yes","No"]
-	OutcomePrices string  `json:"outcomePrices"` // JSON 字符串数组，例如 ["0.52","0.48"]
-	Volume        float64 `json:"volumeNum,omitempty"`
-	Volume24hr    float64 `json:"volume24hr,omitempty"`
-	Liquidity     float64 `json:"liquidityNum,omitempty"`
-	BestBid       float64 `json:"bestBid,omitempty"`
-	BestAsk       float64 `json:"bestAsk,omitempty"`
-	Active        bool    `json:"active,omitempty"`
-	Closed        bool    `json:"closed,omitempty"`
+	ID            string            `json:"id"`
+	Question      string            `json:"question"`
+	Description   string            `json:"description"`
+	ConditionID   string            `json:"conditionId"`
+	Slug          string            `json:"slug"`
+	ClobTokenIDs  string            `json:"clobTokenIds"`  // JSON 字符串数组
+	Outcomes      string            `json:"outcomes"`      // JSON 字符串数组，例如 ["Yes","No"]
+	OutcomePrices string            `json:"outcomePrices"` // JSON 字符串数组，例如 ["0.52","0.48"]
+	Volume        float64           `json:"volumeNum,omitempty"`
+	Volume24hr    float64           `json:"volume24hr,omitempty"`
+	Liquidity     float64           `json:"liquidityNum,omitempty"`
+	BestBid       float64           `json:"bestBid,omitempty"`
+	BestAsk       float64           `json:"bestAsk,omitempty"`
+	Active        bool              `json:"active,omitempty"`
+	Closed        bool              `json:"closed,omitempty"`
+	Events        []MarketEventData `json:"events,omitempty"`
+}
+
+// MarketEventData 市场关联的事件信息
+type MarketEventData struct {
+	ID               string        `json:"id"`
+	Slug             string        `json:"slug,omitempty"`
+	ResolutionSource string        `json:"resolutionSource,omitempty"`
+	EventMetadata    EventMetadata `json:"eventMetadata,omitempty"`
+}
+
+// EventMetadata 事件元数据
+type EventMetadata struct {
+	PriceToBeat *float64 `json:"priceToBeat"`
+	FinalPrice  *float64 `json:"finalPrice,omitempty"`
+}
+
+// ResolutionSourceInfo resolutionSource 解析结果
+type ResolutionSourceInfo struct {
+	Asset  string // 资产符号，如 "btc"
+	Quote  string // 计价货币，如 "usd"
+	Topic  string // RTDS 订阅 topic，如 "crypto_prices_chainlink"
+	Symbol string // RTDS 订阅 symbol，如 "btc/usd"
+}
+
+// ParseResolutionSource 从 markets 的 events 中解析底层资产信息
+// 仅支持 Chainlink 格式: https://data.chain.link/streams/{asset}-{quote}
+func ParseResolutionSource(market *Market) *ResolutionSourceInfo {
+	if market == nil {
+		return nil
+	}
+	for _, e := range market.Events {
+		if info := parseChainlinkURL(e.ResolutionSource); info != nil {
+			return info
+		}
+	}
+	return nil
+}
+
+// parseChainlinkURL 解析 Chainlink URL
+func parseChainlinkURL(resolutionSource string) *ResolutionSourceInfo {
+	if resolutionSource == "" {
+		return nil
+	}
+	u, err := url.Parse(resolutionSource)
+	if err != nil {
+		return nil
+	}
+	// 匹配 data.chain.link/streams/{asset}-{quote}
+	if u.Host != "data.chain.link" {
+		return nil
+	}
+	parts := strings.Split(strings.TrimPrefix(u.Path, "/streams/"), "-")
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return nil
+	}
+	asset, quote := parts[0], parts[1]
+	return &ResolutionSourceInfo{
+		Asset:  asset,
+		Quote:  quote,
+		Topic:  "crypto_prices_chainlink",
+		Symbol: fmt.Sprintf("%s/%s", asset, quote),
+	}
 }

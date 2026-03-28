@@ -56,3 +56,42 @@ type LastTradePriceEvent struct {
 	Timestamp       string `json:"timestamp"`
 	TransactionHash string `json:"transaction_hash"`
 }
+
+// UnderlyingPriceEvent 底层资产价格事件
+type UnderlyingPriceEvent struct {
+	Symbol string  // 资产符号，如 "btc/usd"
+	Value  float64 // 当前价格
+}
+
+// PriceToBeatEvent 起始价格事件
+type PriceToBeatEvent struct {
+	PriceToBeat float64 // 起始价格
+}
+
+// RTDSSubscription RTDS 订阅请求
+type RTDSSubscription struct {
+	Action        string                 `json:"action"` // "subscribe" 或 "unsubscribe"
+	Subscriptions []RTDSSubscriptionItem `json:"subscriptions"`
+}
+
+// RTDSSubscriptionItem RTDS 订阅项
+type RTDSSubscriptionItem struct {
+	Topic   string `json:"topic"`             // 如 "crypto_prices", "crypto_prices_chainlink"
+	Type    string `json:"type"`              // 如 "update", "*"
+	Filters string `json:"filters,omitempty"` // JSON 字符串格式的过滤器
+}
+
+// RTDSMessage RTDS 推送消息
+type RTDSMessage struct {
+	Topic     string      `json:"topic"`
+	Type      string      `json:"type"`
+	Timestamp int64       `json:"timestamp"`
+	Payload   RTDSPayload `json:"payload"`
+}
+
+// RTDSPayload RTDS 消息负载
+type RTDSPayload struct {
+	Symbol    string  `json:"symbol"`
+	Timestamp int64   `json:"timestamp"`
+	Value     float64 `json:"value"`
+}
