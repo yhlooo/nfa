@@ -94,7 +94,7 @@ func newPolyMarketWatchCommand() *cobra.Command {
 			if err := watcher.Start(ctx); err != nil {
 				return fmt.Errorf("start watcher error: %w", err)
 			}
-			defer watcher.Stop()
+			defer func() { _ = watcher.Stop() }()
 
 			// 启动 UI
 			ui := polymarketwatcher.NewUI(polymarketwatcher.Options{
