@@ -1,3 +1,93 @@
+PolyMarketBrowser.Connected:
+    hash: sha1-c2f9b7b4897f03f94abf92294c9ca46fea62360b
+    other: 已连接
+PolyMarketBrowser.Disconnected:
+    hash: sha1-3591430735342038fa3390b84c49e36a654305d6
+    other: 已断开（重连中...）
+PolyMarketBrowser.Event.Hint:
+    hash: sha1-bda5ce06b37fdebb49557997b5570232ded6e72d
+    other: ↑↓ 导航  Enter 监听  Esc 返回
+PolyMarketBrowser.Event.Liquidity:
+    hash: sha1-5fc904bf39b029c5dd109afd9aadd86f32c94d06
+    other: '流动性: {{.Liquidity}}'
+PolyMarketBrowser.Event.Markets:
+    hash: sha1-c3c49d3e838c8fe813d360aea7dc6b792948afde
+    other: 市场
+PolyMarketBrowser.Event.NoMarkets:
+    hash: sha1-a61f106b35b3137aea4ece014cb238acb9aed7e1
+    other: 该事件下没有市场
+PolyMarketBrowser.Event.Volume24h:
+    hash: sha1-c386e3dae96e2811ea791db5e444dfdc6aa92830
+    other: '24小时交易量: {{.Volume}}'
+PolyMarketBrowser.Home.EventTag:
+    hash: sha1-ad8919ace091b14011c6439cfd5e1707b58f5abd
+    other: 事件
+PolyMarketBrowser.Home.Hint:
+    hash: sha1-97eadd01f4787a750c0c184bbe60e3fccdba90f9
+    other: ↑↓ 导航  Tab 搜索  Enter 打开  Esc 退出
+PolyMarketBrowser.Home.Loading:
+    hash: sha1-b04ba49f848624bb97ab094a2631d2ad74913498
+    other: 加载中...
+PolyMarketBrowser.Home.NoResults:
+    hash: sha1-658e79f9dc7fca34dc164cbb79e1c0be3cdebf23
+    other: 未找到结果
+PolyMarketBrowser.Home.SearchPlaceholder:
+    hash: sha1-f9cb3d22bf65f4ab8c8e0875bb1ce180f0f01dcf
+    other: 搜索事件和系列...
+PolyMarketBrowser.Home.SeriesTag:
+    hash: sha1-40c20d94e78fa142819df8cc9440d30e65329975
+    other: 系列
+PolyMarketBrowser.Market.Ask:
+    hash: sha1-15b194c4a53d3daf741478ce2249c3395842236e
+    other: '卖价:'
+PolyMarketBrowser.Market.Bid:
+    hash: sha1-4fd452081ee8cd1b25cc458f6da95ac74a659e06
+    other: '买价:'
+PolyMarketBrowser.Market.Connected:
+    hash: sha1-c2f9b7b4897f03f94abf92294c9ca46fea62360b
+    other: 已连接
+PolyMarketBrowser.Market.Disconnected:
+    hash: sha1-3591430735342038fa3390b84c49e36a654305d6
+    other: 已断开（重连中...）
+PolyMarketBrowser.Market.Hint:
+    hash: sha1-fcab012a8a21e43545d1fe664af4a4ce2a126957
+    other: Esc 返回
+PolyMarketBrowser.Market.LastUpdate:
+    hash: sha1-cad1f14544b4d7b617f71b4e2e571f50b14666d5
+    other: '最后更新: {{.Time}}'
+PolyMarketBrowser.PressCtrlCToExit:
+    hash: sha1-bdfd72e4659985bfe6cca850d22eeb6eaacf54f4
+    other: Ctrl+C 退出
+PolyMarketBrowser.PressEscToBack:
+    hash: sha1-fcab012a8a21e43545d1fe664af4a4ce2a126957
+    other: Esc 返回
+PolyMarketBrowser.Series.Events:
+    hash: sha1-c5497bca58468ae64aed6c0fd921109217988db3
+    other: 事件
+PolyMarketBrowser.Series.Hint:
+    hash: sha1-b0e02376dbbef8e2446697ee23ab1cd1be712d38
+    other: ↑↓ 导航  Enter 打开  Esc 返回
+PolyMarketBrowser.Series.NoEvents:
+    hash: sha1-469a1b42a54fa897a0af632a86015237d771f3f1
+    other: 该系列下没有事件
+PolyMarketBrowser.Series.Volume:
+    hash: sha1-b6a6ecf23a371e8d6375e1b958f285c60784c131
+    other: '交易量: {{.Volume}}'
+PolyMarketBrowser.Title:
+    hash: sha1-ba1dffa9d1c4a4b379bd6f27f977677102de1162
+    other: PolyMarket 浏览器
+PolyMarketWatcher.Connected:
+    hash: sha1-c2f9b7b4897f03f94abf92294c9ca46fea62360b
+    other: Connected
+PolyMarketWatcher.Disconnected:
+    hash: sha1-3591430735342038fa3390b84c49e36a654305d6
+    other: Disconnected (reconnecting...)
+PolyMarketWatcher.LastUpdate:
+    hash: sha1-cad1f14544b4d7b617f71b4e2e571f50b14666d5
+    other: 'Last update: {{.Time}}'
+PolyMarketWatcher.PressCtrlCToExit:
+    hash: sha1-fdeb5dbd0500aa4fd15fefc55421631e82e4270e
+    other: Press Ctrl+C to exit
 commands.CmdShortDesc:
     hash: sha1-12aa6d698d70286447539546da88874c44a85773
     other: 基于大语言模型的金融交易顾问 AI Agent 。 **这不构成财务建议。**
@@ -10,6 +100,15 @@ commands.CmdShortDescModelsList:
 commands.CmdShortDescOtter:
     hash: sha1-5fbc197e535facad8b83cf991c9f1eea43a8b522
     other: 打印水獭图片
+commands.CmdShortDescTools:
+    hash: sha1-ab4115a7b246ddbd83e7fc61c29d6792444c3e89
+    other: External tools
+commands.CmdShortDescToolsPolyMarket:
+    hash: sha1-aa202bfde9eb70126c64f3d3f580d7146d571819
+    other: PolyMarket tools
+commands.CmdShortDescToolsPolyMarketWatch:
+    hash: sha1-0294f125a932887784a658296aa1e13f37e7e8d1
+    other: Watch a PolyMarket market in real-time
 commands.CmdShortDescVersion:
     hash: sha1-79526ef3b57592a549aa6b35ce7596080ebf5668
     other: 打印版本信息

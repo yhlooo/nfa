@@ -1,6 +1,7 @@
 ---
 name: i18n-translate
 description: 提取项目中需要翻译的 i18n 消息结构体，并更新翻译文件
+allowed-tools: Bash(goi18n *)
 ---
 
 ## 步骤

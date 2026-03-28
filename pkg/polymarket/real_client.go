@@ -172,6 +172,106 @@ func (c *Client) GetMarketBySlug(ctx context.Context, slug string) (*Market, err
 	return market, nil
 }
 
+// ListEvents 列出事件
+func (c *Client) ListEvents(ctx context.Context, req *ListEventsRequest) ([]Event, error) {
+	query := url.Values{}
+	if req.Limit > 0 {
+		query.Set("limit", fmt.Sprintf("%d", req.Limit))
+	}
+	if req.Offset > 0 {
+		query.Set("offset", fmt.Sprintf("%d", req.Offset))
+	}
+	if req.Order != "" {
+		query.Set("order", req.Order)
+	}
+	if req.Ascending {
+		query.Set("ascending", "true")
+	}
+	if req.Active != nil {
+		query.Set("active", fmt.Sprintf("%t", *req.Active))
+	}
+	if req.Featured != nil {
+		query.Set("featured", fmt.Sprintf("%t", *req.Featured))
+	}
+	if req.Closed != nil {
+		query.Set("closed", fmt.Sprintf("%t", *req.Closed))
+	}
+	for _, slug := range req.Slug {
+		query.Add("slug", slug)
+	}
+
+	var events []Event
+	err := c.Do(ctx, &RawRequest{
+		Method:   http.MethodGet,
+		Endpoint: GammaAPIEndpoint,
+		URI:      "/events",
+		Query:    query,
+	}, &events)
+	if err != nil {
+		return nil, err
+	}
+	return events, nil
+}
+
+// ListSeries 列出系列
+func (c *Client) ListSeries(ctx context.Context, req *ListSeriesRequest) ([]Series, error) {
+	query := url.Values{}
+	if req.Limit > 0 {
+		query.Set("limit", fmt.Sprintf("%d", req.Limit))
+	}
+	if req.Offset > 0 {
+		query.Set("offset", fmt.Sprintf("%d", req.Offset))
+	}
+	if req.Order != "" {
+		query.Set("order", req.Order)
+	}
+	if req.Ascending {
+		query.Set("ascending", "true")
+	}
+	if req.Closed != nil {
+		query.Set("closed", fmt.Sprintf("%t", *req.Closed))
+	}
+	for _, slug := range req.Slug {
+		query.Add("slug", slug)
+	}
+
+	var series []Series
+	err := c.Do(ctx, &RawRequest{
+		Method:   http.MethodGet,
+		Endpoint: GammaAPIEndpoint,
+		URI:      "/series",
+		Query:    query,
+	}, &series)
+	if err != nil {
+		return nil, err
+	}
+	return series, nil
+}
+
+// Search 搜索事件、系列和用户
+func (c *Client) Search(ctx context.Context, req *SearchRequest) (*SearchResult, error) {
+	query := url.Values{}
+	query.Set("q", req.Query)
+	if req.Limit > 0 {
+		query.Set("limit_per_type", fmt.Sprintf("%d", req.Limit))
+	}
+	if req.SearchTags {
+		query.Set("search_tags", "true")
+	}
+
+	result := &SearchResult{}
+	err := c.Do(ctx, &RawRequest{
+		Method:   http.MethodGet,
+		Endpoint: GammaAPIEndpoint,
+		URI:      "/public-search",
+		Query:    query,
+	}, result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 // ConnectMarketChannel WebSocket 连接市场信道
 func (c *Client) ConnectMarketChannel(ctx context.Context) (*websocket.Conn, error) {
 	return c.ConnectWebSocket(ctx, &RawRequest{

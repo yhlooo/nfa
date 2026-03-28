@@ -21,6 +21,12 @@ type GammaAPIClient interface {
 	GetEventBySlug(ctx context.Context, req *GetEventBySlugRequest) (*Event, error)
 	// GetMarketBySlug 通过 slug 获取市场
 	GetMarketBySlug(ctx context.Context, slug string) (*Market, error)
+	// ListEvents 列出事件
+	ListEvents(ctx context.Context, req *ListEventsRequest) ([]Event, error)
+	// ListSeries 列出系列
+	ListSeries(ctx context.Context, req *ListSeriesRequest) ([]Series, error)
+	// Search 搜索事件、系列和用户
+	Search(ctx context.Context, req *SearchRequest) (*SearchResult, error)
 }
 
 // DataAPIClient Data API 客户端
@@ -69,15 +75,106 @@ type GetEventBySlugRequest struct {
 	IncludeTemplate bool
 }
 
+// ListEventsRequest 列出事件请求
+type ListEventsRequest struct {
+	Limit     int
+	Offset    int
+	Order     string // 例如 "volume24hr", "liquidity"
+	Ascending bool
+	Active    *bool
+	Featured  *bool
+	Closed    *bool
+	Slug      []string
+}
+
+// ListSeriesRequest 列出系列请求
+type ListSeriesRequest struct {
+	Limit     int
+	Offset    int
+	Order     string
+	Ascending bool
+	Closed    *bool
+	Slug      []string
+}
+
+// SearchRequest 搜索请求
+type SearchRequest struct {
+	Query      string
+	Limit      int
+	SearchTags bool
+}
+
+// SearchResult 搜索结果
+type SearchResult struct {
+	Events     []Event     `json:"events"`
+	Tags       []SearchTag `json:"tags,omitempty"`
+	Profiles   []Profile   `json:"profiles,omitempty"`
+	Pagination Pagination  `json:"pagination,omitempty"`
+}
+
+// SearchTag 搜索标签
+type SearchTag struct {
+	ID         string `json:"id"`
+	Label      string `json:"label"`
+	Slug       string `json:"slug"`
+	EventCount int    `json:"event_count,omitempty"`
+}
+
+// Profile 用户资料
+type Profile struct {
+	ID        string `json:"id"`
+	Name      string `json:"name,omitempty"`
+	Pseudonym string `json:"pseudonym,omitempty"`
+}
+
+// Pagination 分页信息
+type Pagination struct {
+	HasMore      bool `json:"hasMore"`
+	TotalResults int  `json:"totalResults"`
+}
+
 // Event 事件
 type Event struct {
-	ID          string `json:"id"`
-	Ticker      string `json:"ticker,omitempty"`
-	Slug        string `json:"slug,omitempty"`
-	Title       string `json:"title,omitempty"`
-	SubTitle    string `json:"subtitle,omitempty"`
-	Description string `json:"description,omitempty"`
-	// ...
+	ID           string   `json:"id"`
+	Ticker       string   `json:"ticker,omitempty"`
+	Slug         string   `json:"slug,omitempty"`
+	Title        string   `json:"title,omitempty"`
+	SubTitle     string   `json:"subtitle,omitempty"`
+	Description  string   `json:"description,omitempty"`
+	StartDate    string   `json:"startDate,omitempty"`
+	EndDate      string   `json:"endDate,omitempty"`
+	Image        string   `json:"image,omitempty"`
+	Icon         string   `json:"icon,omitempty"`
+	Active       bool     `json:"active,omitempty"`
+	Closed       bool     `json:"closed,omitempty"`
+	Featured     bool     `json:"featured,omitempty"`
+	Volume       float64  `json:"volume,omitempty"`
+	Volume24hr   float64  `json:"volume24hr,omitempty"`
+	Liquidity    float64  `json:"liquidity,omitempty"`
+	OpenInterest float64  `json:"openInterest,omitempty"`
+	Category     string   `json:"category,omitempty"`
+	SeriesSlug   string   `json:"seriesSlug,omitempty"`
+	Markets      []Market `json:"markets,omitempty"`
+	Series       []Series `json:"series,omitempty"`
+}
+
+// Series 系列
+type Series struct {
+	ID          string  `json:"id"`
+	Ticker      string  `json:"ticker,omitempty"`
+	Slug        string  `json:"slug,omitempty"`
+	Title       string  `json:"title,omitempty"`
+	SubTitle    string  `json:"subtitle,omitempty"`
+	Description string  `json:"description,omitempty"`
+	Image       string  `json:"image,omitempty"`
+	Icon        string  `json:"icon,omitempty"`
+	Active      bool    `json:"active,omitempty"`
+	Closed      bool    `json:"closed,omitempty"`
+	Featured    bool    `json:"featured,omitempty"`
+	Volume      float64 `json:"volume,omitempty"`
+	Volume24hr  float64 `json:"volume24hr,omitempty"`
+	Liquidity   float64 `json:"liquidity,omitempty"`
+	Events      []Event `json:"events,omitempty"`
 }
 
 // GetUserOrdersRequest 获取用户订单请求
@@ -120,13 +217,19 @@ type HeartbeatStatus struct {
 
 // Market 市场信息
 type Market struct {
-	ID           string `json:"id"`
-	Question     string `json:"question"`
-	Description  string `json:"description"`
-	ConditionID  string `json:"conditionId"`
-	Slug         string `json:"slug"`
-	ClobTokenIDs string `json:"clobTokenIds"` // JSON 字符串数组
-	Outcomes     string `json:"outcomes"`     // JSON 字符串数组
-	Active       bool   `json:"active"`
-	Closed       bool   `json:"closed"`
+	ID            string  `json:"id"`
+	Question      string  `json:"question"`
+	Description   string  `json:"description"`
+	ConditionID   string  `json:"conditionId"`
+	Slug          string  `json:"slug"`
+	ClobTokenIDs  string  `json:"clobTokenIds"`  // JSON 字符串数组
+	Outcomes      string  `json:"outcomes"`      // JSON 字符串数组，例如 ["Yes","No"]
+	OutcomePrices string  `json:"outcomePrices"` // JSON 字符串数组，例如 ["0.52","0.48"]
+	Volume        float64 `json:"volumeNum,omitempty"`
+	Volume24hr    float64 `json:"volume24hr,omitempty"`
+	Liquidity     float64 `json:"liquidityNum,omitempty"`
+	BestBid       float64 `json:"bestBid,omitempty"`
+	BestAsk       float64 `json:"bestAsk,omitempty"`
+	Active        bool    `json:"active,omitempty"`
+	Closed        bool    `json:"closed,omitempty"`
 }

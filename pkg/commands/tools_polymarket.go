@@ -9,6 +9,7 @@ import (
 
 	"github.com/yhlooo/nfa/pkg/i18n"
 	"github.com/yhlooo/nfa/pkg/polymarket"
+	polymarketui "github.com/yhlooo/nfa/pkg/ui/polymarket"
 	polymarketwatcher "github.com/yhlooo/nfa/pkg/ui/polymarketwatcher"
 )
 
@@ -31,6 +32,19 @@ func newPolyMarketCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "polymarket",
 		Short: i18n.T(MsgCmdShortDescToolsPolyMarket),
+		// 默认行为：进入交互式浏览器模式
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
+
+			// 创建客户端（无需认证）
+			client := polymarket.NewClient(polymarket.AuthInfo{})
+
+			// 启动浏览器
+			browser := polymarketui.NewBrowser(polymarketui.Options{
+				Client: client,
+			})
+			return browser.Run(ctx)
+		},
 	}
 
 	cmd.AddCommand(

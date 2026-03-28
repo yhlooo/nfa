@@ -1,7 +1,40 @@
+PolyMarketBrowser.Connected: Connected
+PolyMarketBrowser.Disconnected: Disconnected (reconnecting...)
+PolyMarketBrowser.Event.Hint: ↑↓ Navigate  Enter Watch  Esc Back
+PolyMarketBrowser.Event.Liquidity: 'Liquidity: {{.Liquidity}}'
+PolyMarketBrowser.Event.Markets: Markets
+PolyMarketBrowser.Event.NoMarkets: No markets in this event
+PolyMarketBrowser.Event.Volume24h: 'Volume 24h: {{.Volume}}'
+PolyMarketBrowser.Home.EventTag: Event
+PolyMarketBrowser.Home.Hint: ↑↓ Navigate  Tab Search  Enter Open  Esc Quit
+PolyMarketBrowser.Home.Loading: Loading...
+PolyMarketBrowser.Home.NoResults: No results found
+PolyMarketBrowser.Home.SearchPlaceholder: Search events and series...
+PolyMarketBrowser.Home.SeriesTag: Series
+PolyMarketBrowser.Market.Ask: 'Ask:'
+PolyMarketBrowser.Market.Bid: 'Bid:'
+PolyMarketBrowser.Market.Connected: Connected
+PolyMarketBrowser.Market.Disconnected: Disconnected (reconnecting...)
+PolyMarketBrowser.Market.Hint: Esc Back
+PolyMarketBrowser.Market.LastUpdate: 'Last update: {{.Time}}'
+PolyMarketBrowser.PressCtrlCToExit: Ctrl+C Quit
+PolyMarketBrowser.PressEscToBack: Esc Back
+PolyMarketBrowser.Series.Events: Events
+PolyMarketBrowser.Series.Hint: ↑↓ Navigate  Enter Open  Esc Back
+PolyMarketBrowser.Series.NoEvents: No events in this series
+PolyMarketBrowser.Series.Volume: 'Volume: {{.Volume}}'
+PolyMarketBrowser.Title: PolyMarket Browser
+PolyMarketWatcher.Connected: Connected
+PolyMarketWatcher.Disconnected: Disconnected (reconnecting...)
+PolyMarketWatcher.LastUpdate: 'Last update: {{.Time}}'
+PolyMarketWatcher.PressCtrlCToExit: Press Ctrl+C to exit
 commands.CmdShortDesc: Financial Trading LLM AI Agent. **This is Not Financial Advice.**
 commands.CmdShortDescModels: Manage LLMs used by the agent
 commands.CmdShortDescModelsList: List available models
 commands.CmdShortDescOtter: Print Otter image
+commands.CmdShortDescTools: External tools
+commands.CmdShortDescToolsPolyMarket: PolyMarket tools
+commands.CmdShortDescToolsPolyMarketWatch: Watch a PolyMarket market in real-time
 commands.CmdShortDescVersion: Print the version information
 commands.GlobalOptsDataRootDesc: Path of data root directory
 commands.GlobalOptsLangDesc: The language used in UI (en or zh)
