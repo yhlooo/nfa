@@ -112,4 +112,4 @@ go run ./cmd/nfa tools
 
 ## 外部参考资料
 
-- PolyMarket: https://docs.polymarket.com/llms.txt
+- PolyMarket: https://docs.polymarket.com/llms.txt （建议通过 curl 访问）
