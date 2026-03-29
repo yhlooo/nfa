@@ -34,6 +34,7 @@ commands.CmdShortDescModelsList: List available models
 commands.CmdShortDescOtter: Print Otter image
 commands.CmdShortDescTools: External tools
 commands.CmdShortDescToolsPolyMarket: PolyMarket tools
+commands.CmdShortDescToolsPolyMarketTrade: Run a trading strategy on a PolyMarket market
 commands.CmdShortDescToolsPolyMarketWatch: Watch a PolyMarket market in real-time
 commands.CmdShortDescVersion: Print the version information
 commands.GlobalOptsDataRootDesc: Path of data root directory
@@ -88,3 +89,32 @@ ui.chat.StopReason: 'stop reason: {{ .Reason }}'
 ui.chat.TabToToggle: (tab to toggle)
 ui.chat.TokenUsage: 'Token Usage:'
 ui.chat.ToolCall: 'ToolCall:'
+trading.title: Strategy Trading
+trading.connected: Connected
+trading.disconnected: Disconnected
+trading.dry_run: DRY-RUN
+trading.real_mode: REAL
+trading.portfolio: Portfolio
+trading.cash: Cash
+trading.yes_shares: YES
+trading.no_shares: NO
+trading.avg_cost: avg
+trading.shares: shares
+trading.position_value: Position Value
+trading.total_value: Total Value
+trading.trade_history: Trade History
+trading.buy: BUY
+trading.sell: SELL
+trading.filled: filled
+trading.pending: pending
+trading.cancelled: cancelled
+trading.strategy: Strategy
+trading.mode: Mode
+trading.multiplier: Multiplier
+trading.no_trades: No trades yet
+trading.underlying_price: Price
+trading.target_price: Target
+trading.bid: Bid
+trading.ask: Ask
+trading.at: '@'
+trading.press_esc_to_exit: Esc Exit

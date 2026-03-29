@@ -20,6 +20,8 @@ var (
 	ErrNonceAlreadyUsed = errors.New("NonceAlreadyUsed")
 	// ErrInvalidAuthInfo 非法的认证信息
 	ErrInvalidAuthInfo = errors.New("InvalidAuthInfo")
+	// ErrNotImplemented 未实现
+	ErrNotImplemented = errors.New("NotImplemented")
 )
 
 // HTTPStatusCodeError HTTP 状态码错误

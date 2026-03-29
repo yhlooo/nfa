@@ -106,6 +106,9 @@ commands.CmdShortDescTools:
 commands.CmdShortDescToolsPolyMarket:
     hash: sha1-aa202bfde9eb70126c64f3d3f580d7146d571819
     other: PolyMarket tools
+commands.CmdShortDescToolsPolyMarketTrade:
+    hash: sha1-5f8c5a1b9d3e2f7a6c8b9d0e1f2a3b4c5d6e7f8a9
+    other: 在 PolyMarket 市场上运行交易策略
 commands.CmdShortDescToolsPolyMarketWatch:
     hash: sha1-0294f125a932887784a658296aa1e13f37e7e8d1
     other: Watch a PolyMarket market in real-time
@@ -262,3 +265,90 @@ ui.chat.TokenUsage:
 ui.chat.ToolCall:
     hash: sha1-a66e915a001cc7c61684ba45a8fefa8d8b79964f
     other: '工具调用:'
+trading.title:
+    hash: sha1-5f8c5a1b9d3e2f7a6c8b9d0e1f2a3b4c5d6e7f8a9
+    other: 策略交易
+trading.connected:
+    hash: sha1-c2f9b7b4897f03f94abf92294c9ca46fea62360b
+    other: 已连接
+trading.disconnected:
+    hash: sha1-3591430735342038fa3390b84c49e36a654305d6
+    other: 已断开
+trading.dry_run:
+    hash: sha1-a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0
+    other: 模拟交易
+trading.real_mode:
+    hash: sha1-b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1
+    other: 实盘交易
+trading.portfolio:
+    hash: sha1-c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2
+    other: 持仓
+trading.cash:
+    hash: sha1-d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3
+    other: 现金
+trading.yes_shares:
+    hash: sha1-e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4
+    other: YES
+trading.no_shares:
+    hash: sha1-f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5
+    other: NO
+trading.avg_cost:
+    hash: sha1-g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6
+    other: 均价
+trading.shares:
+    hash: sha1-h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7
+    other: 份
+trading.position_value:
+    hash: sha1-i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8
+    other: 持仓价值
+trading.total_value:
+    hash: sha1-j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9
+    other: 总价值
+trading.trade_history:
+    hash: sha1-k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0
+    other: 交易记录
+trading.buy:
+    hash: sha1-l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1
+    other: 买入
+trading.sell:
+    hash: sha1-m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2
+    other: 卖出
+trading.filled:
+    hash: sha1-n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3
+    other: 已成交
+trading.pending:
+    hash: sha1-o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3h4
+    other: 待成交
+trading.cancelled:
+    hash: sha1-p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3h4i5
+    other: 已取消
+trading.strategy:
+    hash: sha1-q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3h4i5j6
+    other: 策略
+trading.mode:
+    hash: sha1-r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3h4i5j6k7
+    other: 模式
+trading.multiplier:
+    hash: sha1-s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3h4i5j6k7l8
+    other: 倍数
+trading.no_trades:
+    hash: sha1-t0u1v2w3x4y5z6a7b8c9d0e1f2g3h4i5j6k7l8m9
+    other: 暂无交易记录
+trading.underlying_price:
+    hash: sha1-u1v2w3x4y5z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0
+    other: 价格
+trading.target_price:
+    hash: sha1-v2w3x4y5z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1
+    other: 目标
+trading.bid:
+    hash: sha1-w3x4y5z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p2
+    other: 买价
+trading.ask:
+    hash: sha1-x4y5z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p2q3
+    other: 卖价
+trading.at:
+    hash: sha1-y5z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p2q3r4
+    other: '@'
+trading.press_esc_to_exit:
+    hash: sha1-z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p2q3r4s5
+    other: Esc 退出

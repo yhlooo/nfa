@@ -60,4 +60,5 @@ var (
 	MsgCmdShortDescTools                = &i18n.Message{ID: "commands.CmdShortDescTools", Other: "External tools"}
 	MsgCmdShortDescToolsPolyMarket      = &i18n.Message{ID: "commands.CmdShortDescToolsPolyMarket", Other: "PolyMarket tools"}
 	MsgCmdShortDescToolsPolyMarketWatch = &i18n.Message{ID: "commands.CmdShortDescToolsPolyMarketWatch", Other: "Watch a PolyMarket market in real-time"}
+	MsgCmdShortDescToolsPolyMarketTrade = &i18n.Message{ID: "commands.CmdShortDescToolsPolyMarketTrade", Other: "Run a trading strategy on a PolyMarket market"}
 )
