@@ -1,43 +1,7 @@
-PolyMarketBrowser.Connected: Connected
-PolyMarketBrowser.Disconnected: Disconnected (reconnecting...)
-PolyMarketBrowser.Event.Hint: ↑↓ Navigate  Enter Watch  Esc Back
-PolyMarketBrowser.Event.Liquidity: 'Liquidity: {{.Liquidity}}'
-PolyMarketBrowser.Event.Markets: Markets
-PolyMarketBrowser.Event.NoMarkets: No markets in this event
-PolyMarketBrowser.Event.Volume24h: 'Volume 24h: {{.Volume}}'
-PolyMarketBrowser.Home.EventTag: Event
-PolyMarketBrowser.Home.Hint: ↑↓ Navigate  Tab Search  Enter Open  Esc Quit
-PolyMarketBrowser.Home.Loading: Loading...
-PolyMarketBrowser.Home.NoResults: No results found
-PolyMarketBrowser.Home.SearchPlaceholder: Search events and series...
-PolyMarketBrowser.Home.SeriesTag: Series
-PolyMarketBrowser.Market.Ask: 'Ask:'
-PolyMarketBrowser.Market.Bid: 'Bid:'
-PolyMarketBrowser.Market.Connected: Connected
-PolyMarketBrowser.Market.Disconnected: Disconnected (reconnecting...)
-PolyMarketBrowser.Market.Hint: Esc Back
-PolyMarketBrowser.Market.LastUpdate: 'Last update: {{.Time}}'
-PolyMarketBrowser.PressCtrlCToExit: Ctrl+C Quit
-PolyMarketBrowser.PressEscToBack: Esc Back
-PolyMarketBrowser.Series.Events: Events
-PolyMarketBrowser.Series.Hint: ↑↓ Navigate  Enter Open  Esc Back
-PolyMarketBrowser.Series.NoEvents: No events in this series
-PolyMarketBrowser.Series.Volume: 'Volume: {{.Volume}}'
-PolyMarketBrowser.Title: PolyMarket Browser
-PolyMarketWatcher.Connected: Connected
-PolyMarketWatcher.Disconnected: Disconnected (reconnecting...)
-PolyMarketWatcher.LastUpdate: 'Last update: {{.Time}}'
-PolyMarketWatcher.PressCtrlCToExit: Press Ctrl+C to exit
-PolyMarketWatcher.PriceToBeat: 'Price to Beat: {{.Value}}'
-PolyMarketWatcher.UnderlyingPrice: '{{.Symbol}} Price: {{.Value}}'
 commands.CmdShortDesc: Financial Trading LLM AI Agent. **This is Not Financial Advice.**
 commands.CmdShortDescModels: Manage LLMs used by the agent
 commands.CmdShortDescModelsList: List available models
 commands.CmdShortDescOtter: Print Otter image
-commands.CmdShortDescTools: External tools
-commands.CmdShortDescToolsPolyMarket: PolyMarket tools
-commands.CmdShortDescToolsPolyMarketTrade: Run a trading strategy on a PolyMarket market
-commands.CmdShortDescToolsPolyMarketWatch: Watch a PolyMarket market in real-time
 commands.CmdShortDescVersion: Print the version information
 commands.GlobalOptsDataRootDesc: Path of data root directory
 commands.GlobalOptsLangDesc: The language used in UI (en or zh)
@@ -71,41 +35,6 @@ models.ModelDescQwen35Flash: Alibaba Qwen3.5 series lightweight high-speed versi
 models.ModelDescQwen35Plus: Alibaba Qwen3.5 series Plus model, native multimodal. Rivals top-tier frontier models in various benchmarks and significantly outperforms the Qwen3 series
 models.ModelDescQwen35_397B_A17B: Alibaba Qwen3.5 series 397B-A17B open-source model, with performance slightly exceeding qwen3.5-plus
 skills.ShortTermTrendForecastDesc: Analyze and predict short-term stock trends (within days, week, or month).
-trading.ask: Ask
-trading.at: '@'
-trading.avg_cost: avg
-trading.bid: Bid
-trading.buy: BUY
-trading.cancelled: cancelled
-trading.cash: Cash
-trading.connected: Connected
-trading.countdown: Countdown
-trading.disconnected: Disconnected
-trading.dry_run: DRY-RUN
-trading.filled: filled
-trading.mode: Mode
-trading.multiplier: Multiplier
-trading.no_shares: "NO"
-trading.no_trades: No trades yet
-trading.pending: pending
-trading.pending_settlement: Pending Settlement
-trading.portfolio: Portfolio
-trading.position_value: Position Value
-trading.press_esc_to_exit: Esc Exit
-trading.real_mode: REAL
-trading.round_count: Round
-trading.round_history: Round History
-trading.sell: SELL
-trading.series_title: Series Trading
-trading.settled_cash: Settled Cash
-trading.shares: shares
-trading.strategy: Strategy
-trading.target_price: Target
-trading.title: Strategy Trading
-trading.total_value: Total Value
-trading.trade_history: Trade History
-trading.underlying_price: Price
-trading.yes_shares: "YES"
 ui.chat.BuiltinSkills: Builtin skills
 ui.chat.CmdDescClear: Start a fresh conversation
 ui.chat.CmdDescExit: Exit the NFA
