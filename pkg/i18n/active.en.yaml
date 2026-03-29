@@ -28,6 +28,8 @@ PolyMarketWatcher.Connected: Connected
 PolyMarketWatcher.Disconnected: Disconnected (reconnecting...)
 PolyMarketWatcher.LastUpdate: 'Last update: {{.Time}}'
 PolyMarketWatcher.PressCtrlCToExit: Press Ctrl+C to exit
+PolyMarketWatcher.PriceToBeat: 'Price to Beat: {{.Value}}'
+PolyMarketWatcher.UnderlyingPrice: '{{.Symbol}} Price: {{.Value}}'
 commands.CmdShortDesc: Financial Trading LLM AI Agent. **This is Not Financial Advice.**
 commands.CmdShortDescModels: Manage LLMs used by the agent
 commands.CmdShortDescModelsList: List available models
@@ -69,6 +71,41 @@ models.ModelDescQwen35Flash: Alibaba Qwen3.5 series lightweight high-speed versi
 models.ModelDescQwen35Plus: Alibaba Qwen3.5 series Plus model, native multimodal. Rivals top-tier frontier models in various benchmarks and significantly outperforms the Qwen3 series
 models.ModelDescQwen35_397B_A17B: Alibaba Qwen3.5 series 397B-A17B open-source model, with performance slightly exceeding qwen3.5-plus
 skills.ShortTermTrendForecastDesc: Analyze and predict short-term stock trends (within days, week, or month).
+trading.ask: Ask
+trading.at: '@'
+trading.avg_cost: avg
+trading.bid: Bid
+trading.buy: BUY
+trading.cancelled: cancelled
+trading.cash: Cash
+trading.connected: Connected
+trading.countdown: Countdown
+trading.disconnected: Disconnected
+trading.dry_run: DRY-RUN
+trading.filled: filled
+trading.mode: Mode
+trading.multiplier: Multiplier
+trading.no_shares: "NO"
+trading.no_trades: No trades yet
+trading.pending: pending
+trading.pending_settlement: Pending Settlement
+trading.portfolio: Portfolio
+trading.position_value: Position Value
+trading.press_esc_to_exit: Esc Exit
+trading.real_mode: REAL
+trading.round_count: Round
+trading.round_history: Round History
+trading.sell: SELL
+trading.series_title: Series Trading
+trading.settled_cash: Settled Cash
+trading.shares: shares
+trading.strategy: Strategy
+trading.target_price: Target
+trading.title: Strategy Trading
+trading.total_value: Total Value
+trading.trade_history: Trade History
+trading.underlying_price: Price
+trading.yes_shares: "YES"
 ui.chat.BuiltinSkills: Builtin skills
 ui.chat.CmdDescClear: Start a fresh conversation
 ui.chat.CmdDescExit: Exit the NFA
@@ -89,32 +126,3 @@ ui.chat.StopReason: 'stop reason: {{ .Reason }}'
 ui.chat.TabToToggle: (tab to toggle)
 ui.chat.TokenUsage: 'Token Usage:'
 ui.chat.ToolCall: 'ToolCall:'
-trading.title: Strategy Trading
-trading.connected: Connected
-trading.disconnected: Disconnected
-trading.dry_run: DRY-RUN
-trading.real_mode: REAL
-trading.portfolio: Portfolio
-trading.cash: Cash
-trading.yes_shares: YES
-trading.no_shares: NO
-trading.avg_cost: avg
-trading.shares: shares
-trading.position_value: Position Value
-trading.total_value: Total Value
-trading.trade_history: Trade History
-trading.buy: BUY
-trading.sell: SELL
-trading.filled: filled
-trading.pending: pending
-trading.cancelled: cancelled
-trading.strategy: Strategy
-trading.mode: Mode
-trading.multiplier: Multiplier
-trading.no_trades: No trades yet
-trading.underlying_price: Price
-trading.target_price: Target
-trading.bid: Bid
-trading.ask: Ask
-trading.at: '@'
-trading.press_esc_to_exit: Esc Exit
