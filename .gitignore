@@ -36,8 +36,8 @@ go.work
 # Genkit
 .genkit/
 
-# Claude
-.claude/settings.local.json
+# Claude / CodeBuddy
+settings.local.json
 
 # i18n
 translate.*.yaml
