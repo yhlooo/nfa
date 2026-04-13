@@ -19,9 +19,9 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 
 	"github.com/yhlooo/nfa/pkg/agents"
+	uitty "github.com/yhlooo/nfa/pkg/apps/chat"
 	"github.com/yhlooo/nfa/pkg/configs"
 	"github.com/yhlooo/nfa/pkg/i18n"
-	uitty "github.com/yhlooo/nfa/pkg/ui/chat"
 	"github.com/yhlooo/nfa/pkg/version"
 )
 
@@ -203,7 +203,7 @@ func NewCommand(name string) *cobra.Command {
 				initialPrompt = args[0]
 			}
 
-			return uitty.NewChatUI(uitty.Options{
+			return uitty.NewChat(uitty.Options{
 				AgentClientIn:         clientIn,
 				AgentClientOut:        clientOut,
 				InitialPrompt:         initialPrompt,

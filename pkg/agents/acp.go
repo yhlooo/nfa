@@ -26,28 +26,16 @@ import (
 var _ acp.Agent = (*NFAAgent)(nil)
 var _ acp.AgentLoader = (*NFAAgent)(nil)
 
-// ACPAgentSideConnection ACP Agent 侧连接
-type ACPAgentSideConnection interface {
-	SessionUpdate(ctx context.Context, req acp.SessionNotification) error
-	Done() <-chan struct{}
-}
-
-var _ ACPAgentSideConnection = (*acp.AgentSideConnection)(nil)
-
 // Connect 连接
 func (a *NFAAgent) Connect(in io.Reader, out io.Writer) error {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
-	if a.conn != nil {
-		select {
-		case <-a.conn.Done():
-		default:
-			return fmt.Errorf("already connected")
-		}
+	if a.client != nil {
+		return fmt.Errorf("already connected")
 	}
 
-	a.conn = acp.NewAgentSideConnection(a, out, in)
+	a.client = acp.NewAgentSideConnection(a, out, in)
 
 	return nil
 }
@@ -129,7 +117,7 @@ func (a *NFAAgent) LoadSession(ctx context.Context, params acp.LoadSessionReques
 		time.Sleep(5 * time.Millisecond) // TODO: 暂时不清楚什么原因，发送太快的话到达客户端是乱序的，所以这里略微 sleep 一下
 		switch msg.Role {
 		case ai.RoleUser:
-			if err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
+			if err := a.client.SessionUpdate(ctx, acp.SessionNotification{
 				SessionId: params.SessionId,
 				Update:    acp.UpdateUserMessageText(msg.Text()),
 			}); err != nil {
@@ -230,7 +218,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	// 斜杠命令
 	switch strings.TrimSpace(prompt) {
 	case "/clear":
-		_ = a.conn.SessionUpdate(ctx, acp.SessionNotification{
+		_ = a.client.SessionUpdate(ctx, acp.SessionNotification{
 			SessionId: params.SessionId,
 			Update:    acp.UpdateAgentMessageText("The context has been cleared."),
 		})
@@ -360,7 +348,7 @@ func (a *NFAAgent) handleStreamChunk(sessionID acp.SessionId) ai.ModelStreamCall
 				inputRaw, _ := json.Marshal(part.ToolRequest.Input)
 				meta := make(map[string]any)
 				SetMetaCurrentModelUsage(meta, ctxutil.GetModelUsageFromContext(ctx))
-				if err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
+				if err := a.client.SessionUpdate(ctx, acp.SessionNotification{
 					Meta:      meta,
 					SessionId: sessionID,
 					Update: acp.StartToolCall(
@@ -384,7 +372,7 @@ func (a *NFAAgent) handleStreamChunk(sessionID acp.SessionId) ai.ModelStreamCall
 				outputRaw, _ := json.Marshal(part.ToolResponse.Output)
 				meta := make(map[string]any)
 				SetMetaCurrentModelUsage(meta, ctxutil.GetModelUsageFromContext(ctx))
-				if err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
+				if err := a.client.SessionUpdate(ctx, acp.SessionNotification{
 					Meta:      meta,
 					SessionId: sessionID,
 					Update: acp.UpdateToolCall(
@@ -424,7 +412,7 @@ func (a *NFAAgent) flushBufferText(
 
 	meta := make(map[string]any)
 	SetMetaCurrentModelUsage(meta, ctxutil.GetModelUsageFromContext(ctx))
-	err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
+	err := a.client.SessionUpdate(ctx, acp.SessionNotification{
 		Meta:      meta,
 		SessionId: sessionID,
 		Update:    buildUpdateFn(buff.String()),
@@ -472,7 +460,7 @@ func (a *NFAAgent) handleSummary(
 
 	meta := make(map[string]any)
 	SetMetaCurrentModelUsage(meta, ctxutil.GetModelUsageFromContext(ctx))
-	if err := a.conn.SessionUpdate(ctx, acp.SessionNotification{
+	if err := a.client.SessionUpdate(ctx, acp.SessionNotification{
 		Meta:      meta,
 		SessionId: sessionID,
 		Update:    acp.UpdateAgentMessageText(content),
