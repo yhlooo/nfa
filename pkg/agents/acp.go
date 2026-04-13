@@ -26,18 +26,16 @@ import (
 var _ acp.Agent = (*NFAAgent)(nil)
 var _ acp.AgentLoader = (*NFAAgent)(nil)
 
-// Connect 连接
-func (a *NFAAgent) Connect(in io.Reader, out io.Writer) error {
+// ConnectClientIO 连接客户端输入输出流
+func (a *NFAAgent) ConnectClientIO(in io.Reader, out io.Writer) {
+	a.SetClient(acp.NewAgentSideConnection(a, out, in))
+}
+
+// SetClient 设置客户端
+func (a *NFAAgent) SetClient(client acp.Client) {
 	a.lock.Lock()
 	defer a.lock.Unlock()
-
-	if a.client != nil {
-		return fmt.Errorf("already connected")
-	}
-
-	a.client = acp.NewAgentSideConnection(a, out, in)
-
-	return nil
+	a.client = client
 }
 
 // Initialize 初始化连接
@@ -58,11 +56,11 @@ func (a *NFAAgent) Initialize(ctx context.Context, _ acp.InitializeRequest) (acp
 	a.InitGenkit(ctx)
 
 	return acp.InitializeResponse{
-		Meta: map[string]any{
+		Meta: NewMetaMapValue(map[string]any{
 			MetaKeyAvailableModels: a.availableModels,
 			MetaKeyCurrentModels:   a.defaultModels,
 			MetaKeySkills:          a.skillLoader.ListMeta(),
-		},
+		}),
 		AgentCapabilities: acp.AgentCapabilities{
 			LoadSession: true,
 		},

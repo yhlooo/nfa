@@ -23,8 +23,9 @@ import (
 
 // Options UI 运行选项
 type Options struct {
-	AgentClientIn         io.Reader
-	AgentClientOut        io.Writer
+	AgentIn               io.Writer
+	AgentOut              io.Reader
+	Agent                 ACPAgent
 	InitialPrompt         string
 	AutoExitAfterResponse bool
 	ResumeSessionID       string
@@ -40,7 +41,13 @@ func NewChat(opts Options) *Chat {
 		viewState:             viewStateInput,
 		width:                 80,
 	}
-	ui.agent = acp.NewClientSideConnection(ui, opts.AgentClientOut, opts.AgentClientIn)
+
+	if opts.Agent != nil {
+		ui.agent = opts.Agent
+	} else {
+		ui.agent = acp.NewClientSideConnection(ui, opts.AgentIn, opts.AgentOut)
+	}
+
 	return ui
 }
 
