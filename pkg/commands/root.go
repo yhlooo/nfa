@@ -3,7 +3,6 @@ package commands
 import (
 	"crypto/tls"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"os"
@@ -172,6 +171,7 @@ func NewCommand(name string) *cobra.Command {
 				m.Vision = opts.VisionModel
 			}
 
+			// 创建 Agent
 			agent := agents.NewNFA(agents.Options{
 				Logger:         logger,
 				Localizer:      i18n.LocalizerFromContext(ctx),
@@ -181,35 +181,24 @@ func NewCommand(name string) *cobra.Command {
 				DataRoot:       globalOpts.DataRoot,
 			})
 
-			agentIn, clientOut := io.Pipe()
-			clientIn, agentOut := io.Pipe()
-			defer func() {
-				_ = clientOut.Close()
-				_ = agentIn.Close()
-				_ = agentOut.Close()
-				_ = clientIn.Close()
-			}()
-
-			if err := agent.Connect(agentIn, agentOut); err != nil {
-				return fmt.Errorf("create agent side connection error: %w", err)
-			}
-
-			ctx, cancel := chromedp.NewContext(ctx)
-			defer cancel()
-
-			// 处理三种模式
+			// 创建应用
 			var initialPrompt string
 			if len(args) > 0 {
 				initialPrompt = args[0]
 			}
-
-			return uitty.NewChat(uitty.Options{
-				AgentClientIn:         clientIn,
-				AgentClientOut:        clientOut,
+			app := uitty.NewChat(uitty.Options{
+				Agent:                 agent,
 				InitialPrompt:         initialPrompt,
 				AutoExitAfterResponse: opts.PrintAndExit,
 				ResumeSessionID:       opts.Resume,
-			}).Run(ctx)
+			})
+			agent.SetClient(app)
+
+			ctx, cancel := chromedp.NewContext(ctx)
+			defer cancel()
+
+			// 开始运行
+			return app.Run(ctx)
 		},
 
 		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {

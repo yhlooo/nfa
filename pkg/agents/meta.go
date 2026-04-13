@@ -66,6 +66,30 @@ func GetMetaCurrentModelUsageValue(meta any) ai.GenerationUsage {
 	return usage
 }
 
+// NewMetaSliceValue 创建 _meta 切片值
+func NewMetaSliceValue(v any) []any {
+	if v == nil {
+		return nil
+	}
+
+	jsonRaw, _ := json.Marshal(v)
+	var ret []any
+	_ = json.Unmarshal(jsonRaw, &ret)
+	return ret
+}
+
+// NewMetaMapValue 创建 _meta 字典值
+func NewMetaMapValue(v any) map[string]any {
+	if v == nil {
+		return nil
+	}
+
+	jsonRaw, _ := json.Marshal(v)
+	var ret map[string]any
+	_ = json.Unmarshal(jsonRaw, &ret)
+	return ret
+}
+
 // GetMetaAvailableModelsValue 从 _meta 中获取可用模型列表
 func GetMetaAvailableModelsValue(meta any) []models.ModelConfig {
 	v, ok := GetMetaValue(meta, MetaKeyAvailableModels).([]any)
