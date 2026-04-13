@@ -73,7 +73,7 @@ type NFAAgent struct {
 	defaultModels  models.Models
 	dataRoot       string
 
-	conn        ACPAgentSideConnection
+	client      acp.Client
 	g           *genkit.Genkit
 	skillLoader *skills.SkillLoader
 
