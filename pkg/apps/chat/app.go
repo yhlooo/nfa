@@ -14,6 +14,7 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 
 	"github.com/yhlooo/nfa/pkg/acputil"
+	"github.com/yhlooo/nfa/pkg/channels"
 	"github.com/yhlooo/nfa/pkg/configs"
 	"github.com/yhlooo/nfa/pkg/history"
 	i18nutil "github.com/yhlooo/nfa/pkg/i18n"
@@ -29,11 +30,13 @@ type Options struct {
 	InitialPrompt         string
 	AutoExitAfterResponse bool
 	ResumeSessionID       string
+	Channels              []channels.Channel
 }
 
 // NewChat 创建对话应用
 func NewChat(opts Options) *Chat {
 	ui := &Chat{
+		channels:              opts.Channels,
 		modelUsageStyle:       lipgloss.NewStyle().Faint(true).Align(lipgloss.Right).PaddingRight(2),
 		initialPrompt:         opts.InitialPrompt,
 		autoExitAfterResponse: opts.AutoExitAfterResponse,
@@ -65,7 +68,9 @@ type Chat struct {
 	acputil.NopTerminal
 	modelUsageStyle lipgloss.Style
 
-	agent                 ACPAgent
+	agent    ACPAgent
+	channels []channels.Channel
+
 	cwd                   string
 	sessionID             acp.SessionId
 	curModels             models.Models
@@ -129,6 +134,12 @@ func (chat *Chat) Run(ctx context.Context) error {
 
 	p := tea.NewProgram(chat, tea.WithContext(ctx))
 	chat.p = p
+
+	// 监听信道
+	for i, ch := range chat.channels {
+		go chat.handleChannel(ctx, i+1, ch)
+	}
+
 	_, err = p.Run()
 
 	// 打印会话恢复提示

@@ -19,6 +19,8 @@ import (
 
 	"github.com/yhlooo/nfa/pkg/agents"
 	uitty "github.com/yhlooo/nfa/pkg/apps/chat"
+	"github.com/yhlooo/nfa/pkg/channels"
+	"github.com/yhlooo/nfa/pkg/channels/wecomaibot"
 	"github.com/yhlooo/nfa/pkg/configs"
 	"github.com/yhlooo/nfa/pkg/i18n"
 	"github.com/yhlooo/nfa/pkg/version"
@@ -181,6 +183,21 @@ func NewCommand(name string) *cobra.Command {
 				DataRoot:       globalOpts.DataRoot,
 			})
 
+			// 连接信道
+			var chs []channels.Channel
+			for _, chOpts := range cfg.Channels {
+				switch {
+				case chOpts.WeComAIBot != nil:
+					ch := &wecomaibot.WeComAIBot{
+						BotID:  chOpts.WeComAIBot.BotID,
+						Secret: chOpts.WeComAIBot.Secret,
+						URL:    chOpts.WeComAIBot.URL,
+					}
+					ch.Start(ctx)
+					chs = append(chs, ch)
+				}
+			}
+
 			// 创建应用
 			var initialPrompt string
 			if len(args) > 0 {
@@ -191,6 +208,7 @@ func NewCommand(name string) *cobra.Command {
 				InitialPrompt:         initialPrompt,
 				AutoExitAfterResponse: opts.PrintAndExit,
 				ResumeSessionID:       opts.Resume,
+				Channels:              chs,
 			})
 			agent.SetClient(app)
 

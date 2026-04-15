@@ -120,7 +120,13 @@ func (chat *Chat) RequestPermission(
 }
 
 // SessionUpdate 更新会话
-func (chat *Chat) SessionUpdate(_ context.Context, params acp.SessionNotification) error {
+func (chat *Chat) SessionUpdate(ctx context.Context, params acp.SessionNotification) error {
 	chat.p.Send(params)
+	if channelID := agents.GetMetaIntValue(params.Meta, channelIDMetaKey); channelID > 0 &&
+		channelID <= len(chat.channels) {
+		if err := chat.channels[channelID-1].Send(ctx, params.Meta, &params, false); err != nil {
+			chat.logger.Error(err, "send notification to channel error")
+		}
+	}
 	return nil
 }

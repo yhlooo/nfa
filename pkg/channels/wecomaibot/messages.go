@@ -55,7 +55,7 @@ type RequestMeta struct {
 
 // GetMeta 获取请求元信息
 func (meta RequestMeta) GetMeta() RequestMeta {
-	return RequestMeta{}
+	return meta
 }
 
 // Request 请求

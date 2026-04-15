@@ -38,6 +38,15 @@ func GetMetaStringValue(meta any, key string) string {
 	return v
 }
 
+// GetMetaIntValue 从 _meta 中获取指定 key 的整数值
+func GetMetaIntValue(meta any, key string) int {
+	v, ok := GetMetaValue(meta, key).(int)
+	if !ok {
+		return 0
+	}
+	return v
+}
+
 // SetMetaCurrentModelUsage 往 _meta 设置当前模型用量
 func SetMetaCurrentModelUsage(meta any, usage ai.GenerationUsage) {
 	mapMeta, ok := meta.(map[string]any)

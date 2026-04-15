@@ -31,6 +31,7 @@ type WeComAIBot struct {
 	receiveChan chan channels.UserMessage
 	conn        *Connection
 	err         error
+	replyBuff   map[string]string
 }
 
 var _ channels.Channel = (*WeComAIBot)(nil)
@@ -39,6 +40,7 @@ var _ Handler = (*WeComAIBot)(nil)
 // Start 开始运行
 func (ch *WeComAIBot) Start(ctx context.Context) {
 	logger := logr.FromContextOrDiscard(ctx)
+	logger.Info("start connecting wecom aibot")
 
 	u := ch.URL
 	if u == "" {
@@ -52,7 +54,12 @@ func (ch *WeComAIBot) Start(ctx context.Context) {
 	ch.lock.Unlock()
 
 	go func() {
-		defer close(receiveChan)
+		defer func() {
+			if ch.conn != nil {
+				_ = ch.conn.Close()
+			}
+			close(receiveChan)
+		}()
 
 		for {
 			select {
@@ -101,7 +108,7 @@ func (ch *WeComAIBot) Receive() <-chan channels.UserMessage {
 }
 
 // Send 发送消息
-func (ch *WeComAIBot) Send(ctx context.Context, notification acp.SessionNotification) error {
+func (ch *WeComAIBot) Send(ctx context.Context, meta any, notification *acp.SessionNotification, end bool) error {
 	logger := logr.FromContextOrDiscard(ctx)
 
 	conn, err := ch.getConn()
@@ -110,22 +117,39 @@ func (ch *WeComAIBot) Send(ctx context.Context, notification acp.SessionNotifica
 	}
 
 	content := ""
-	switch {
-	case notification.Update.AgentThoughtChunk != nil && notification.Update.AgentThoughtChunk.Content.Text != nil:
-		content = notification.Update.AgentThoughtChunk.Content.Text.Text
-	case notification.Update.AgentMessageChunk != nil && notification.Update.AgentMessageChunk.Content.Text != nil:
-		content = notification.Update.AgentMessageChunk.Content.Text.Text
-	default:
-		// 忽略其它内容
+	if notification != nil {
+		switch {
+		case notification.Update.AgentThoughtChunk != nil && notification.Update.AgentThoughtChunk.Content.Text != nil:
+			content = notification.Update.AgentThoughtChunk.Content.Text.Text
+		case notification.Update.AgentMessageChunk != nil && notification.Update.AgentMessageChunk.Content.Text != nil:
+			content = notification.Update.AgentMessageChunk.Content.Text.Text
+		default:
+			// 忽略其它内容
+		}
+	}
+	if content == "" && !end {
 		return nil
 	}
 
-	reqID := agents.GetMetaStringValue(notification.Meta, replyReqIDMetaKey)
-	msgID := agents.GetMetaStringValue(notification.Meta, replyMsgIDMetaKey)
+	reqID := agents.GetMetaStringValue(meta, replyReqIDMetaKey)
+	msgID := agents.GetMetaStringValue(meta, replyMsgIDMetaKey)
 	if reqID == "" || msgID == "" {
 		logger.Info("ignore notification without request ID or message ID")
 		return nil
 	}
+
+	// 获取之前缓冲的内容
+	ch.lock.Lock()
+	if ch.replyBuff == nil {
+		ch.replyBuff = make(map[string]string)
+	}
+	content = ch.replyBuff[msgID] + content
+	if end {
+		delete(ch.replyBuff, msgID)
+	} else {
+		ch.replyBuff[msgID] = content
+	}
+	ch.lock.Unlock()
 
 	resp, err := conn.Send(ctx, RespondMessageRequest{
 		RequestMeta: RequestMeta{
@@ -138,7 +162,7 @@ func (ch *WeComAIBot) Send(ctx context.Context, notification acp.SessionNotifica
 			MsgType: StreamMessage,
 			Stream: &StreamMessageContent{
 				ID:      msgID,
-				Finish:  false,
+				Finish:  end,
 				Content: content,
 			},
 		},
