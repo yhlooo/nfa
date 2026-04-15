@@ -110,7 +110,7 @@ func (a *NFAAgent) LoadSession(ctx context.Context, params acp.LoadSessionReques
 	}
 
 	// 回放历史消息
-	handleFn := a.handleStreamChunk(params.SessionId)
+	handleFn := a.handleStreamChunk(params.SessionId, nil)
 	for _, msg := range data.Messages {
 		time.Sleep(5 * time.Millisecond) // TODO: 暂时不清楚什么原因，发送太快的话到达客户端是乱序的，所以这里略微 sleep 一下
 		switch msg.Role {
@@ -210,7 +210,8 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 
 	a.logger.Info("prompt turn start")
 
-	ctx = ctxutil.ContextWithHandleStreamFn(ctx, a.handleStreamChunk(params.SessionId))
+	extraMeta, _ := params.Meta.(map[string]any)
+	ctx = ctxutil.ContextWithHandleStreamFn(ctx, a.handleStreamChunk(params.SessionId, extraMeta))
 	resp := acp.PromptResponse{Meta: map[string]any{}, StopReason: acp.StopReasonEndTurn}
 
 	// 斜杠命令
@@ -310,7 +311,7 @@ func (a *NFAAgent) Cancel(_ context.Context, params acp.CancelNotification) erro
 }
 
 // handleStreamChunk 处理模型流输出
-func (a *NFAAgent) handleStreamChunk(sessionID acp.SessionId) ai.ModelStreamCallback {
+func (a *NFAAgent) handleStreamChunk(sessionID acp.SessionId, extraMeta map[string]any) ai.ModelStreamCallback {
 	return func(ctx context.Context, chunk *ai.ModelResponseChunk) error {
 		select {
 		case <-ctx.Done():
@@ -326,25 +327,34 @@ func (a *NFAAgent) handleStreamChunk(sessionID acp.SessionId) ai.ModelStreamCall
 		for _, part := range chunk.Content {
 			switch {
 			case part.IsReasoning():
-				if err := a.flushBufferText(ctx, sessionID, acp.UpdateAgentMessageText, text); err != nil {
+				if err := a.flushBufferText(ctx, sessionID, extraMeta, acp.UpdateAgentMessageText, text); err != nil {
 					return err
 				}
 				reasoning.WriteString(part.Text)
 			case part.IsText() || part.IsData():
-				if err := a.flushBufferText(ctx, sessionID, acp.UpdateAgentThoughtText, reasoning); err != nil {
+				if err := a.flushBufferText(
+					ctx, sessionID, extraMeta, acp.UpdateAgentThoughtText,
+					reasoning,
+				); err != nil {
 					return err
 				}
 				text.WriteString(part.Text)
 			case part.IsToolRequest() && part.ToolRequest != nil:
-				if err := a.flushBufferText(ctx, sessionID, acp.UpdateAgentThoughtText, reasoning); err != nil {
+				if err := a.flushBufferText(
+					ctx, sessionID, extraMeta, acp.UpdateAgentThoughtText,
+					reasoning,
+				); err != nil {
 					return err
 				}
-				if err := a.flushBufferText(ctx, sessionID, acp.UpdateAgentMessageText, text); err != nil {
+				if err := a.flushBufferText(ctx, sessionID, extraMeta, acp.UpdateAgentMessageText, text); err != nil {
 					return err
 				}
 
 				inputRaw, _ := json.Marshal(part.ToolRequest.Input)
 				meta := make(map[string]any)
+				for k, v := range extraMeta {
+					meta[k] = v
+				}
 				SetMetaCurrentModelUsage(meta, ctxutil.GetModelUsageFromContext(ctx))
 				if err := a.client.SessionUpdate(ctx, acp.SessionNotification{
 					Meta:      meta,
@@ -361,14 +371,20 @@ func (a *NFAAgent) handleStreamChunk(sessionID acp.SessionId) ai.ModelStreamCall
 				}
 
 			case part.IsToolResponse() && part.ToolResponse != nil:
-				if err := a.flushBufferText(ctx, sessionID, acp.UpdateAgentThoughtText, reasoning); err != nil {
+				if err := a.flushBufferText(
+					ctx, sessionID, extraMeta, acp.UpdateAgentThoughtText,
+					reasoning,
+				); err != nil {
 					return err
 				}
-				if err := a.flushBufferText(ctx, sessionID, acp.UpdateAgentMessageText, text); err != nil {
+				if err := a.flushBufferText(ctx, sessionID, extraMeta, acp.UpdateAgentMessageText, text); err != nil {
 					return err
 				}
 				outputRaw, _ := json.Marshal(part.ToolResponse.Output)
 				meta := make(map[string]any)
+				for k, v := range extraMeta {
+					meta[k] = v
+				}
 				SetMetaCurrentModelUsage(meta, ctxutil.GetModelUsageFromContext(ctx))
 				if err := a.client.SessionUpdate(ctx, acp.SessionNotification{
 					Meta:      meta,
@@ -386,10 +402,10 @@ func (a *NFAAgent) handleStreamChunk(sessionID acp.SessionId) ai.ModelStreamCall
 			}
 		}
 
-		if err := a.flushBufferText(ctx, sessionID, acp.UpdateAgentThoughtText, reasoning); err != nil {
+		if err := a.flushBufferText(ctx, sessionID, extraMeta, acp.UpdateAgentThoughtText, reasoning); err != nil {
 			return err
 		}
-		if err := a.flushBufferText(ctx, sessionID, acp.UpdateAgentMessageText, text); err != nil {
+		if err := a.flushBufferText(ctx, sessionID, extraMeta, acp.UpdateAgentMessageText, text); err != nil {
 			return err
 		}
 
@@ -401,6 +417,7 @@ func (a *NFAAgent) handleStreamChunk(sessionID acp.SessionId) ai.ModelStreamCall
 func (a *NFAAgent) flushBufferText(
 	ctx context.Context,
 	sessionID acp.SessionId,
+	extraMeta map[string]any,
 	buildUpdateFn func(string) acp.SessionUpdate,
 	buff strings.Builder,
 ) error {
@@ -409,6 +426,9 @@ func (a *NFAAgent) flushBufferText(
 	}
 
 	meta := make(map[string]any)
+	for k, v := range extraMeta {
+		meta[k] = v
+	}
 	SetMetaCurrentModelUsage(meta, ctxutil.GetModelUsageFromContext(ctx))
 	err := a.client.SessionUpdate(ctx, acp.SessionNotification{
 		Meta:      meta,

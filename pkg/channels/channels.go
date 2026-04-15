@@ -11,11 +11,13 @@ type Channel interface {
 	// Receive 获取接收用户消息的信道
 	Receive() <-chan UserMessage
 	// Send 发送消息
-	Send(ctx context.Context, notification acp.SessionNotification) error
+	Send(ctx context.Context, meta any, notification *acp.SessionNotification, end bool) error
+	// Err 获取运行错误
+	Err() error
 }
 
 // UserMessage 用户消息
 type UserMessage struct {
-	Meta   any
+	Meta   map[string]any
 	Prompt []acp.ContentBlock
 }

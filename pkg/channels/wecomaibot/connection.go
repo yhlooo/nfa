@@ -161,6 +161,7 @@ func (c *Connection) Send(ctx context.Context, req Request) (*Response, error) {
 	if err != nil {
 		return nil, fmt.Errorf("marshal request to json error: %w", err)
 	}
+	c.logger.V(1).Info(fmt.Sprintf("send request: %s", string(reqRaw)))
 
 	// 设置接受响应的 channel
 	reqID := req.GetMeta().Headers.RequestID
