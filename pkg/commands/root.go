@@ -21,6 +21,7 @@ import (
 	uitty "github.com/yhlooo/nfa/pkg/apps/chat"
 	"github.com/yhlooo/nfa/pkg/channels"
 	"github.com/yhlooo/nfa/pkg/channels/wecomaibot"
+	"github.com/yhlooo/nfa/pkg/channels/yuanbaobot"
 	"github.com/yhlooo/nfa/pkg/configs"
 	"github.com/yhlooo/nfa/pkg/i18n"
 	"github.com/yhlooo/nfa/pkg/version"
@@ -185,16 +186,27 @@ func NewCommand(name string) *cobra.Command {
 
 			// 连接信道
 			var chs []channels.Channel
-			for _, chOpts := range cfg.Channels {
-				switch {
-				case chOpts.WeComAIBot != nil:
-					ch := &wecomaibot.WeComAIBot{
-						BotID:  chOpts.WeComAIBot.BotID,
-						Secret: chOpts.WeComAIBot.Secret,
-						URL:    chOpts.WeComAIBot.URL,
+			if cfg.Channels.Enabled {
+				for _, chOpts := range cfg.Channels.Channels {
+					switch {
+					case chOpts.WeComAIBot != nil:
+						ch := &wecomaibot.WeComAIBot{
+							BotID:  chOpts.WeComAIBot.BotID,
+							Secret: chOpts.WeComAIBot.Secret,
+							URL:    chOpts.WeComAIBot.URL,
+						}
+						ch.Start(ctx)
+						chs = append(chs, ch)
+					case chOpts.YuanbaoBot != nil:
+						ch := &yuanbaobot.YuanbaoBot{
+							AppKey:       chOpts.YuanbaoBot.AppID,
+							AppSecret:    chOpts.YuanbaoBot.AppSecret,
+							BaseURL:      chOpts.YuanbaoBot.BaseURL,
+							WebSocketURL: chOpts.YuanbaoBot.WebSocketURL,
+						}
+						ch.Start(ctx)
+						chs = append(chs, ch)
 					}
-					ch.Start(ctx)
-					chs = append(chs, ch)
 				}
 			}
 
