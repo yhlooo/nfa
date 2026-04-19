@@ -115,6 +115,10 @@ func NewGenkitWithModels(
 			plugin := p.Minimax.Plugin()
 			plugins = append(plugins, plugin)
 			oaiPlugins[i] = plugin
+		case p.OpenRouter != nil:
+			plugin := p.OpenRouter.Plugin()
+			plugins = append(plugins, plugin)
+			oaiPlugins[i] = plugin
 		case p.OpenAICompatible != nil:
 			plugin := p.OpenAICompatible.OpenAICompatiblePlugin()
 			plugins = append(plugins, plugin)
@@ -172,6 +176,13 @@ func NewGenkitWithModels(
 			registeredModels, err := p.Minimax.RegisterModels(ctx, g, oaiPlugins[i])
 			if err != nil {
 				logger.Error(err, "define minimax models error")
+				continue
+			}
+			modelConfigs = append(modelConfigs, registeredModels...)
+		case p.OpenRouter != nil:
+			registeredModels, err := p.OpenRouter.RegisterModels(ctx, g, oaiPlugins[i])
+			if err != nil {
+				logger.Error(err, "define openrouter models error")
 				continue
 			}
 			modelConfigs = append(modelConfigs, registeredModels...)

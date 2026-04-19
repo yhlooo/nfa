@@ -286,6 +286,8 @@ func (g *ModelGenerator) generateStream(ctx context.Context, handleChunk core.St
 					currentToolCall.Input = args
 				}
 				fullResponse.Message.Content = append(fullResponse.Message.Content, ai.NewToolRequestPart(currentToolCall))
+				currentToolCall = nil
+				currentArguments = ""
 			}
 
 			msgRaw := choice.Delta.RawJSON()

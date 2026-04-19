@@ -8,6 +8,7 @@ type ModelProvider struct {
 	Moonshot         *MoonshotOptions         `json:"moonshotai,omitempty"`
 	Deepseek         *DeepseekOptions         `json:"deepseek,omitempty"`
 	Minimax          *MinimaxOptions          `json:"minimax,omitempty"`
+	OpenRouter       *OpenRouterOptions       `json:"openrouter,omitempty"`
 	OpenAICompatible *OpenAICompatibleOptions `json:"openaiCompatible,omitempty"`
 }
 
