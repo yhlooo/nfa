@@ -22,12 +22,13 @@ const loggerName = "agent"
 
 // Options Agent 运行选项
 type Options struct {
-	Logger         logr.Logger
-	Localizer      *i18n.Localizer
-	ModelProviders []models.ModelProvider
-	DataProviders  DataProviders
-	DefaultModels  models.Models
-	DataRoot       string
+	Logger           logr.Logger
+	Localizer        *i18n.Localizer
+	ModelProviders   []models.ModelProvider
+	DataProviders    DataProviders
+	DefaultModels    models.Models
+	DataRoot         string
+	MaxContextWindow int64
 }
 
 // DataProviders 数据供应商配置
@@ -44,18 +45,22 @@ func (opts *Options) Complete() {
 	if opts.DataRoot == "" {
 		opts.DataRoot = ".nfa"
 	}
+	if opts.MaxContextWindow == 0 {
+		opts.MaxContextWindow = 200000
+	}
 }
 
 // NewNFA 创建 NFA Agent
 func NewNFA(opts Options) *NFAAgent {
 	opts.Complete()
 	return &NFAAgent{
-		logger:         opts.Logger.WithName(loggerName),
-		localizer:      opts.Localizer,
-		modelProviders: opts.ModelProviders,
-		dataProviders:  opts.DataProviders,
-		defaultModels:  opts.DefaultModels,
-		dataRoot:       opts.DataRoot,
+		logger:           opts.Logger.WithName(loggerName),
+		localizer:        opts.Localizer,
+		modelProviders:   opts.ModelProviders,
+		dataProviders:    opts.DataProviders,
+		defaultModels:    opts.DefaultModels,
+		dataRoot:         opts.DataRoot,
+		maxContextWindow: opts.MaxContextWindow,
 
 		sessions:    map[acp.SessionId]*Session{},
 		sessionsDir: filepath.Join(opts.DataRoot, SessionsDirName),
@@ -66,12 +71,13 @@ func NewNFA(opts Options) *NFAAgent {
 type NFAAgent struct {
 	lock sync.RWMutex
 
-	logger         logr.Logger
-	localizer      *i18n.Localizer
-	modelProviders []models.ModelProvider
-	dataProviders  DataProviders
-	defaultModels  models.Models
-	dataRoot       string
+	logger           logr.Logger
+	localizer        *i18n.Localizer
+	modelProviders   []models.ModelProvider
+	dataProviders    DataProviders
+	defaultModels    models.Models
+	dataRoot         string
+	maxContextWindow int64
 
 	client      acp.Client
 	g           *genkit.Genkit
@@ -95,6 +101,7 @@ type Session struct {
 	id           acp.SessionId
 	cancelPrompt context.CancelFunc
 
-	history    []*ai.Message
-	modelUsage ai.GenerationUsage
+	history           []*ai.Message
+	modelUsage        ai.GenerationUsage
+	lastContextWindow int64
 }

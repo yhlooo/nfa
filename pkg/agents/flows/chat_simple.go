@@ -36,6 +36,11 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptions
 				curTurnOpts := append([]ai.GenerateOption{ai.WithMessages(messages...)}, opts...)
 				curTurnOpts = append(curTurnOpts, genOpts()...)
 
+				// 检查上下文限制
+				if output.LastContextWindow > in.MaxContextWindow {
+					return output, nil
+				}
+
 				// 进行一轮生成
 				resp, err := genkit.Generate(ctx, g, curTurnOpts...)
 				if err != nil {
@@ -44,6 +49,9 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptions
 				messages = append(messages, resp.Message)
 				output.Messages = append(output.Messages, pruneReasoning(resp.Message))
 				ctxutil.AddModelUsageToContext(ctx, resp.Usage)
+				if resp.Usage != nil {
+					output.LastContextWindow = int64(resp.Usage.InputTokens)
+				}
 
 				toolRequests := resp.ToolRequests()
 				if len(toolRequests) == 0 {

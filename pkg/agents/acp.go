@@ -165,10 +165,12 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	defer cancel()
 	session.cancelPrompt = cancel
 	messages := session.history
+	lastContextWindow := session.lastContextWindow
 	defer func() {
 		session.lock.Lock()
 		session.cancelPrompt = nil
 		session.history = messages
+		session.lastContextWindow = lastContextWindow
 		session.lock.Unlock()
 	}()
 	session.lock.Unlock()
@@ -222,8 +224,13 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 			Update:    acp.UpdateAgentMessageText("The context has been cleared."),
 		})
 		messages = nil
+		lastContextWindow = 0
 		return resp, nil
 	case "/summarize", "/summary":
+		if lastContextWindow > a.maxContextWindow {
+			resp.StopReason = acp.StopReasonMaxTokens
+			return resp, nil
+		}
 		err := a.handleSummary(ctx, params.SessionId, messages, &resp)
 		SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
 		return resp, err
@@ -262,9 +269,15 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	//	}
 	//}
 
+	if lastContextWindow > a.maxContextWindow {
+		resp.StopReason = acp.StopReasonMaxTokens
+		SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
+		return resp, nil
+	}
 	chatOut, err := a.chatFlow.Run(ctx, flows.ChatInput{
-		Prompt:  prompt,
-		History: history,
+		Prompt:           prompt,
+		History:          history,
+		MaxContextWindow: a.maxContextWindow,
 	})
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
@@ -280,6 +293,10 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 
 	messages = append(messages, chatOut.Messages...)
 	SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
+	lastContextWindow = chatOut.LastContextWindow
+	if lastContextWindow > a.maxContextWindow {
+		resp.StopReason = acp.StopReasonMaxTokens
+	}
 
 	// 保存会话
 	if err := SaveSession(a.sessionsDir, params.SessionId, messages); err != nil {

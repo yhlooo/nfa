@@ -17,6 +17,9 @@ type Config struct {
 	Channels ChannelsConfig `json:"channels,omitempty"`
 	// 语言，可选 en, zh
 	Language string `json:"language,omitempty"`
+	// 最大上下文窗口
+	// 默认 200K
+	MaxContextWindow int64 `json:"maxContextWindow,omitempty"`
 }
 
 // ChannelsConfig 消息通道配置
