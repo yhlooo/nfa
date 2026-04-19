@@ -16,7 +16,7 @@ const (
 )
 
 // MoonshotModels 建议的月之暗面模型
-func MoonshotModels(ctx context.Context) []ModelConfig {
+func MoonshotModels() []ModelConfig {
 	return []ModelConfig{
 		{
 			Name:      "kimi-k2.5",
@@ -62,7 +62,7 @@ func (opts *MoonshotOptions) Plugin() *oai.OpenAICompatible {
 
 // RegisterModels 注册模型
 func (opts *MoonshotOptions) RegisterModels(
-	ctx context.Context,
+	_ context.Context,
 	g *genkit.Genkit,
 	plugin *oai.OpenAICompatible,
 ) ([]ModelConfig, error) {
@@ -72,7 +72,7 @@ func (opts *MoonshotOptions) RegisterModels(
 	}
 
 	// 注册建议模型
-	for _, m := range MoonshotModels(ctx) {
+	for _, m := range MoonshotModels() {
 		if _, ok := definedModels[m.Name]; !ok {
 			opts.Models = append(opts.Models, m)
 		}

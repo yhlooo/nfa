@@ -16,7 +16,7 @@ const (
 )
 
 // MinimaxModels 建议的 MiniMax 模型
-func MinimaxModels(ctx context.Context) []ModelConfig {
+func MinimaxModels() []ModelConfig {
 	return []ModelConfig{
 		{
 			Name:      "minimax-m2.7",
@@ -25,17 +25,6 @@ func MinimaxModels(ctx context.Context) []ModelConfig {
 				Input:  2.1,
 				Output: 8.4,
 				Cached: 0.42,
-			},
-			ContextWindow:   200000,
-			MaxOutputTokens: 128000,
-		},
-		{
-			Name:      "minimax-m2.5",
-			Reasoning: true,
-			Cost: ModelCost{
-				Input:  2.1,
-				Output: 8.4,
-				Cached: 0.21,
 			},
 			ContextWindow:   200000,
 			MaxOutputTokens: 128000,
@@ -72,7 +61,7 @@ func (opts *MinimaxOptions) Plugin() *oai.OpenAICompatible {
 
 // RegisterModels 注册模型
 func (opts *MinimaxOptions) RegisterModels(
-	ctx context.Context,
+	_ context.Context,
 	g *genkit.Genkit,
 	plugin *oai.OpenAICompatible,
 ) ([]ModelConfig, error) {
@@ -82,7 +71,7 @@ func (opts *MinimaxOptions) RegisterModels(
 	}
 
 	// 注册建议模型
-	for _, m := range MinimaxModels(ctx) {
+	for _, m := range MinimaxModels() {
 		if _, ok := definedModels[m.Name]; !ok {
 			opts.Models = append(opts.Models, m)
 		}

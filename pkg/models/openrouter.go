@@ -17,7 +17,7 @@ const (
 )
 
 // OpenRouterModels 建议的 OpenRouter 模型
-func OpenRouterModels(_ context.Context) []ModelConfig {
+func OpenRouterModels() []ModelConfig {
 	return []ModelConfig{
 		{
 			Name:      "google/gemini-3.1-pro-preview",
@@ -34,9 +34,9 @@ func OpenRouterModels(_ context.Context) []ModelConfig {
 		{
 			Name:      "openai/gpt-5.4",
 			Reasoning: true,
-			Vision:    true,
+			Vision:    false, // TODO: 似乎当前格式不支持
 			Cost: ModelCost{
-				Input:  2.5, // 272K
+				Input:  2.5, // <= 272K
 				Output: 15,
 				Cached: 0.25,
 			},
@@ -46,7 +46,7 @@ func OpenRouterModels(_ context.Context) []ModelConfig {
 		{
 			Name:      "anthropic/claude-sonnet-4.6",
 			Reasoning: true,
-			Vision:    true,
+			Vision:    false, // TODO: 似乎当前格式不支持
 			Cost: ModelCost{
 				Input:  3,
 				Output: 15,
@@ -58,7 +58,7 @@ func OpenRouterModels(_ context.Context) []ModelConfig {
 		{
 			Name:      "anthropic/claude-opus-4.7",
 			Reasoning: true,
-			Vision:    true,
+			Vision:    false, // TODO: 似乎当前格式不支持
 			Cost: ModelCost{
 				Input:  5,
 				Output: 25,
@@ -66,6 +66,18 @@ func OpenRouterModels(_ context.Context) []ModelConfig {
 			},
 			ContextWindow:   1000000,
 			MaxOutputTokens: 128000,
+		},
+		{
+			Name:      "x-ai/grok-4.20",
+			Reasoning: true,
+			Vision:    true,
+			Cost: ModelCost{
+				Input:  2,
+				Output: 6,
+				Cached: 0.2,
+			},
+			ContextWindow:   2000000,
+			MaxOutputTokens: 2000000,
 		},
 	}
 }
@@ -99,7 +111,7 @@ func (opts *OpenRouterOptions) Plugin() *oai.OpenAICompatible {
 
 // RegisterModels 注册模型
 func (opts *OpenRouterOptions) RegisterModels(
-	ctx context.Context,
+	_ context.Context,
 	g *genkit.Genkit,
 	plugin *oai.OpenAICompatible,
 ) ([]ModelConfig, error) {
@@ -109,7 +121,7 @@ func (opts *OpenRouterOptions) RegisterModels(
 	}
 
 	// 注册建议模型
-	for _, m := range OpenRouterModels(ctx) {
+	for _, m := range OpenRouterModels() {
 		if _, ok := definedModels[m.Name]; !ok {
 			opts.Models = append(opts.Models, m)
 		}

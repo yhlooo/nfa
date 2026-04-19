@@ -16,7 +16,7 @@ const (
 )
 
 // DeepSeekModels 建议的 DeepSeek 模型
-func DeepSeekModels(ctx context.Context) []ModelConfig {
+func DeepSeekModels() []ModelConfig {
 	return []ModelConfig{
 		{
 			Name:      "deepseek-reasoner",
@@ -72,7 +72,7 @@ func (opts *DeepseekOptions) Plugin() *oai.OpenAICompatible {
 
 // RegisterModels 注册模型
 func (opts *DeepseekOptions) RegisterModels(
-	ctx context.Context,
+	_ context.Context,
 	g *genkit.Genkit,
 	plugin *oai.OpenAICompatible,
 ) ([]ModelConfig, error) {
@@ -82,7 +82,7 @@ func (opts *DeepseekOptions) RegisterModels(
 	}
 
 	// 注册建议模型
-	for _, m := range DeepSeekModels(ctx) {
+	for _, m := range DeepSeekModels() {
 		if _, ok := definedModels[m.Name]; !ok {
 			opts.Models = append(opts.Models, m)
 		}

@@ -16,15 +16,15 @@ const (
 )
 
 // ZAIModels 建议的智谱 AI 模型
-func ZAIModels(ctx context.Context) []ModelConfig {
+func ZAIModels() []ModelConfig {
 	return []ModelConfig{
 		{
-			Name:      "glm-5-turbo",
+			Name:      "glm-5.1",
 			Reasoning: true,
 			Cost: ModelCost{
-				Input:  7, // 128K-256K
-				Output: 26,
-				Cached: 1.8,
+				Input:  8, // > 32K
+				Output: 28,
+				Cached: 2,
 			},
 			ContextWindow:   200000,
 			MaxOutputTokens: 128000,
@@ -33,7 +33,7 @@ func ZAIModels(ctx context.Context) []ModelConfig {
 			Name:      "glm-5",
 			Reasoning: true,
 			Cost: ModelCost{
-				Input:  6, // 128K-256K
+				Input:  6, // > 32K
 				Output: 22,
 				Cached: 1.5,
 			},
@@ -41,50 +41,16 @@ func ZAIModels(ctx context.Context) []ModelConfig {
 			MaxOutputTokens: 128000,
 		},
 		{
-			Name:      "glm-4.7",
-			Reasoning: true,
-			Cost: ModelCost{
-				Input:  4, // 128K-256K
-				Output: 16,
-				Cached: 0.8,
-			},
-			ContextWindow:   200000,
-			MaxOutputTokens: 128000,
-		},
-		{
-			Name:      "glm-4.7-flashx",
-			Reasoning: true,
-			Cost: ModelCost{
-				Input:  0.5,
-				Output: 3,
-				Cached: 0.1,
-			},
-			ContextWindow:   200000,
-			MaxOutputTokens: 128000,
-		},
-		{
-			Name:      "glm-4.6v",
+			Name:      "glm-5v-turbo",
 			Reasoning: true,
 			Vision:    true,
 			Cost: ModelCost{
-				Input:  2, // 128K-256K
-				Output: 6,
-				Cached: 0.4,
+				Input:  7, // > 32K
+				Output: 26,
+				Cached: 1.8,
 			},
-			ContextWindow:   128000,
-			MaxOutputTokens: 32000,
-		},
-		{
-			Name:      "glm-4.6v-flashx",
-			Reasoning: true,
-			Vision:    true,
-			Cost: ModelCost{
-				Input:  0.3, // 128K-256K
-				Output: 3,
-				Cached: 0.03,
-			},
-			ContextWindow:   128000,
-			MaxOutputTokens: 32000,
+			ContextWindow:   200000,
+			MaxOutputTokens: 128000,
 		},
 	}
 }
@@ -118,7 +84,7 @@ func (opts *ZAIOptions) Plugin() *oai.OpenAICompatible {
 
 // RegisterModels 注册模型
 func (opts *ZAIOptions) RegisterModels(
-	ctx context.Context,
+	_ context.Context,
 	g *genkit.Genkit,
 	plugin *oai.OpenAICompatible,
 ) ([]ModelConfig, error) {
@@ -128,7 +94,7 @@ func (opts *ZAIOptions) RegisterModels(
 	}
 
 	// 注册建议模型
-	for _, m := range ZAIModels(ctx) {
+	for _, m := range ZAIModels() {
 		if _, ok := definedModels[m.Name]; !ok {
 			opts.Models = append(opts.Models, m)
 		}

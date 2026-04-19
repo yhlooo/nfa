@@ -17,19 +17,8 @@ const (
 )
 
 // QwenModels 建议的通义千问模型
-func QwenModels(ctx context.Context) []ModelConfig {
+func QwenModels() []ModelConfig {
 	return []ModelConfig{
-		{
-			Name:      "qwen3.5-plus",
-			Reasoning: true,
-			Vision:    true,
-			Cost: ModelCost{
-				Input:  2, // 128K-256K
-				Output: 12,
-			},
-			ContextWindow:   1000000,
-			MaxOutputTokens: 64000,
-		},
 		{
 			Name:      "qwen3.5-397b-a17b",
 			Reasoning: true,
@@ -38,54 +27,43 @@ func QwenModels(ctx context.Context) []ModelConfig {
 				Input:  3, // 128K-256K
 				Output: 18,
 			},
-			ContextWindow:   256000,
+			ContextWindow:   254000,
 			MaxOutputTokens: 64000,
 		},
 		{
-			Name:      "qwen3.5-flash",
+			Name:      "qwen3.6-plus",
 			Reasoning: true,
 			Vision:    true,
 			Cost: ModelCost{
-				Input:  0.8, // 128K-256K
-				Output: 8,
-			},
-			ContextWindow:   1000000,
-			MaxOutputTokens: 64000,
-		},
-		{
-			Name:      "qwen3-max",
-			Reasoning: true,
-			Cost: ModelCost{
-				Input:  2.5,
-				Output: 10,
-				Cached: 0.5,
-			},
-			ContextWindow:   256000,
-			MaxOutputTokens: 64000,
-		},
-		{
-			Name:      "qwen3-vl-plus",
-			Reasoning: true,
-			Vision:    true,
-			Cost: ModelCost{
-				Input:  1,
-				Output: 10,
+				Input:  2, // <= 256K
+				Output: 12,
 				Cached: 0.2,
 			},
-			ContextWindow:   256000,
-			MaxOutputTokens: 32000,
+			ContextWindow:   991000,
+			MaxOutputTokens: 64000,
 		},
 		{
-			Name:      "qwen3-vl-flash",
+			Name:      "qwen3.6-35b-a3b",
 			Reasoning: true,
 			Vision:    true,
 			Cost: ModelCost{
-				Input:  0.15,
-				Output: 1.5,
-				Cached: 0.03,
+				Input:  1.8,
+				Output: 10.8,
 			},
-			ContextWindow:   256000,
-			MaxOutputTokens: 32000,
+			ContextWindow:   254000,
+			MaxOutputTokens: 64000,
+		},
+		{
+			Name:      "qwen3.6-flash",
+			Reasoning: true,
+			Vision:    true,
+			Cost: ModelCost{
+				Input:  1.2, // <= 256K
+				Output: 7.2,
+				Cached: 0.12,
+			},
+			ContextWindow:   991000,
+			MaxOutputTokens: 64000,
 		},
 	}
 }
@@ -119,7 +97,7 @@ func (opts *QwenOptions) Plugin() *oai.OpenAICompatible {
 
 // RegisterModels 注册模型
 func (opts *QwenOptions) RegisterModels(
-	ctx context.Context,
+	_ context.Context,
 	g *genkit.Genkit,
 	plugin *oai.OpenAICompatible,
 ) ([]ModelConfig, error) {
@@ -129,7 +107,7 @@ func (opts *QwenOptions) RegisterModels(
 	}
 
 	// 注册建议模型
-	for _, m := range QwenModels(ctx) {
+	for _, m := range QwenModels() {
 		if _, ok := definedModels[m.Name]; !ok {
 			opts.Models = append(opts.Models, m)
 		}
