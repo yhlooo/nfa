@@ -65,10 +65,10 @@ func runModelsList(ctx context.Context) error {
 func outputModelList(ctx context.Context, modelList []models.ModelConfig) error {
 	t := tablewriter.NewTable(os.Stdout,
 		tablewriter.WithHeader([]string{
-			"Name",
+			i18n.TContext(ctx, MsgModelNameTag),
 			i18n.TContext(ctx, MsgReasoningTag),
 			i18n.TContext(ctx, MsgVisionTag),
-			"Context",
+			i18n.TContext(ctx, MsgModelContextTag),
 		}),
 		tablewriter.WithRendition(tw.Rendition{
 			Borders: tw.BorderNone,

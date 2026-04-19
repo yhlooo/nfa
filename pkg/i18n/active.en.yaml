@@ -6,6 +6,8 @@ commands.CmdShortDescVersion: Print the version information
 commands.GlobalOptsDataRootDesc: Path of data root directory
 commands.GlobalOptsLangDesc: The language used in UI (en or zh)
 commands.GlobalOptsVerbosityDesc: Number for the log level verbosity (0, 1, or 2)
+commands.ModelContextTag: Context
+commands.ModelNameTag: Name
 commands.OtterOptsBackgroundDesc: Print with background
 commands.OtterOptsColorDesc: Print with color
 commands.OtterOptsScaleDesc: Scaling factor

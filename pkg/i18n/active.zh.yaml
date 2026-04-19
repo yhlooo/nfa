@@ -22,6 +22,12 @@ commands.GlobalOptsLangDesc:
 commands.GlobalOptsVerbosityDesc:
     hash: sha1-d99c2b79a5d6e3a42f969d5df2dd282899e7e5fd
     other: 日志级别 (0, 1, 或 2)
+commands.ModelContextTag:
+    hash: sha1-cc11b3a28fa30ae6d3d3ad1438824cbd5224ba5c
+    other: 上下文
+commands.ModelNameTag:
+    hash: sha1-709a23220f2c3d64d1e1d6d18c4d5280f8d82fca
+    other: 名称
 commands.OtterOptsBackgroundDesc:
     hash: sha1-75614009ba55d609624c7d06a122bee0178abff7
     other: 带背景打印
