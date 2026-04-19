@@ -123,8 +123,8 @@ func (wb *WebBrowser) DefineBrowseTool(g *genkit.Genkit) ai.ToolRef {
 				ai.WithMessages(
 					ai.NewUserMessage(
 						ai.NewMediaPart(
-							"image/png",
-							"data:image/png;base64,"+base64.StdEncoding.EncodeToString(wb.cacheScreenshot)),
+							"image/jpeg",
+							"data:image/jpeg;base64,"+base64.StdEncoding.EncodeToString(wb.cacheScreenshot)),
 						ai.NewTextPart("根据图片中的信息回答：\n"+in.Question),
 					),
 				),

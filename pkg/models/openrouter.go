@@ -34,7 +34,7 @@ func OpenRouterModels() []ModelConfig {
 		{
 			Name:      "openai/gpt-5.4",
 			Reasoning: true,
-			Vision:    false, // TODO: 似乎当前格式不支持
+			Vision:    true,
 			Cost: ModelCost{
 				Input:  2.5, // <= 272K
 				Output: 15,
@@ -46,7 +46,7 @@ func OpenRouterModels() []ModelConfig {
 		{
 			Name:      "anthropic/claude-sonnet-4.6",
 			Reasoning: true,
-			Vision:    false, // TODO: 似乎当前格式不支持
+			Vision:    true,
 			Cost: ModelCost{
 				Input:  3,
 				Output: 15,
@@ -58,7 +58,7 @@ func OpenRouterModels() []ModelConfig {
 		{
 			Name:      "anthropic/claude-opus-4.7",
 			Reasoning: true,
-			Vision:    false, // TODO: 似乎当前格式不支持
+			Vision:    true,
 			Cost: ModelCost{
 				Input:  5,
 				Output: 25,
