@@ -6,7 +6,6 @@ import (
 	"github.com/firebase/genkit/go/genkit"
 
 	"github.com/yhlooo/nfa/pkg/genkitplugins/oai"
-	"github.com/yhlooo/nfa/pkg/i18n"
 )
 
 const (
@@ -20,9 +19,8 @@ const (
 func ZAIModels(ctx context.Context) []ModelConfig {
 	return []ModelConfig{
 		{
-			Name:        "glm-5-turbo",
-			Description: i18n.TContext(ctx, MsgModelDescGLM5Turbo),
-			Reasoning:   true,
+			Name:      "glm-5-turbo",
+			Reasoning: true,
 			Cost: ModelCost{
 				Input:  7, // 128K-256K
 				Output: 26,
@@ -32,9 +30,8 @@ func ZAIModels(ctx context.Context) []ModelConfig {
 			MaxOutputTokens: 128000,
 		},
 		{
-			Name:        "glm-5",
-			Description: i18n.TContext(ctx, MsgModelDescGLM5),
-			Reasoning:   true,
+			Name:      "glm-5",
+			Reasoning: true,
 			Cost: ModelCost{
 				Input:  6, // 128K-256K
 				Output: 22,
@@ -44,9 +41,8 @@ func ZAIModels(ctx context.Context) []ModelConfig {
 			MaxOutputTokens: 128000,
 		},
 		{
-			Name:        "glm-4.7",
-			Description: i18n.TContext(ctx, MsgModelDescGLM47),
-			Reasoning:   true,
+			Name:      "glm-4.7",
+			Reasoning: true,
 			Cost: ModelCost{
 				Input:  4, // 128K-256K
 				Output: 16,
@@ -56,9 +52,8 @@ func ZAIModels(ctx context.Context) []ModelConfig {
 			MaxOutputTokens: 128000,
 		},
 		{
-			Name:        "glm-4.7-flashx",
-			Description: i18n.TContext(ctx, MsgModelDescGLM47FlashX),
-			Reasoning:   true,
+			Name:      "glm-4.7-flashx",
+			Reasoning: true,
 			Cost: ModelCost{
 				Input:  0.5,
 				Output: 3,
@@ -68,10 +63,9 @@ func ZAIModels(ctx context.Context) []ModelConfig {
 			MaxOutputTokens: 128000,
 		},
 		{
-			Name:        "glm-4.6v",
-			Description: i18n.TContext(ctx, MsgModelDescGLM46V),
-			Reasoning:   true,
-			Vision:      true,
+			Name:      "glm-4.6v",
+			Reasoning: true,
+			Vision:    true,
 			Cost: ModelCost{
 				Input:  2, // 128K-256K
 				Output: 6,
@@ -81,10 +75,9 @@ func ZAIModels(ctx context.Context) []ModelConfig {
 			MaxOutputTokens: 32000,
 		},
 		{
-			Name:        "glm-4.6v-flashx",
-			Description: i18n.TContext(ctx, MsgModelDescGLM46VFlashX),
-			Reasoning:   true,
-			Vision:      true,
+			Name:      "glm-4.6v-flashx",
+			Reasoning: true,
+			Vision:    true,
 			Cost: ModelCost{
 				Input:  0.3, // 128K-256K
 				Output: 3,

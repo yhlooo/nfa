@@ -83,15 +83,6 @@ func (s *ModelSelector) View() string {
 		// 格式: " ❯ 1. ollama/llama3.2"
 		line := fmt.Sprintf(" %s %d. %s", cursor, i+1, item.Name)
 
-		// 如果有描述，添加在后面
-		if item.Description != "" {
-			desc := item.Description
-			if len(desc) > 80 {
-				desc = desc[:80] + "..."
-			}
-			line += fmt.Sprintf(" - %s", desc)
-		}
-
 		b.WriteString(line + "\n")
 	}
 

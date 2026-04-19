@@ -18,8 +18,6 @@ type ModelConfig struct {
 	Name string `json:"name"`
 	// 供应商名称
 	Provider string `json:"provider,omitempty"`
-	// 模型描述（可选）
-	Description string `json:"description,omitempty"`
 
 	// 是否支持推理、思考模式
 	Reasoning bool `json:"reasoning,omitempty"`

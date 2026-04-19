@@ -6,7 +6,6 @@ import (
 	"github.com/firebase/genkit/go/genkit"
 
 	"github.com/yhlooo/nfa/pkg/genkitplugins/oai"
-	"github.com/yhlooo/nfa/pkg/i18n"
 )
 
 const (
@@ -20,10 +19,9 @@ const (
 func MoonshotModels(ctx context.Context) []ModelConfig {
 	return []ModelConfig{
 		{
-			Name:        "kimi-k2.5",
-			Description: i18n.TContext(ctx, MsgModelDescKimiK25),
-			Reasoning:   true,
-			Vision:      true,
+			Name:      "kimi-k2.5",
+			Reasoning: true,
+			Vision:    true,
 			Cost: ModelCost{
 				Input:  4,
 				Output: 21,

@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/olekukonko/tablewriter"
@@ -65,34 +64,38 @@ func runModelsList(ctx context.Context) error {
 // outputModelList 输出模型列表
 func outputModelList(ctx context.Context, modelList []models.ModelConfig) error {
 	t := tablewriter.NewTable(os.Stdout,
+		tablewriter.WithHeader([]string{
+			"Name",
+			i18n.TContext(ctx, MsgReasoningTag),
+			i18n.TContext(ctx, MsgVisionTag),
+			"Context",
+		}),
 		tablewriter.WithRendition(tw.Rendition{
 			Borders: tw.BorderNone,
 			Settings: tw.Settings{
 				Separators: tw.Separators{BetweenColumns: tw.Off},
 			},
 		}),
-		tablewriter.WithWidths(tw.CellWidth{
-			PerColumn: tw.Mapper[int, int]{2: 100},
-		}),
+		tablewriter.WithAlignment([]tw.Align{tw.AlignLeft, tw.AlignCenter, tw.AlignCenter, tw.AlignRight}),
 	)
 	defer func() { _ = t.Close() }()
 
 	for _, model := range modelList {
-		var tags []string
+		reasoning := "❌"
 		if model.Reasoning {
-			tags = append(tags, i18n.TContext(ctx, MsgReasoningTag))
+			reasoning = "✅"
 		}
+		vision := "❌"
 		if model.Vision {
-			tags = append(tags, i18n.TContext(ctx, MsgVisionTag))
+			vision = "✅"
 		}
 
 		ctxSize := strconv.FormatInt(model.ContextWindow/1000, 10) + "K"
 		if model.ContextWindow < 1000 {
 			ctxSize = strconv.FormatInt(model.ContextWindow, 10)
 		}
-		tags = append(tags, ctxSize)
 
-		_ = t.Append([]string{model.Name, strings.Join(tags, ", "), model.Description})
+		_ = t.Append([]string{model.Name, reasoning, vision, ctxSize})
 	}
 
 	return t.Render()

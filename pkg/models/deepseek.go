@@ -6,7 +6,6 @@ import (
 	"github.com/firebase/genkit/go/genkit"
 
 	"github.com/yhlooo/nfa/pkg/genkitplugins/oai"
-	"github.com/yhlooo/nfa/pkg/i18n"
 )
 
 const (
@@ -20,9 +19,8 @@ const (
 func DeepSeekModels(ctx context.Context) []ModelConfig {
 	return []ModelConfig{
 		{
-			Name:        "deepseek-reasoner",
-			Description: i18n.TContext(ctx, MsgModelDescDeepseekReasoner),
-			Reasoning:   true,
+			Name:      "deepseek-reasoner",
+			Reasoning: true,
 			Cost: ModelCost{
 				Input:  2,
 				Output: 3,
@@ -32,8 +30,7 @@ func DeepSeekModels(ctx context.Context) []ModelConfig {
 			MaxOutputTokens: 64000,
 		},
 		{
-			Name:        "deepseek-chat",
-			Description: i18n.TContext(ctx, MsgModelDescDeepseekChat),
+			Name: "deepseek-chat",
 			Cost: ModelCost{
 				Input:  2,
 				Output: 3,

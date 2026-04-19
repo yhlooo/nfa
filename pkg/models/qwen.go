@@ -7,7 +7,6 @@ import (
 	"github.com/firebase/genkit/go/genkit"
 
 	"github.com/yhlooo/nfa/pkg/genkitplugins/oai"
-	"github.com/yhlooo/nfa/pkg/i18n"
 )
 
 const (
@@ -21,10 +20,9 @@ const (
 func QwenModels(ctx context.Context) []ModelConfig {
 	return []ModelConfig{
 		{
-			Name:        "qwen3.5-plus",
-			Description: i18n.TContext(ctx, MsgModelDescQwen35Plus),
-			Reasoning:   true,
-			Vision:      true,
+			Name:      "qwen3.5-plus",
+			Reasoning: true,
+			Vision:    true,
 			Cost: ModelCost{
 				Input:  2, // 128K-256K
 				Output: 12,
@@ -33,10 +31,9 @@ func QwenModels(ctx context.Context) []ModelConfig {
 			MaxOutputTokens: 64000,
 		},
 		{
-			Name:        "qwen3.5-397b-a17b",
-			Description: i18n.TContext(ctx, MsgModelDescQwen35_397B_A17B),
-			Reasoning:   true,
-			Vision:      true,
+			Name:      "qwen3.5-397b-a17b",
+			Reasoning: true,
+			Vision:    true,
 			Cost: ModelCost{
 				Input:  3, // 128K-256K
 				Output: 18,
@@ -45,10 +42,9 @@ func QwenModels(ctx context.Context) []ModelConfig {
 			MaxOutputTokens: 64000,
 		},
 		{
-			Name:        "qwen3.5-flash",
-			Description: i18n.TContext(ctx, MsgModelDescQwen35Flash),
-			Reasoning:   true,
-			Vision:      true,
+			Name:      "qwen3.5-flash",
+			Reasoning: true,
+			Vision:    true,
 			Cost: ModelCost{
 				Input:  0.8, // 128K-256K
 				Output: 8,
@@ -57,9 +53,8 @@ func QwenModels(ctx context.Context) []ModelConfig {
 			MaxOutputTokens: 64000,
 		},
 		{
-			Name:        "qwen3-max",
-			Description: i18n.TContext(ctx, MsgModelDescQwen3Max),
-			Reasoning:   true,
+			Name:      "qwen3-max",
+			Reasoning: true,
 			Cost: ModelCost{
 				Input:  2.5,
 				Output: 10,
@@ -69,10 +64,9 @@ func QwenModels(ctx context.Context) []ModelConfig {
 			MaxOutputTokens: 64000,
 		},
 		{
-			Name:        "qwen3-vl-plus",
-			Description: i18n.TContext(ctx, MsgModelDescQwen3VLPlus),
-			Reasoning:   true,
-			Vision:      true,
+			Name:      "qwen3-vl-plus",
+			Reasoning: true,
+			Vision:    true,
 			Cost: ModelCost{
 				Input:  1,
 				Output: 10,
@@ -82,10 +76,9 @@ func QwenModels(ctx context.Context) []ModelConfig {
 			MaxOutputTokens: 32000,
 		},
 		{
-			Name:        "qwen3-vl-flash",
-			Description: i18n.TContext(ctx, MsgModelDescQwen3VLFlash),
-			Reasoning:   true,
-			Vision:      true,
+			Name:      "qwen3-vl-flash",
+			Reasoning: true,
+			Vision:    true,
 			Cost: ModelCost{
 				Input:  0.15,
 				Output: 1.5,

@@ -55,57 +55,6 @@ commands.VersionOptsOutputFormatDesc:
 commands.VisionTag:
     hash: sha1-40b0906c4f3b5a2658a393a02faf70a3ff416418
     other: 视觉
-models.ModelDescDeepseekChat:
-    hash: sha1-2c94021f0f0d68b5aff8195c0680dcbfff796269
-    other: DeepSeek-V3.2 非思考模式，适合简单任务
-models.ModelDescDeepseekReasoner:
-    hash: sha1-98eeeec3bde1b699ce8b4ff97e63023edf1edc51
-    other: DeepSeek-V3.2 思考模式，适合复杂推理
-models.ModelDescGLM5:
-    hash: sha1-5ebe6c555a6e11177e03f38889aa89f0c18c3f8f
-    other: 智谱新一代的旗舰基座模型，面向 Agentic Engineering 打造。在 Coding 与 Agent 能力上取得开源 SOTA 表现
-models.ModelDescGLM5Turbo:
-    hash: sha1-2811da58c0a7b7a82a2e227d0fb27b44f8401d43
-    other: 智谱最新 Coding 与 Agent 旗舰。增强工具调用、指令遵循、定时与持续性任务、长链路执行等核心能力
-models.ModelDescGLM46V:
-    hash: sha1-5589e21aa0bb8611c858286f36fc4acd16f22232
-    other: 智谱多模态旗舰模型，在视觉理解精度上达到同参数规模 SOTA
-models.ModelDescGLM46VFlashX:
-    hash: sha1-c1e2400c56988d9e7ffa0f29480cf3e2ce2a91fa
-    other: GLM-4.6V 系列轻量高速版，速度和成本更优，适合简单任务
-models.ModelDescGLM47:
-    hash: sha1-9f753e1b9ef9d1a35ec745548b0038d424730306
-    other: 智谱旗舰模型，面向 Agentic Coding 场景、强化编码能力、长程任务规划与工具协同
-models.ModelDescGLM47FlashX:
-    hash: sha1-857393ab507a8817b564f418b20e85b0cbb8380e
-    other: GLM-4.7 系列轻量高速版，速度和成本更优，适合简单任务
-models.ModelDescKimiK25:
-    hash: sha1-b5d98d3803a3f9a314d4a3ea243245ef04fd2f47
-    other: 月之暗面 Kimi 最新旗舰模型，支持文本推理与视觉理解。在 Agent 、代码、视觉理解及一系列通用智能任务上取得开源 SOTA 表现
-models.ModelDescMinimaxM25:
-    hash: sha1-a43d0e94c546a9f6562fcb8b1ef56ef7e6f7a91f
-    other: MiniMax 旗舰文本推理模型
-models.ModelDescMinimaxM27:
-    hash: sha1-779294fe657554ccc19bdc94173179493da51bb4
-    other: MiniMax 最新旗舰文本推理模型，复杂环境 Skill 遵循等显著优于 MiniMax M2.5
-models.ModelDescQwen3Max:
-    hash: sha1-e988adcbf84d63da9f4c3b705fcd33082c90c28e
-    other: 阿里通义千问 Qwen3 系列文本推理模型
-models.ModelDescQwen3VLFlash:
-    hash: sha1-f24c477fa289d5460b67cf950de6f0610f9ee13e
-    other: 阿里 Qwen3 系列轻量高速视觉理解模型，相比 qwen3-vl-plus 速度和成本更优
-models.ModelDescQwen3VLPlus:
-    hash: sha1-75e8764afba16f7def0c180524a3aabb6c28d33e
-    other: 阿里通义千问 Qwen3 系列视觉理解模型
-models.ModelDescQwen35Flash:
-    hash: sha1-254e8366df31e9c83908f6dc0f29f0777dc7c4ba
-    other: 阿里 Qwen3.5 系列轻量高速版，速度和成本更优，适合简单任务
-models.ModelDescQwen35Plus:
-    hash: sha1-f792a01f2844a07a897b2d8ff20b1b9188d11d98
-    other: 阿里 Qwen3.5 系列 Plus 模型，原生多模态。在多项任务评测中媲美世界顶尖前沿模型。效果显著优于 Qwen3 系列
-models.ModelDescQwen35_397B_A17B:
-    hash: sha1-e2c61168ea99acb2e3405d936daae672c2c75789
-    other: 阿里 Qwen3.5 系列 397B-A17B 开源模型，效果略优于 qwen3.5-plus
 skills.ShortTermTrendForecastDesc:
     hash: sha1-d1f1ca49c1c0c3a0326b93049b3bcfb9e1753759
     other: 对股票短期趋势（数天、一周、一个月内）进行分析和预测

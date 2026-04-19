@@ -6,7 +6,6 @@ import (
 	"github.com/firebase/genkit/go/genkit"
 
 	"github.com/yhlooo/nfa/pkg/genkitplugins/oai"
-	"github.com/yhlooo/nfa/pkg/i18n"
 )
 
 const (
@@ -20,9 +19,8 @@ const (
 func MinimaxModels(ctx context.Context) []ModelConfig {
 	return []ModelConfig{
 		{
-			Name:        "minimax-m2.7",
-			Description: i18n.TContext(ctx, MsgModelDescMinimaxM27),
-			Reasoning:   true,
+			Name:      "minimax-m2.7",
+			Reasoning: true,
 			Cost: ModelCost{
 				Input:  2.1,
 				Output: 8.4,
@@ -32,9 +30,8 @@ func MinimaxModels(ctx context.Context) []ModelConfig {
 			MaxOutputTokens: 128000,
 		},
 		{
-			Name:        "minimax-m2.5",
-			Description: i18n.TContext(ctx, MsgModelDescMinimaxM25),
-			Reasoning:   true,
+			Name:      "minimax-m2.5",
+			Reasoning: true,
 			Cost: ModelCost{
 				Input:  2.1,
 				Output: 8.4,
