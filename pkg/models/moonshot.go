@@ -19,6 +19,18 @@ const (
 func MoonshotModels() []ModelConfig {
 	return []ModelConfig{
 		{
+			Name:      "kimi-k2.6",
+			Reasoning: true,
+			Vision:    true,
+			Cost: ModelCost{
+				Input:  6.5,
+				Output: 27,
+				Cached: 1.1,
+			},
+			ContextWindow:   256000,
+			MaxOutputTokens: 256000,
+		},
+		{
 			Name:      "kimi-k2.5",
 			Reasoning: true,
 			Vision:    true,
