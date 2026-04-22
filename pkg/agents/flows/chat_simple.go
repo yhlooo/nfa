@@ -32,6 +32,8 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptions
 				opts = append(opts, ai.WithStreaming(handleTextStream(handleStream, true, true)))
 			}
 
+			reflected := 0
+
 			for {
 				curTurnOpts := append([]ai.GenerateOption{ai.WithMessages(messages...)}, opts...)
 				curTurnOpts = append(curTurnOpts, genOpts()...)
@@ -47,7 +49,6 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptions
 					return output, err
 				}
 				messages = append(messages, resp.Message)
-				output.Messages = append(output.Messages, pruneReasoning(resp.Message))
 				ctxutil.AddModelUsageToContext(ctx, resp.Usage)
 				if resp.Usage != nil {
 					output.LastContextWindow = int64(resp.Usage.InputTokens)
@@ -55,9 +56,27 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptions
 
 				toolRequests := resp.ToolRequests()
 				if len(toolRequests) == 0 {
-					// 结束一轮对话
+					// 反思一轮
+					if reflected < 1 {
+						messages = append(messages, ai.NewUserTextMessage(`[SystemPrompt] 请根据以下检查项反思你的回答是否正确解决了用户的问题，并在确认无误后重新组织回答：
+1. 形式：检查回答在形式上是否真正回答了用户的问题？
+2. 广度和深度：回顾自己的之前的思考是否已经充分考虑了问题的广度和深度，是否有关键遗漏？
+3. 事实和数据：评估支撑自己结论的关键数据是什么？数据对结论是否形成有力支撑？这些数据的来源是否真实可靠？
+4. 严谨性：回答是否向用户明确澄清回答的局限性、适用范围，以确保不会导致用户产生重大误解？
+如果回答存在缺陷请调整或继续思考、探索，如果确认无误则重新组织回答。
+**注意：新组织的回答应当作给用户的第一个回答，不应该向用户透露反思结果等额外信息**
+`))
+
+						reflected++
+						continue
+					}
+
+					// 结束对话
+					output.Messages = append(output.Messages, pruneReasoning(resp.Message))
 					return output, nil
 				}
+
+				output.Messages = append(output.Messages, pruneReasoning(resp.Message))
 
 				// 调用工具
 				var parts []*ai.Part
