@@ -92,13 +92,13 @@ var AgentSystemPromptTpl = template.Must(template.New("AgentSystemPrompt").
 {{- end }}
 
 ## 其它信息
-- 当前时间： {{ .Time }}
+- 当前日期： {{ .Time }}
 `))
 
 // NewAgentSystemPrompt 创建 Agent 系统提示
 func NewAgentSystemPrompt(data AgentSystemPromptData) (string, error) {
 	if data.Time == "" {
-		data.Time = time.Now().Format(time.RFC1123)
+		data.Time = time.Now().Format(time.DateOnly)
 	}
 
 	buf := &bytes.Buffer{}
