@@ -70,20 +70,16 @@ type Chat struct {
 	channels []channels.Channel
 
 	cwd                   string
-	sessionID             acp.SessionId
-	curPrimaryModel       string
-	modelUsage            ai.GenerationUsage
 	initialPrompt         string
 	autoExitAfterResponse bool
 	resumeSessionID       string
-	skills                []skills.SkillMeta
 
-	// Model selection
-	cfgPath string
-
-	// History
-	history     *history.History
-	historyPath string
+	sessionID       acp.SessionId
+	curPrimaryModel string
+	modelUsage      ai.GenerationUsage
+	skills          []skills.SkillMeta
+	history         *history.History
+	historyPath     string
 }
 
 // Run 运行
@@ -99,10 +95,8 @@ func (chat *Chat) Run(ctx context.Context) error {
 		return err
 	}
 
-	chat.cfgPath = configs.ConfigPathFromContext(ctx)
-
 	// 确定历史文件路径（与配置文件同目录）
-	chat.historyPath = filepath.Join(filepath.Dir(chat.cfgPath), "history.json")
+	chat.historyPath = filepath.Join(filepath.Dir(configs.ConfigPathFromContext(ctx)), "history.json")
 
 	// 加载历史记录
 	chat.history, err = history.LoadHistory(chat.historyPath)
@@ -117,9 +111,8 @@ func (chat *Chat) Run(ctx context.Context) error {
 	}
 
 	chat.input = NewInputBox(ctx, []SelectorOption{
-		{Name: "clear", Description: i18nutil.TContext(ctx, MsgCmdDescClear)},
-		{Name: "model", Description: i18nutil.TContext(ctx, MsgCmdDescModel)},
-		{Name: "skills", Description: i18nutil.TContext(ctx, MsgCmdDescSkills)},
+		//{Name: "model", Description: i18nutil.TContext(ctx, MsgCmdDescModel)},
+		//{Name: "skills", Description: i18nutil.TContext(ctx, MsgCmdDescSkills)},
 		{Name: "exit", Description: i18nutil.TContext(ctx, MsgCmdDescExit)},
 	}, chat.history, chat.historyPath)
 

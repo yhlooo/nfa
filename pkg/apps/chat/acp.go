@@ -120,6 +120,18 @@ func (chat *Chat) RequestPermission(
 
 // SessionUpdate 更新会话
 func (chat *Chat) SessionUpdate(ctx context.Context, params acp.SessionNotification) error {
+	if params.Update.AvailableCommandsUpdate != nil {
+		commands := make([]SelectorOption, len(params.Update.AvailableCommandsUpdate.AvailableCommands))
+		for i, command := range params.Update.AvailableCommandsUpdate.AvailableCommands {
+			commands[i] = SelectorOption{
+				Name:        command.Name,
+				Description: command.Description,
+			}
+		}
+		chat.input.AddCommands(commands)
+		return nil
+	}
+
 	chat.p.Send(params)
 	if channelID := agents.GetMetaIntValue(params.Meta, channelIDMetaKey); channelID > 0 &&
 		channelID <= len(chat.channels) {

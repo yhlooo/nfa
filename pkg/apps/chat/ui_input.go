@@ -224,10 +224,13 @@ func (box *InputBox) Value() string {
 }
 
 // Blur 移除焦点
-//
-//goland:noinspection GoMixedReceiverTypes
 func (box *InputBox) Blur() {
 	box.input.Blur()
+}
+
+// AddCommands 添加命令
+func (box *InputBox) AddCommands(items []SelectorOption) {
+	box.commandSelector.AddItems(items...)
 }
 
 // Focus 获得焦点
@@ -352,6 +355,14 @@ func (s *Selector) SetSearchKey(key string) {
 		return
 	}
 	s.searchKey = key
+	s.RenewTable()
+}
+
+// AddItems 添加选项
+//
+//goland:noinspection GoMixedReceiverTypes
+func (s *Selector) AddItems(items ...SelectorOption) {
+	s.items = append(s.items, items...)
 	s.RenewTable()
 }
 

@@ -19,6 +19,7 @@ import (
 	"github.com/yhlooo/nfa/pkg/agents/flows"
 	"github.com/yhlooo/nfa/pkg/ctxutil"
 	"github.com/yhlooo/nfa/pkg/i18n"
+	i18nutil "github.com/yhlooo/nfa/pkg/i18n"
 	"github.com/yhlooo/nfa/pkg/skills"
 	"github.com/yhlooo/nfa/pkg/version"
 )
@@ -73,7 +74,7 @@ func (a *NFAAgent) Authenticate(_ context.Context, _ acp.AuthenticateRequest) (a
 }
 
 // NewSession 创建会话
-func (a *NFAAgent) NewSession(_ context.Context, _ acp.NewSessionRequest) (acp.NewSessionResponse, error) {
+func (a *NFAAgent) NewSession(ctx context.Context, _ acp.NewSessionRequest) (acp.NewSessionResponse, error) {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
@@ -92,6 +93,7 @@ func (a *NFAAgent) NewSession(_ context.Context, _ acp.NewSessionRequest) (acp.N
 		currentModels: curModels,
 	}
 
+	go a.sendAvailableCommands(ctx, sessionID)
 	return acp.NewSessionResponse{
 		SessionId: sessionID,
 		Models: &acp.SessionModelState{
@@ -112,16 +114,26 @@ func (a *NFAAgent) LoadSession(ctx context.Context, params acp.LoadSessionReques
 		return acp.LoadSessionResponse{}, fmt.Errorf("load session data error: %w", err)
 	}
 
+	curModels := a.opts.DefaultModels
+	availableModels := make([]acp.ModelInfo, len(a.availableModels))
+	for i, m := range a.availableModels {
+		availableModels[i] = acp.ModelInfo{
+			ModelId: acp.ModelId(m.Provider + "/" + m.Name),
+			Name:    m.Name,
+		}
+	}
+
 	// 创建会话
 	a.sessions[params.SessionId] = &Session{
-		id:      params.SessionId,
-		history: data.Messages,
+		id:            params.SessionId,
+		history:       data.Messages,
+		currentModels: curModels,
 	}
 
 	// 回放历史消息
 	handleFn := a.handleStreamChunk(params.SessionId, nil)
 	for _, msg := range data.Messages {
-		time.Sleep(5 * time.Millisecond) // TODO: 暂时不清楚什么原因，发送太快的话到达客户端是乱序的，所以这里略微 sleep 一下
+		time.Sleep(5 * time.Millisecond) // 由于客户端并行处理，发送太快的话到达客户端是乱序的，所以这里略微 sleep 一下
 		switch msg.Role {
 		case ai.RoleUser:
 			if err := a.client.SessionUpdate(ctx, acp.SessionNotification{
@@ -140,7 +152,41 @@ func (a *NFAAgent) LoadSession(ctx context.Context, params acp.LoadSessionReques
 		}
 	}
 
-	return acp.LoadSessionResponse{}, nil
+	go a.sendAvailableCommands(ctx, params.SessionId)
+	return acp.LoadSessionResponse{
+		Models: &acp.SessionModelState{
+			AvailableModels: availableModels,
+			CurrentModelId:  acp.ModelId(curModels.GetPrimary()),
+		},
+	}, nil
+}
+
+// sendAvailableCommands 发送可用命令列表
+func (a *NFAAgent) sendAvailableCommands(ctx context.Context, sessionID acp.SessionId) {
+	time.Sleep(10 * time.Millisecond)
+	commands := []acp.AvailableCommand{
+		{
+			Name:        "clear",
+			Description: i18nutil.TContext(ctx, MsgCmdDescClear),
+		},
+	}
+	for _, skill := range a.skillLoader.ListMeta() {
+		commands = append(commands, acp.AvailableCommand{
+			Name:        skill.Name,
+			Description: skill.Description,
+		})
+	}
+
+	if err := a.client.SessionUpdate(ctx, acp.SessionNotification{
+		SessionId: sessionID,
+		Update: acp.SessionUpdate{
+			AvailableCommandsUpdate: &acp.SessionAvailableCommandsUpdate{
+				AvailableCommands: commands,
+			},
+		},
+	}); err != nil {
+		a.logger.Error(err, "send available commands error")
+	}
 }
 
 // SetSessionMode 设置会话模式
@@ -211,20 +257,61 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	a.logger.Info("prompt turn start")
 
 	extraMeta, _ := params.Meta.(map[string]any)
-	ctx = ctxutil.ContextWithHandleStreamFn(ctx, a.handleStreamChunk(params.SessionId, extraMeta))
+	handleStreamFn := a.handleStreamChunk(params.SessionId, extraMeta)
+	ctx = ctxutil.ContextWithHandleStreamFn(ctx, handleStreamFn)
 	resp := acp.PromptResponse{Meta: map[string]any{}, StopReason: acp.StopReasonEndTurn}
 
 	// 斜杠命令
-	switch strings.TrimSpace(prompt) {
-	case "/clear":
-		_ = a.client.SessionUpdate(ctx, acp.SessionNotification{
-			SessionId: params.SessionId,
-			Update:    acp.UpdateAgentMessageText("The context has been cleared."),
-		})
-		messages = nil
-		lastContextWindow = 0
-		return resp, nil
-	default:
+	if strings.HasPrefix(prompt, "/") {
+		switch strings.TrimSpace(prompt) {
+		case "/clear":
+			_ = a.client.SessionUpdate(ctx, acp.SessionNotification{
+				SessionId: params.SessionId,
+				Update:    acp.UpdateAgentMessageText("The context has been cleared."),
+			})
+			messages = nil
+			lastContextWindow = 0
+			return resp, nil
+		default:
+			divided := strings.SplitN(prompt, " ", 2)
+			if len(divided) >= 1 {
+				cmdName := strings.TrimPrefix(divided[0], "/")
+				skill, err := a.skillLoader.Get(cmdName)
+				if err != nil {
+					resp.StopReason = acp.StopReasonRefusal
+					return resp, err
+				}
+				toolCallID := uuid.New().String()
+				toolReq := ai.NewToolRequestPart(&ai.ToolRequest{
+					Name:  skills.LoadSkillToolName,
+					Input: skills.LoadSkillInput{Name: skill.Meta.Name},
+					Ref:   toolCallID,
+				})
+				toolResp := ai.NewToolResponsePart(&ai.ToolResponse{
+					Name: skills.LoadSkillToolName,
+					Output: skills.LoadSkillOutput{
+						Name:        skill.Meta.Name,
+						Description: skill.Meta.Description,
+						Content:     skill.Content,
+					},
+					Ref: toolCallID,
+				})
+
+				_ = handleStreamFn(ctx, &ai.ModelResponseChunk{
+					Content: []*ai.Part{toolReq},
+					Role:    ai.RoleModel,
+				})
+				_ = handleStreamFn(ctx, &ai.ModelResponseChunk{
+					Content: []*ai.Part{toolResp},
+					Role:    ai.RoleTool,
+				})
+				messages = append(messages,
+					ai.NewUserTextMessage(prompt),
+					ai.NewModelMessage(toolReq),
+					ai.NewMessage(ai.RoleTool, nil, toolResp),
+				)
+			}
+		}
 	}
 
 	history := make([]*ai.Message, len(messages))
