@@ -226,48 +226,12 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 		messages = nil
 		lastContextWindow = 0
 		return resp, nil
-	case "/summarize", "/summary":
-		if lastContextWindow > a.maxContextWindow {
-			resp.StopReason = acp.StopReasonMaxTokens
-			return resp, nil
-		}
-		err := a.handleSummary(ctx, params.SessionId, messages, &resp)
-		SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
-		return resp, err
 	default:
 	}
-
-	//// 路由
-	//routingRet, err := a.routingFlow.Run(ctx, flows.TopicRoutingInput{
-	//	Messages: append(messages, ai.NewUserTextMessage(prompt)),
-	//})
-	//if err != nil {
-	//	resp.StopReason = acp.StopReasonRefusal
-	//	err = fmt.Errorf("topic routing error: %w", err)
-	//	SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
-	//	return resp, err
-	//}
 
 	history := make([]*ai.Message, len(messages))
 	copy(history, messages)
 	messages = append(messages, ai.NewUserTextMessage(prompt))
-
-	//// 根据话题套模版
-	//a.logger.Info(fmt.Sprintf("topic routing: continue: %t, topic: %s", routingRet.Continue, routingRet.Topic))
-	//if !routingRet.Continue {
-	//	switch routingRet.Topic {
-	//	case flows.TopicContinue:
-	//	case flows.TopicQuery:
-	//	case flows.TopicStockAnalysis:
-	//	case flows.TopicPortfolioAnalysis:
-	//	case flows.TopicShortTermTrendForecast:
-	//		prompt = ShortTermTrendForecastPrompt(prompt)
-	//	case flows.TopicBasic:
-	//	case flows.TopicComprehensive:
-	//	case flows.TopicOthers:
-	//	default:
-	//	}
-	//}
 
 	if lastContextWindow > a.maxContextWindow {
 		resp.StopReason = acp.StopReasonMaxTokens
@@ -454,53 +418,6 @@ func (a *NFAAgent) flushBufferText(
 	})
 	buff.Reset()
 	if err != nil {
-		return fmt.Errorf("session update error: %w", err)
-	}
-
-	return nil
-}
-
-// handleSummary 处理摘要
-func (a *NFAAgent) handleSummary(
-	ctx context.Context,
-	sessionID acp.SessionId,
-	messages []*ai.Message,
-	resp *acp.PromptResponse,
-) error {
-	ret, err := a.summarizeFlow.Run(ctx, flows.SummarizeInput{History: messages})
-	if err != nil {
-		if errors.Is(err, context.Canceled) {
-			resp.StopReason = acp.StopReasonCancelled
-			return nil
-		}
-		resp.StopReason = acp.StopReasonRefusal
-		return err
-	}
-
-	content := fmt.Sprintf(`# %s
-
-%s
-
-## 过程概述
-
-%s`, ret.Title, ret.Description, ret.ProcessOverview)
-	content = strings.TrimRight(content, "\n")
-	if ret.MethodologySummary != "" {
-		content += fmt.Sprintf(`
-
-# 方法论
-
-%s`, ret.MethodologySummary)
-	}
-
-	meta := make(map[string]any)
-	SetMetaCurrentModelUsage(meta, ctxutil.GetModelUsageFromContext(ctx))
-	if err := a.client.SessionUpdate(ctx, acp.SessionNotification{
-		Meta:      meta,
-		SessionId: sessionID,
-		Update:    acp.UpdateAgentMessageText(content),
-	}); err != nil {
-		resp.StopReason = acp.StopReasonRefusal
 		return fmt.Errorf("session update error: %w", err)
 	}
 

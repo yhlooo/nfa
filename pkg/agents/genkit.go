@@ -67,12 +67,10 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 	}
 
 	// 注册 flows
-	a.chatFlow = flows.DefineSimpleChatFlow(a.g, ChatFlowName, flows.FixedGenerateOptions(
+	a.chatFlow = flows.DefineSimpleChatFlow(a.g, ChatFlowName,
 		ai.WithSystemFn(AnalystSystemPrompt(a.skillLoader)),
 		ai.WithTools(a.availableTools...),
-	))
-	a.summarizeFlow = flows.DefineSummarizeFlow(a.g)
-	a.routingFlow = flows.DefineTopicRoutingFlow(a.g)
+	)
 }
 
 // NewGenkitWithModels 创建 genkit 对象并注册模型

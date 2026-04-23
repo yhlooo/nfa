@@ -86,9 +86,7 @@ type NFAAgent struct {
 	availableModels []models.ModelConfig
 	availableTools  []ai.ToolRef
 
-	chatFlow      flows.ChatFlow
-	routingFlow   flows.TopicRoutingFlow
-	summarizeFlow flows.SummarizeFlow
+	chatFlow flows.ChatFlow
 
 	sessions    map[acp.SessionId]*Session
 	sessionsDir string

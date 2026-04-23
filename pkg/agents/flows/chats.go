@@ -32,13 +32,3 @@ var _ error = ToolCallError{}
 func (e ToolCallError) Error() string {
 	return e.Err
 }
-
-// GenerateOptionsFn 获取生成选项的方法
-type GenerateOptionsFn func() []ai.GenerateOption
-
-// FixedGenerateOptions 固定的生成选项
-func FixedGenerateOptions(opts ...ai.GenerateOption) GenerateOptionsFn {
-	return func() []ai.GenerateOption {
-		return opts
-	}
-}

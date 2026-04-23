@@ -12,7 +12,7 @@ import (
 )
 
 // DefineSimpleChatFlow 定义简单对话流程
-func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptionsFn) ChatFlow {
+func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts ...ai.GenerateOption) ChatFlow {
 	return genkit.DefineFlow(g, name,
 		func(ctx context.Context, in ChatInput) (ChatOutput, error) {
 			output := ChatOutput{}
@@ -36,7 +36,7 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts GenerateOptions
 
 			for {
 				curTurnOpts := append([]ai.GenerateOption{ai.WithMessages(messages...)}, opts...)
-				curTurnOpts = append(curTurnOpts, genOpts()...)
+				curTurnOpts = append(curTurnOpts, genOpts...)
 
 				// 检查上下文限制
 				if output.LastContextWindow > in.MaxContextWindow {
