@@ -1,4 +1,4 @@
-package gencfg
+package oai
 
 // GenerateConfig 生成配置
 type GenerateConfig struct {

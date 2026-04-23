@@ -11,8 +11,6 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/packages/param"
 	"github.com/openai/openai-go/shared"
-
-	"github.com/yhlooo/nfa/pkg/agents/gencfg"
 )
 
 // NewModelGenerator 创建模型生成器
@@ -21,7 +19,7 @@ func NewModelGenerator(client *openai.Client, req *ai.ModelRequest, opts ModelOp
 		Model: opts.Label,
 	}
 
-	cfg, hasCfg := req.Config.(gencfg.GenerateConfig)
+	cfg, hasCfg := req.Config.(GenerateConfig)
 
 	if opts.Reasoning && (!hasCfg || cfg.Reasoning) {
 		rawReq.SetExtraFields(opts.EnableReasoningExtraFields)
