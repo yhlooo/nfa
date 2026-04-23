@@ -20,7 +20,7 @@ type ACPAgent interface {
 
 // initAgent 初始化 Agent
 func (chat *Chat) initAgent(ctx context.Context) error {
-	resp, err := chat.agent.Initialize(ctx, acp.InitializeRequest{
+	_, err := chat.agent.Initialize(ctx, acp.InitializeRequest{
 		ClientCapabilities: acp.ClientCapabilities{},
 		ClientInfo: &acp.Implementation{
 			Name:    "NFA",
@@ -31,10 +31,6 @@ func (chat *Chat) initAgent(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("initialize agent error: %w", err)
 	}
-	chat.curModels = agents.GetMetaCurrentModelsValue(resp.Meta)
-	chat.modelSelector.SetAvailableModels(agents.GetMetaAvailableModelsValue(resp.Meta))
-	chat.modelSelector.SetCurrentModels(chat.curModels)
-	chat.skills = agents.GetMetaSkillsValue(resp.Meta)
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -55,13 +51,16 @@ func (chat *Chat) newSession() tea.Msg {
 		return QuitError{Error: fmt.Errorf("new session error: %w", err)}
 	}
 	chat.sessionID = resp.SessionId
+	if resp.Models != nil {
+		chat.curPrimaryModel = string(resp.Models.CurrentModelId)
+	}
 
 	return nil
 }
 
 // loadSession 加载会话
 func (chat *Chat) loadSession() tea.Msg {
-	_, err := chat.agent.LoadSession(chat.ctx, acp.LoadSessionRequest{
+	resp, err := chat.agent.LoadSession(chat.ctx, acp.LoadSessionRequest{
 		SessionId:  acp.SessionId(chat.resumeSessionID),
 		Cwd:        chat.cwd,
 		McpServers: []acp.McpServer{},
@@ -70,6 +69,9 @@ func (chat *Chat) loadSession() tea.Msg {
 		return QuitError{Error: fmt.Errorf("load session error: %w", err)}
 	}
 	chat.sessionID = acp.SessionId(chat.resumeSessionID)
+	if resp.Models != nil {
+		chat.curPrimaryModel = string(resp.Models.CurrentModelId)
+	}
 	return nil
 }
 
@@ -78,9 +80,6 @@ func (chat *Chat) newPrompt(prompt string) tea.Cmd {
 	return func() tea.Msg {
 		req := acp.PromptRequest{
 			SessionId: chat.sessionID,
-			Meta: map[string]any{
-				agents.MetaKeyCurrentModels: chat.curModels,
-			},
 			Prompt: []acp.ContentBlock{
 				acp.TextBlock(prompt),
 			},

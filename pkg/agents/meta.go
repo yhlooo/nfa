@@ -4,16 +4,10 @@ import (
 	"encoding/json"
 
 	"github.com/firebase/genkit/go/ai"
-
-	"github.com/yhlooo/nfa/pkg/models"
-	"github.com/yhlooo/nfa/pkg/skills"
 )
 
 const (
-	MetaKeyCurrentModels     = "currentModels"
-	MetaKeyAvailableModels   = "availableModels"
 	MetaKeyCurrentModelUsage = "currentModelUsage"
-	MetaKeySkills            = "skills"
 )
 
 // GetMetaValue 从 _meta 中获取指定 key 的值
@@ -73,98 +67,4 @@ func GetMetaCurrentModelUsageValue(meta any) ai.GenerationUsage {
 	}
 
 	return usage
-}
-
-// NewMetaSliceValue 创建 _meta 切片值
-func NewMetaSliceValue(v any) []any {
-	if v == nil {
-		return nil
-	}
-
-	jsonRaw, _ := json.Marshal(v)
-	var ret []any
-	_ = json.Unmarshal(jsonRaw, &ret)
-	return ret
-}
-
-// NewMetaMapValue 创建 _meta 字典值
-func NewMetaMapValue(v any) map[string]any {
-	if v == nil {
-		return nil
-	}
-
-	jsonRaw, _ := json.Marshal(v)
-	var ret map[string]any
-	_ = json.Unmarshal(jsonRaw, &ret)
-	return ret
-}
-
-// GetMetaAvailableModelsValue 从 _meta 中获取可用模型列表
-func GetMetaAvailableModelsValue(meta any) []models.ModelConfig {
-	v, ok := GetMetaValue(meta, MetaKeyAvailableModels).([]any)
-	if !ok {
-		return nil
-	}
-
-	ret := make([]models.ModelConfig, 0, len(v))
-	for _, item := range v {
-		itemMap, ok := item.(map[string]any)
-		if !ok {
-			continue
-		}
-		raw, _ := json.Marshal(itemMap)
-		var cfg models.ModelConfig
-		if err := json.Unmarshal(raw, &cfg); err != nil {
-			continue
-		}
-		ret = append(ret, cfg)
-	}
-
-	return ret
-}
-
-// GetMetaCurrentModelsValue 从 _meta 中获取当前使用的模型
-func GetMetaCurrentModelsValue(meta any) models.Models {
-	v, ok := GetMetaValue(meta, MetaKeyCurrentModels).(map[string]any)
-	if !ok {
-		return models.Models{}
-	}
-
-	ret := models.Models{}
-
-	if name, ok := v["primary"].(string); ok {
-		ret.Primary = name
-	}
-	if name, ok := v["light"].(string); ok {
-		ret.Light = name
-	}
-	if name, ok := v["vision"].(string); ok {
-		ret.Vision = name
-	}
-
-	return ret
-}
-
-// GetMetaSkillsValue 从 _meta 中获取技能列表
-func GetMetaSkillsValue(meta any) []skills.SkillMeta {
-	v, ok := GetMetaValue(meta, MetaKeySkills).([]any)
-	if !ok {
-		return nil
-	}
-
-	ret := make([]skills.SkillMeta, 0, len(v))
-	for _, item := range v {
-		itemMap, ok := item.(map[string]any)
-		if !ok {
-			continue
-		}
-		raw, _ := json.Marshal(itemMap)
-		var m skills.SkillMeta
-		if err := json.Unmarshal(raw, &m); err != nil {
-			continue
-		}
-		ret = append(ret, m)
-	}
-
-	return ret
 }

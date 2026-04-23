@@ -47,7 +47,7 @@ func (a *NFAAgent) Initialize(ctx context.Context, _ acp.InitializeRequest) (acp
 	ctx = logr.NewContext(ctx, a.logger)
 
 	// 初始化技能加载器并加载技能
-	a.skillLoader = skills.NewSkillLoader(filepath.Join(a.dataRoot, "skills"))
+	a.skillLoader = skills.NewSkillLoader(filepath.Join(a.opts.DataRoot, "skills"))
 	if err := a.skillLoader.LoadMeta(ctx); err != nil {
 		a.logger.Error(err, "load skills error")
 	}
@@ -56,11 +56,6 @@ func (a *NFAAgent) Initialize(ctx context.Context, _ acp.InitializeRequest) (acp
 	a.InitGenkit(ctx)
 
 	return acp.InitializeResponse{
-		Meta: NewMetaMapValue(map[string]any{
-			MetaKeyAvailableModels: a.availableModels,
-			MetaKeyCurrentModels:   a.defaultModels,
-			MetaKeySkills:          a.skillLoader.ListMeta(),
-		}),
 		AgentCapabilities: acp.AgentCapabilities{
 			LoadSession: true,
 		},
@@ -82,13 +77,27 @@ func (a *NFAAgent) NewSession(_ context.Context, _ acp.NewSessionRequest) (acp.N
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
+	curModels := a.opts.DefaultModels
+	availableModels := make([]acp.ModelInfo, len(a.availableModels))
+	for i, m := range a.availableModels {
+		availableModels[i] = acp.ModelInfo{
+			ModelId: acp.ModelId(m.Provider + "/" + m.Name),
+			Name:    m.Name,
+		}
+	}
+
 	sessionID := acp.SessionId(uuid.New().String())
 	a.sessions[sessionID] = &Session{
-		id: sessionID,
+		id:            sessionID,
+		currentModels: curModels,
 	}
 
 	return acp.NewSessionResponse{
 		SessionId: sessionID,
+		Models: &acp.SessionModelState{
+			AvailableModels: availableModels,
+			CurrentModelId:  acp.ModelId(curModels.GetPrimary()),
+		},
 	}, nil
 }
 
@@ -98,7 +107,7 @@ func (a *NFAAgent) LoadSession(ctx context.Context, params acp.LoadSessionReques
 	defer a.lock.Unlock()
 
 	// 从文件加载会话数据
-	data, err := LoadSessionData(a.sessionsDir, params.SessionId)
+	data, err := LoadSessionData(filepath.Join(a.opts.DataRoot, SessionsDirName), params.SessionId)
 	if err != nil {
 		return acp.LoadSessionResponse{}, fmt.Errorf("load session data error: %w", err)
 	}
@@ -175,20 +184,9 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	}()
 	session.lock.Unlock()
 
-	m := GetMetaCurrentModelsValue(params.Meta)
-	if m.Primary == "" {
-		m.Primary = a.defaultModels.Primary
-	}
-	if m.Light == "" {
-		m.Light = a.defaultModels.Light
-	}
-	if m.Vision == "" {
-		m.Vision = a.defaultModels.Vision
-	}
-	if m.Primary == "" {
+	if session.currentModels.Primary == "" {
 		return acp.PromptResponse{StopReason: acp.StopReasonRefusal}, fmt.Errorf("no available model")
 	}
-	m.SetAllModels(a.availableModels)
 
 	prompt := ""
 	for _, content := range params.Prompt {
@@ -201,7 +199,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	if prompt == "" {
 		return acp.PromptResponse{StopReason: acp.StopReasonEndTurn}, nil
 	}
-	ctx = ctxutil.ContextWithModels(ctx, m)
+	ctx = ctxutil.ContextWithModels(ctx, session.currentModels)
 	ctx = ctxutil.ContextWithModelUsage(ctx, session.modelUsage)
 	ctx = logr.NewContext(ctx, a.logger)
 	defer func() {
@@ -233,7 +231,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	copy(history, messages)
 	messages = append(messages, ai.NewUserTextMessage(prompt))
 
-	if lastContextWindow > a.maxContextWindow {
+	if lastContextWindow > a.opts.MaxContextWindow {
 		resp.StopReason = acp.StopReasonMaxTokens
 		SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
 		return resp, nil
@@ -241,7 +239,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	chatOut, err := a.chatFlow.Run(ctx, flows.ChatInput{
 		Prompt:           prompt,
 		History:          history,
-		MaxContextWindow: a.maxContextWindow,
+		MaxContextWindow: a.opts.MaxContextWindow,
 	})
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
@@ -258,12 +256,12 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	messages = append(messages, chatOut.Messages...)
 	SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
 	lastContextWindow = chatOut.LastContextWindow
-	if lastContextWindow > a.maxContextWindow {
+	if lastContextWindow > a.opts.MaxContextWindow {
 		resp.StopReason = acp.StopReasonMaxTokens
 	}
 
 	// 保存会话
-	if err := SaveSession(a.sessionsDir, params.SessionId, messages); err != nil {
+	if err := SaveSession(filepath.Join(a.opts.DataRoot, SessionsDirName), params.SessionId, messages); err != nil {
 		a.logger.Error(err, "save session error")
 	}
 

@@ -11,27 +11,11 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 
 	"github.com/yhlooo/nfa/pkg/agents"
-	"github.com/yhlooo/nfa/pkg/configs"
 	"github.com/yhlooo/nfa/pkg/history"
 	i18nutil "github.com/yhlooo/nfa/pkg/i18n"
 	"github.com/yhlooo/nfa/pkg/otter"
 	"github.com/yhlooo/nfa/pkg/skills"
 	"github.com/yhlooo/nfa/pkg/version"
-)
-
-type viewState string
-
-const (
-	viewStateInput       viewState = "input"
-	viewStateModelSelect viewState = "model_select"
-)
-
-type ModelType string
-
-const (
-	ModelTypePrimary ModelType = "primary"
-	ModelTypeLight   ModelType = "light"
-	ModelTypeVision  ModelType = "vision"
 )
 
 var _ tea.Model = (*Chat)(nil)
@@ -47,8 +31,8 @@ func (chat *Chat) Init() tea.Cmd {
 	}
 
 	cmds := []tea.Cmd{
-		chat.printHello(),
 		sessionCmd,
+		chat.printHello(),
 		textarea.Blink,
 	}
 	if chat.initialPrompt != "" {
@@ -60,18 +44,6 @@ func (chat *Chat) Init() tea.Cmd {
 
 // Update 处理更新事件
 func (chat *Chat) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	// 根据 viewState 路由消息
-	switch chat.viewState {
-	case viewStateInput:
-		return chat.updateInInputState(msg)
-	case viewStateModelSelect:
-		return chat.updateInModelSelectState(msg)
-	}
-	return chat, nil
-}
-
-// updateInInputState 处理输入状态
-func (chat *Chat) updateInInputState(msg tea.Msg) (tea.Model, tea.Cmd) {
 	logger := chat.logger
 
 	var inputCmd tea.Cmd
@@ -104,28 +76,10 @@ func (chat *Chat) updateInInputState(msg tea.Msg) (tea.Model, tea.Cmd) {
 					switch content {
 					case "/exit":
 						return chat, tea.Quit
-					case "/model", "/model :primary":
-						return chat, chat.enterModelSelectMode(ModelTypePrimary)
-					case "/model :light":
-						return chat, chat.enterModelSelectMode(ModelTypeLight)
-					case "/model :vision":
-						return chat, chat.enterModelSelectMode(ModelTypeVision)
 					case "/skills":
 						cmds = append(cmds, chat.printSkillsList())
 					default:
-						// 检查是否是 /model 开头的直接设置命令
-						if modelType, modelName, ok := chat.handleDirectModelSet(content); ok {
-							cmds = append(cmds, tea.Printf(
-								"\033[34m✓ %s %s\033[0m",
-								i18nutil.LocalizeContext(chat.ctx, &i18n.LocalizeConfig{
-									DefaultMessage: MsgSetModel,
-									TemplateData:   map[string]any{"Type": modelType},
-								}),
-								modelName,
-							))
-						} else {
-							cmds = append(cmds, chat.newPrompt(content))
-						}
+						cmds = append(cmds, chat.newPrompt(content))
 					}
 				}
 			}
@@ -167,50 +121,6 @@ func (chat *Chat) updateInInputState(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return chat, tea.Batch(cmds...)
 }
 
-// updateInModelSelectState 处理模型选择状态
-func (chat *Chat) updateInModelSelectState(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmds []tea.Cmd
-	var vpCmd tea.Cmd
-	chat.vp, vpCmd = chat.vp.Update(msg)
-	cmds = append(cmds, vpCmd)
-
-	var selectorCmd tea.Cmd
-	chat.modelSelector, selectorCmd = chat.modelSelector.Update(msg)
-	cmds = append(cmds, selectorCmd)
-
-	switch typedMsg := msg.(type) {
-	case tea.KeyMsg:
-		switch typedMsg.Type {
-		case tea.KeyEnter:
-			var modelType ModelType
-			modelName := ""
-			modelType, modelName, chat.curModels = chat.modelSelector.GetSelectedModels()
-			if err := configs.SaveDefaultModels(chat.cfgPath, chat.curModels); err != nil {
-				cmds = append(cmds, func() tea.Msg {
-					return fmt.Errorf("failed to save model: %w", err)
-				})
-			} else {
-				cmds = append(cmds, tea.Printf(
-					"\033[34m✓ %s %s\033[0m",
-					i18nutil.LocalizeContext(chat.ctx, &i18n.LocalizeConfig{
-						DefaultMessage: MsgSetModel,
-						TemplateData:   map[string]any{"Type": modelType},
-					}),
-					modelName,
-				))
-			}
-			cmds = append(cmds, chat.exitModelSelectMode())
-		case tea.KeyEsc:
-			// 取消选择
-			cmds = append(cmds, chat.exitModelSelectMode())
-		}
-	}
-
-	cmds = append(cmds, chat.updateComponents()...)
-
-	return chat, tea.Batch(cmds...)
-}
-
 // updateComponents 根据状态更新组件
 func (chat *Chat) updateComponents() []tea.Cmd {
 	var cmds []tea.Cmd
@@ -227,19 +137,6 @@ func (chat *Chat) updateComponents() []tea.Cmd {
 	return cmds
 }
 
-// enterModelSelectMode 进入模型选择模式
-func (chat *Chat) enterModelSelectMode(t ModelType) tea.Cmd {
-	chat.modelSelector.SetModelType(t)
-	chat.viewState = viewStateModelSelect
-	return nil
-}
-
-// exitModelSelectMode 退出模型选择模式
-func (chat *Chat) exitModelSelectMode() tea.Cmd {
-	chat.viewState = viewStateInput
-	return nil
-}
-
 // View 渲染显示内容
 func (chat *Chat) View() string {
 	vpView := chat.vp.View()
@@ -247,14 +144,9 @@ func (chat *Chat) View() string {
 		vpView += "\n"
 	}
 
-	var bottomView string
-	switch chat.viewState {
-	case viewStateInput:
-		if chat.input.Focused() {
-			bottomView = chat.input.View()
-		}
-	case viewStateModelSelect:
-		bottomView = chat.modelSelector.View()
+	bottomView := ""
+	if chat.input.Focused() {
+		bottomView = chat.input.View()
 	}
 
 	modelUsageView := ""
@@ -281,27 +173,21 @@ func (chat *Chat) View() string {
 
 // printHello 输出欢迎信息
 func (chat *Chat) printHello() tea.Cmd {
-	bannerLines := strings.Split(otter.MustOtter(true, false, 1), "\n")
-	if len(bannerLines) < 5 {
-		return nil
-	}
+	return func() tea.Msg {
+		bannerLines := strings.Split(otter.MustOtter(true, false, 1), "\n")
+		if len(bannerLines) < 5 {
+			return nil
+		}
 
-	i := len(bannerLines) - 6
-	bannerLines[i] += fmt.Sprintf("\r\033[36C\033[1mNFA\033[2m v%s\033[0m", version.Version)
-	i++
-	bannerLines[i] += fmt.Sprintf("\r\033[36C\033[2m%s\033[0m", chat.curModels.GetPrimary())
-	i++
-	if chat.curModels.GetLight() != chat.curModels.GetPrimary() {
-		bannerLines[i] += fmt.Sprintf("\r\033[36C\033[2m%s (light)\033[0m", chat.curModels.GetLight())
+		i := len(bannerLines) - 5
+		bannerLines[i] += fmt.Sprintf("\r\033[36C\033[1mNFA\033[2m v%s\033[0m", version.Version)
 		i++
-	}
-	if visionModel := chat.curModels.GetVision(); visionModel != "" && visionModel != chat.curModels.GetPrimary() {
-		bannerLines[i] += fmt.Sprintf("\r\033[36C\033[2m%s (vision)\033[0m", chat.curModels.GetVision())
+		bannerLines[i] += fmt.Sprintf("\r\033[36C\033[2m%s\033[0m", chat.curPrimaryModel)
 		i++
-	}
-	bannerLines[i] += fmt.Sprintf("\r\033[36C\033[1;33m%s\033[0m", i18nutil.TContext(chat.ctx, MsgNFANote))
+		bannerLines[i] += fmt.Sprintf("\r\033[36C\033[1;33m%s\033[0m", i18nutil.TContext(chat.ctx, MsgNFANote))
 
-	return tea.Println("\n" + strings.Join(bannerLines, "\n") + "\n")
+		return tea.Println("\n" + strings.Join(bannerLines, "\n") + "\n")()
+	}
 }
 
 // intWithSeparator 每 step 位带分隔符 sep 的表示整数的字符串
@@ -375,58 +261,4 @@ func (chat *Chat) printSkillsList() tea.Cmd {
 	buf.WriteString("\033[2m" + strings.Repeat("─", chat.width) + "\033[0m\n")
 
 	return tea.Println(buf.String())
-}
-
-// handleDirectModelSet 处理直接设置模型的命令
-func (chat *Chat) handleDirectModelSet(content string) (modelType ModelType, modelName string, ok bool) {
-	parts := strings.Fields(content)
-	if len(parts) == 0 || parts[0] != "/model" {
-		return "", "", false
-	}
-
-	modelType = ModelTypePrimary
-
-	switch len(parts) {
-	case 2:
-		// /model <provider>/<name>
-		modelName = parts[1]
-	case 3:
-		// /model :target <provider>/<name>
-		if !strings.HasPrefix(parts[1], ":") {
-			// 无效格式，不处理，让用户重新输入
-			return "", "", false
-		}
-		modelType = ModelType(strings.TrimPrefix(parts[1], ":"))
-		modelName = parts[2]
-	default:
-		// 无效格式，不处理
-		return "", "", false
-	}
-
-	if modelName == "" {
-		return "", "", false
-	}
-
-	// 应用模型并保存
-	switch modelType {
-	case ModelTypePrimary:
-		chat.curModels.Primary = modelName
-	case ModelTypeLight:
-		chat.curModels.Light = modelName
-	case ModelTypeVision:
-		chat.curModels.Vision = modelName
-	default:
-		return "", "", false
-	}
-
-	chat.modelSelector.SetCurrentModels(chat.curModels)
-
-	// 只保存 defaultModels 字段到文件
-	if err := configs.SaveDefaultModels(chat.cfgPath, chat.curModels); err != nil {
-		// 保存失败，忽略错误
-		chat.logger.Error(err, "save default models error")
-		return modelType, modelName, true
-	}
-
-	return modelType, modelName, true
 }

@@ -27,25 +27,25 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 		return
 	}
 
-	a.g, a.availableModels = NewGenkitWithModels(ctx, a.modelProviders, a.defaultModels)
-	if a.defaultModels.Primary == "" && len(a.availableModels) > 0 {
-		a.defaultModels.Primary = a.availableModels[0].Name
+	a.g, a.availableModels = NewGenkitWithModels(ctx, a.opts.ModelProviders, a.opts.DefaultModels)
+	if a.opts.DefaultModels.Primary == "" && len(a.availableModels) > 0 {
+		a.opts.DefaultModels.Primary = a.availableModels[0].Name
 	}
 	for _, m := range a.availableModels {
 		a.logger.Info(fmt.Sprintf("registered model: %s", m.Name))
 	}
 
 	// 注册工具
-	if a.dataProviders.AlphaVantage != nil {
-		alphaVantageTools, err := a.dataProviders.AlphaVantage.RegisterTools(ctx, a.g)
+	if a.opts.DataProviders.AlphaVantage != nil {
+		alphaVantageTools, err := a.opts.DataProviders.AlphaVantage.RegisterTools(ctx, a.g)
 		if err != nil {
 			a.logger.Error(err, "register alpha vantage tools error")
 		} else {
 			a.availableTools = append(a.availableTools, alphaVantageTools...)
 		}
 	}
-	if a.dataProviders.TencentCloudWSA != nil {
-		searchTool, err := a.dataProviders.TencentCloudWSA.RegisterTool(ctx, a.g)
+	if a.opts.DataProviders.TencentCloudWSA != nil {
+		searchTool, err := a.opts.DataProviders.TencentCloudWSA.RegisterTool(ctx, a.g)
 		if err != nil {
 			a.logger.Error(err, "register tencent cloud wsa search tool error")
 		} else {

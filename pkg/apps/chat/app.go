@@ -18,7 +18,6 @@ import (
 	"github.com/yhlooo/nfa/pkg/configs"
 	"github.com/yhlooo/nfa/pkg/history"
 	i18nutil "github.com/yhlooo/nfa/pkg/i18n"
-	"github.com/yhlooo/nfa/pkg/models"
 	"github.com/yhlooo/nfa/pkg/skills"
 )
 
@@ -41,7 +40,6 @@ func NewChat(opts Options) *Chat {
 		initialPrompt:         opts.InitialPrompt,
 		autoExitAfterResponse: opts.AutoExitAfterResponse,
 		resumeSessionID:       opts.ResumeSessionID,
-		viewState:             viewStateInput,
 		width:                 80,
 	}
 
@@ -73,19 +71,15 @@ type Chat struct {
 
 	cwd                   string
 	sessionID             acp.SessionId
-	curModels             models.Models
+	curPrimaryModel       string
 	modelUsage            ai.GenerationUsage
 	initialPrompt         string
 	autoExitAfterResponse bool
 	resumeSessionID       string
+	skills                []skills.SkillMeta
 
 	// Model selection
-	cfgPath       string
-	viewState     viewState
-	modelSelector *ModelSelector
-
-	// Skills
-	skills []skills.SkillMeta
+	cfgPath string
 
 	// History
 	history     *history.History
@@ -104,9 +98,6 @@ func (chat *Chat) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
-	chat.modelSelector = NewModelSelector()
-	chat.modelSelector.SetContext(ctx)
 
 	chat.cfgPath = configs.ConfigPathFromContext(ctx)
 

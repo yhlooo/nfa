@@ -66,7 +66,6 @@ func (o *GlobalOptions) AddPFlags(fs *pflag.FlagSet) {
 func NewOptions() Options {
 	return Options{
 		Model:        "",
-		LightModel:   "",
 		VisionModel:  "",
 		PrintAndExit: false,
 		Resume:       "",
@@ -76,7 +75,6 @@ func NewOptions() Options {
 // Options 运行选项
 type Options struct {
 	Model        string
-	LightModel   string
 	VisionModel  string
 	PrintAndExit bool
 	Resume       string
@@ -85,7 +83,6 @@ type Options struct {
 // AddPFlags 将选项绑定到命令行参数
 func (o *Options) AddPFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.Model, "model", o.Model, i18n.T(MsgRootOptsModelDesc))
-	fs.StringVar(&o.LightModel, "light-model", o.LightModel, i18n.T(MsgRootOptsLightModelDesc))
 	fs.StringVar(&o.VisionModel, "vision-model", o.VisionModel, i18n.T(MsgRootOptsVisionModelDesc))
 	fs.BoolVarP(&o.PrintAndExit, "print", "p", o.PrintAndExit, i18n.T(MsgRootOptsPrintAndExitDesc))
 	fs.StringVar(&o.Resume, "resume", o.Resume, i18n.T(MsgRootOptsResumeDesc))
@@ -166,9 +163,6 @@ func NewCommand(name string) *cobra.Command {
 			m := cfg.DefaultModels
 			if opts.Model != "" {
 				m.Primary = opts.Model
-			}
-			if opts.LightModel != "" {
-				m.Light = opts.LightModel
 			}
 			if opts.VisionModel != "" {
 				m.Vision = opts.VisionModel

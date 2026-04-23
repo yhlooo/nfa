@@ -6,7 +6,6 @@ import (
 
 	"github.com/coder/acp-go-sdk"
 
-	"github.com/yhlooo/nfa/pkg/agents"
 	"github.com/yhlooo/nfa/pkg/channels"
 )
 
@@ -18,8 +17,7 @@ const (
 func (chat *Chat) handleChannel(ctx context.Context, id int, ch channels.Channel) {
 	for msg := range ch.Receive() {
 		meta := map[string]any{
-			agents.MetaKeyCurrentModels: chat.curModels,
-			channelIDMetaKey:            id,
+			channelIDMetaKey: id,
 		}
 		for k, v := range msg.Meta {
 			meta[k] = v

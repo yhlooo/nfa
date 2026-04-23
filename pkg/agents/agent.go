@@ -2,7 +2,6 @@ package agents
 
 import (
 	"context"
-	"path/filepath"
 	"sync"
 
 	"github.com/coder/acp-go-sdk"
@@ -54,31 +53,21 @@ func (opts *Options) Complete() {
 func NewNFA(opts Options) *NFAAgent {
 	opts.Complete()
 	return &NFAAgent{
-		logger:           opts.Logger.WithName(loggerName),
-		localizer:        opts.Localizer,
-		modelProviders:   opts.ModelProviders,
-		dataProviders:    opts.DataProviders,
-		defaultModels:    opts.DefaultModels,
-		dataRoot:         opts.DataRoot,
-		maxContextWindow: opts.MaxContextWindow,
-
-		sessions:    map[acp.SessionId]*Session{},
-		sessionsDir: filepath.Join(opts.DataRoot, SessionsDirName),
+		opts:      opts,
+		logger:    opts.Logger.WithName(loggerName),
+		localizer: opts.Localizer,
+		sessions:  map[acp.SessionId]*Session{},
 	}
 }
 
 // NFAAgent NFA Agent
 type NFAAgent struct {
+	opts Options
+
 	lock sync.RWMutex
 
-	logger           logr.Logger
-	localizer        *i18n.Localizer
-	modelProviders   []models.ModelProvider
-	dataProviders    DataProviders
-	defaultModels    models.Models
-	dataRoot         string
-	maxContextWindow int64
-
+	logger      logr.Logger
+	localizer   *i18n.Localizer
 	client      acp.Client
 	g           *genkit.Genkit
 	skillLoader *skills.SkillLoader
@@ -88,8 +77,7 @@ type NFAAgent struct {
 
 	chatFlow flows.ChatFlow
 
-	sessions    map[acp.SessionId]*Session
-	sessionsDir string
+	sessions map[acp.SessionId]*Session
 }
 
 // Session 会话
@@ -99,6 +87,7 @@ type Session struct {
 	id           acp.SessionId
 	cancelPrompt context.CancelFunc
 
+	currentModels     models.Models
 	history           []*ai.Message
 	modelUsage        ai.GenerationUsage
 	lastContextWindow int64
