@@ -3,7 +3,7 @@ package agents
 import (
 	"encoding/json"
 
-	"github.com/firebase/genkit/go/ai"
+	"github.com/yhlooo/nfa/pkg/tokentracker"
 )
 
 const (
@@ -42,7 +42,7 @@ func GetMetaIntValue(meta any, key string) int {
 }
 
 // SetMetaCurrentModelUsage 往 _meta 设置当前模型用量
-func SetMetaCurrentModelUsage(meta any, usage ai.GenerationUsage) {
+func SetMetaCurrentModelUsage(meta any, summary tokentracker.Summary) {
 	mapMeta, ok := meta.(map[string]any)
 	if !ok {
 		return
@@ -50,21 +50,21 @@ func SetMetaCurrentModelUsage(meta any, usage ai.GenerationUsage) {
 	if mapMeta == nil {
 		return
 	}
-	raw, _ := json.Marshal(usage)
+	raw, _ := json.Marshal(summary)
 	mapMeta[MetaKeyCurrentModelUsage] = string(raw)
 }
 
 // GetMetaCurrentModelUsageValue 从 _meta 中获取当前模型用量
-func GetMetaCurrentModelUsageValue(meta any) ai.GenerationUsage {
+func GetMetaCurrentModelUsageValue(meta any) (tokentracker.Summary, bool) {
 	v := GetMetaStringValue(meta, MetaKeyCurrentModelUsage)
 	if v == "" {
-		return ai.GenerationUsage{}
+		return tokentracker.Summary{}, false
 	}
 
-	usage := ai.GenerationUsage{}
+	usage := tokentracker.Summary{}
 	if err := json.Unmarshal([]byte(v), &usage); err != nil {
-		return ai.GenerationUsage{}
+		return tokentracker.Summary{}, false
 	}
 
-	return usage
+	return usage, true
 }

@@ -18,6 +18,7 @@ require (
 	github.com/olekukonko/tablewriter v1.1.3
 	github.com/openai/openai-go v1.8.2
 	github.com/saran13raj/go-pixels v0.0.0-20250629121333-58b240a3ae51
+	github.com/shopspring/decimal v1.4.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10

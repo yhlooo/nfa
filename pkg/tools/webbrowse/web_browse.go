@@ -18,6 +18,7 @@ import (
 	"github.com/go-logr/logr"
 
 	"github.com/yhlooo/nfa/pkg/ctxutil"
+	"github.com/yhlooo/nfa/pkg/tokentracker"
 )
 
 // NewWebBrowser 创建 Web 浏览器
@@ -128,6 +129,7 @@ func (wb *WebBrowser) DefineBrowseTool(g *genkit.Genkit) ai.ToolRef {
 						ai.NewTextPart("根据图片中的信息回答：\n"+in.Question),
 					),
 				),
+				ai.WithMiddleware(tokentracker.ModelMiddlewareFromContext(ctx, m.GetVision())),
 			)
 			if err != nil {
 				return BrowseOutput{}, err

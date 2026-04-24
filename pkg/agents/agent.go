@@ -13,6 +13,7 @@ import (
 	"github.com/yhlooo/nfa/pkg/agents/flows"
 	"github.com/yhlooo/nfa/pkg/models"
 	"github.com/yhlooo/nfa/pkg/skills"
+	"github.com/yhlooo/nfa/pkg/tokentracker"
 	"github.com/yhlooo/nfa/pkg/tools/alphavantage"
 	"github.com/yhlooo/nfa/pkg/tools/websearch"
 )
@@ -89,6 +90,6 @@ type Session struct {
 
 	currentModels     models.Models
 	history           []*ai.Message
-	modelUsage        ai.GenerationUsage
+	tokenTracker      *tokentracker.TokenTracker
 	lastContextWindow int64
 }

@@ -21,23 +21,21 @@ func DeepSeekModels() []ModelConfig {
 		{
 			Name:      "deepseek-reasoner",
 			Reasoning: true,
-			Cost: ModelCost{
+			Prices: ModelPrices{
 				Input:  2,
 				Output: 3,
 				Cached: 0.2,
 			},
-			ContextWindow:   128000,
-			MaxOutputTokens: 64000,
+			ContextWindow: 128000,
 		},
 		{
 			Name: "deepseek-chat",
-			Cost: ModelCost{
+			Prices: ModelPrices{
 				Input:  2,
 				Output: 3,
 				Cached: 0.2,
 			},
-			ContextWindow:   128000,
-			MaxOutputTokens: 8000,
+			ContextWindow: 128000,
 		},
 	}
 }

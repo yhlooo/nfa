@@ -21,6 +21,7 @@ import (
 	"github.com/yhlooo/nfa/pkg/i18n"
 	i18nutil "github.com/yhlooo/nfa/pkg/i18n"
 	"github.com/yhlooo/nfa/pkg/skills"
+	"github.com/yhlooo/nfa/pkg/tokentracker"
 	"github.com/yhlooo/nfa/pkg/version"
 )
 
@@ -91,6 +92,7 @@ func (a *NFAAgent) NewSession(ctx context.Context, _ acp.NewSessionRequest) (acp
 	a.sessions[sessionID] = &Session{
 		id:            sessionID,
 		currentModels: curModels,
+		tokenTracker:  tokentracker.NewTracker(a.availableModels),
 	}
 
 	go a.sendAvailableCommands(ctx, sessionID)
@@ -128,6 +130,7 @@ func (a *NFAAgent) LoadSession(ctx context.Context, params acp.LoadSessionReques
 		id:            params.SessionId,
 		history:       data.Messages,
 		currentModels: curModels,
+		tokenTracker:  tokentracker.NewTracker(a.availableModels),
 	}
 
 	// 回放历史消息
@@ -246,13 +249,8 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 		return acp.PromptResponse{StopReason: acp.StopReasonEndTurn}, nil
 	}
 	ctx = ctxutil.ContextWithModels(ctx, session.currentModels)
-	ctx = ctxutil.ContextWithModelUsage(ctx, session.modelUsage)
+	ctx = tokentracker.ContextWithTokenTracker(ctx, session.tokenTracker)
 	ctx = logr.NewContext(ctx, a.logger)
-	defer func() {
-		session.lock.Lock()
-		session.modelUsage = ctxutil.GetModelUsageFromContext(ctx)
-		session.lock.Unlock()
-	}()
 
 	a.logger.Info("prompt turn start")
 
@@ -320,7 +318,6 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 
 	if lastContextWindow > a.opts.MaxContextWindow {
 		resp.StopReason = acp.StopReasonMaxTokens
-		SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
 		return resp, nil
 	}
 	chatOut, err := a.chatFlow.Run(ctx, flows.ChatInput{
@@ -336,12 +333,11 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 			resp.StopReason = acp.StopReasonRefusal
 			messages = append(messages, ai.NewModelTextMessage("Error: "+err.Error()))
 		}
-		SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
+		SetMetaCurrentModelUsage(resp.Meta, session.tokenTracker.Summary())
 		return resp, err
 	}
 
 	messages = append(messages, chatOut.Messages...)
-	SetMetaCurrentModelUsage(resp.Meta, ctxutil.GetModelUsageFromContext(ctx))
 	lastContextWindow = chatOut.LastContextWindow
 	if lastContextWindow > a.opts.MaxContextWindow {
 		resp.StopReason = acp.StopReasonMaxTokens
@@ -352,6 +348,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 		a.logger.Error(err, "save session error")
 	}
 
+	SetMetaCurrentModelUsage(resp.Meta, session.tokenTracker.Summary())
 	return resp, nil
 }
 
@@ -421,7 +418,6 @@ func (a *NFAAgent) handleStreamChunk(sessionID acp.SessionId, extraMeta map[stri
 				for k, v := range extraMeta {
 					meta[k] = v
 				}
-				SetMetaCurrentModelUsage(meta, ctxutil.GetModelUsageFromContext(ctx))
 				if err := a.client.SessionUpdate(ctx, acp.SessionNotification{
 					Meta:      meta,
 					SessionId: sessionID,
@@ -451,7 +447,6 @@ func (a *NFAAgent) handleStreamChunk(sessionID acp.SessionId, extraMeta map[stri
 				for k, v := range extraMeta {
 					meta[k] = v
 				}
-				SetMetaCurrentModelUsage(meta, ctxutil.GetModelUsageFromContext(ctx))
 				if err := a.client.SessionUpdate(ctx, acp.SessionNotification{
 					Meta:      meta,
 					SessionId: sessionID,
@@ -495,7 +490,6 @@ func (a *NFAAgent) flushBufferText(
 	for k, v := range extraMeta {
 		meta[k] = v
 	}
-	SetMetaCurrentModelUsage(meta, ctxutil.GetModelUsageFromContext(ctx))
 	err := a.client.SessionUpdate(ctx, acp.SessionNotification{
 		Meta:      meta,
 		SessionId: sessionID,

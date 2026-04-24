@@ -22,25 +22,23 @@ func MoonshotModels() []ModelConfig {
 			Name:      "kimi-k2.6",
 			Reasoning: true,
 			Vision:    true,
-			Cost: ModelCost{
+			Prices: ModelPrices{
 				Input:  6.5,
 				Output: 27,
 				Cached: 1.1,
 			},
-			ContextWindow:   256000,
-			MaxOutputTokens: 256000,
+			ContextWindow: 256000,
 		},
 		{
 			Name:      "kimi-k2.5",
 			Reasoning: true,
 			Vision:    true,
-			Cost: ModelCost{
+			Prices: ModelPrices{
 				Input:  4,
 				Output: 21,
 				Cached: 0.7,
 			},
-			ContextWindow:   256000,
-			MaxOutputTokens: 256000,
+			ContextWindow: 256000,
 		},
 	}
 }

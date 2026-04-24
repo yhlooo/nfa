@@ -21,13 +21,12 @@ func MinimaxModels() []ModelConfig {
 		{
 			Name:      "minimax-m2.7",
 			Reasoning: true,
-			Cost: ModelCost{
+			Prices: ModelPrices{
 				Input:  2.1,
 				Output: 8.4,
 				Cached: 0.42,
 			},
-			ContextWindow:   200000,
-			MaxOutputTokens: 128000,
+			ContextWindow: 200000,
 		},
 	}
 }

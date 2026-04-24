@@ -4,11 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/core"
+	"github.com/go-logr/logr"
 	"github.com/openai/openai-go"
+	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/param"
 	"github.com/openai/openai-go/shared"
 )
@@ -76,8 +79,8 @@ func (g *ModelGenerator) WithMessages(messages []*ai.Message) *ModelGenerator {
 			}
 			if len(toolCalls) > 0 {
 				am.ToolCalls = toolCalls
-				am.SetExtraFields(map[string]any{g.reasoningContentField: concatenateReasoningContent(msg.Content)})
 			}
+			am.SetExtraFields(map[string]any{g.reasoningContentField: concatenateReasoningContent(msg.Content)})
 			oaiMessages = append(oaiMessages, openai.ChatCompletionMessageParamUnion{
 				OfAssistant: &am,
 			})
@@ -190,7 +193,11 @@ func (g *ModelGenerator) Generate(
 
 // generateStream 对话补全流式生成
 func (g *ModelGenerator) generateStream(ctx context.Context, handleChunk core.StreamCallback[*ai.ModelResponseChunk]) (*ai.ModelResponse, error) {
-	stream := g.client.Chat.Completions.NewStreaming(ctx, *g.request)
+	logger := logr.FromContextOrDiscard(ctx)
+	stream := g.client.Chat.Completions.NewStreaming(
+		ctx, *g.request,
+		option.WithJSONSet("stream_options.include_usage", true),
+	)
 	defer func() { _ = stream.Close() }()
 
 	var fullResponse ai.ModelResponse
@@ -215,107 +222,119 @@ func (g *ModelGenerator) generateStream(ctx context.Context, handleChunk core.St
 
 	for stream.Next() {
 		chunk := stream.Current()
-		if len(chunk.Choices) > 0 {
-			choice := chunk.Choices[0]
-			modelChunk := &ai.ModelResponseChunk{}
 
-			switch choice.FinishReason {
-			case "tool_calls", "stop":
-				fullResponse.FinishReason = ai.FinishReasonStop
-			case "length":
-				fullResponse.FinishReason = ai.FinishReasonLength
-			case "content_filter":
-				fullResponse.FinishReason = ai.FinishReasonBlocked
-			case "function_call":
-				fullResponse.FinishReason = ai.FinishReasonOther
-			default:
-				fullResponse.FinishReason = ai.FinishReasonUnknown
+		fullResponse.Usage.InputTokens += int(chunk.Usage.PromptTokens)
+		fullResponse.Usage.OutputTokens += int(chunk.Usage.CompletionTokens)
+		fullResponse.Usage.ThoughtsTokens += int(chunk.Usage.CompletionTokensDetails.ReasoningTokens)
+		if chunk.Usage.PromptTokensDetails.CachedTokens > 0 {
+			fullResponse.Usage.CachedContentTokens += int(chunk.Usage.PromptTokensDetails.CachedTokens)
+		} else {
+			logger.V(1).Info(fmt.Sprintf("usage raw: %s", chunk.Usage.RawJSON()))
+			cached, err := strconv.ParseInt(chunk.Usage.JSON.ExtraFields["prompt_cache_hit_tokens"].Raw(), 10, 64)
+			if err == nil {
+				fullResponse.Usage.CachedContentTokens += int(cached)
 			}
+		}
+		fullResponse.Usage.TotalTokens += int(chunk.Usage.TotalTokens)
 
-			// handle tool calls
-			for _, toolCall := range choice.Delta.ToolCalls {
-				// first tool call (= current tool call is nil) contains the tool call name
-				if currentToolCall != nil && toolCall.ID != "" && currentToolCall.Ref != toolCall.ID {
-					toolCallCollects = append(toolCallCollects, struct {
-						toolCall *ai.ToolRequest
-						args     string
-					}{
-						toolCall: currentToolCall,
-						args:     currentArguments,
-					})
-					currentToolCall = nil
-					currentArguments = ""
-				}
+		if len(chunk.Choices) == 0 {
+			continue
+		}
 
-				if currentToolCall == nil {
-					currentToolCall = &ai.ToolRequest{
-						Name: toolCall.Function.Name,
-						Ref:  toolCall.ID,
-					}
-				}
+		choice := chunk.Choices[0]
+		modelChunk := &ai.ModelResponseChunk{}
 
-				if toolCall.Function.Arguments != "" {
-					currentArguments += toolCall.Function.Arguments
-				}
+		switch choice.FinishReason {
+		case "tool_calls", "stop":
+			fullResponse.FinishReason = ai.FinishReasonStop
+		case "length":
+			fullResponse.FinishReason = ai.FinishReasonLength
+		case "content_filter":
+			fullResponse.FinishReason = ai.FinishReasonBlocked
+		case "function_call":
+			fullResponse.FinishReason = ai.FinishReasonOther
+		default:
+			fullResponse.FinishReason = ai.FinishReasonUnknown
+		}
 
-				modelChunk.Content = append(modelChunk.Content, ai.NewToolRequestPart(&ai.ToolRequest{
-					Name:  currentToolCall.Name,
-					Input: toolCall.Function.Arguments,
-					Ref:   currentToolCall.Ref,
-				}))
-			}
-
-			// when tool call is complete
-			if choice.FinishReason == "tool_calls" && currentToolCall != nil {
-				// parse accumulated arguments string
-				for _, toolcall := range toolCallCollects {
-					args, err := jsonStringToMap(toolcall.args)
-					if err != nil {
-						return nil, fmt.Errorf("generate error: could not parse tool args: %w", err)
-					}
-					toolcall.toolCall.Input = args
-					fullResponse.Message.Content = append(fullResponse.Message.Content, ai.NewToolRequestPart(toolcall.toolCall))
-				}
-				if currentArguments != "" {
-					args, err := jsonStringToMap(currentArguments)
-					if err != nil {
-						return nil, fmt.Errorf("generate error: could not parse tool args: %w", err)
-					}
-					currentToolCall.Input = args
-				}
-				fullResponse.Message.Content = append(fullResponse.Message.Content, ai.NewToolRequestPart(currentToolCall))
+		// handle tool calls
+		for _, toolCall := range choice.Delta.ToolCalls {
+			// first tool call (= current tool call is nil) contains the tool call name
+			if currentToolCall != nil && toolCall.ID != "" && currentToolCall.Ref != toolCall.ID {
+				toolCallCollects = append(toolCallCollects, struct {
+					toolCall *ai.ToolRequest
+					args     string
+				}{
+					toolCall: currentToolCall,
+					args:     currentArguments,
+				})
 				currentToolCall = nil
 				currentArguments = ""
 			}
 
-			msgRaw := choice.Delta.RawJSON()
-			var msgRawMap map[string]any
-			if err := json.Unmarshal([]byte(msgRaw), &msgRawMap); err != nil {
-				return nil, fmt.Errorf("generate error: unmarshal choices[0].delta error: %w", err)
+			if currentToolCall == nil {
+				currentToolCall = &ai.ToolRequest{
+					Name: toolCall.Function.Name,
+					Ref:  toolCall.ID,
+				}
 			}
 
-			// 思考
-			if reasoningContent, ok := msgRawMap[g.reasoningContentField].(string); ok {
-				part := &ai.Part{Kind: ai.PartReasoning, ContentType: "plain/text", Text: reasoningContent}
-				modelChunk.Content = append(modelChunk.Content, part)
-				fullResponse.Message.Content = append(fullResponse.Message.Content, part)
-			}
-			// 普通文本
-			if content := choice.Delta.Content; content != "" {
-				part := ai.NewTextPart(content)
-				modelChunk.Content = append(modelChunk.Content, part)
-				fullResponse.Message.Content = append(fullResponse.Message.Content, part)
+			if toolCall.Function.Arguments != "" {
+				currentArguments += toolCall.Function.Arguments
 			}
 
-			if err := handleChunk(ctx, modelChunk); err != nil {
-				return nil, fmt.Errorf("generate error: callback error: %w", err)
-			}
-
-			fullResponse.Usage.InputTokens += int(chunk.Usage.PromptTokens)
-			fullResponse.Usage.OutputTokens += int(chunk.Usage.CompletionTokens)
-			fullResponse.Usage.ThoughtsTokens += int(chunk.Usage.CompletionTokensDetails.ReasoningTokens)
-			fullResponse.Usage.TotalTokens += int(chunk.Usage.TotalTokens)
+			modelChunk.Content = append(modelChunk.Content, ai.NewToolRequestPart(&ai.ToolRequest{
+				Name:  currentToolCall.Name,
+				Input: toolCall.Function.Arguments,
+				Ref:   currentToolCall.Ref,
+			}))
 		}
+
+		// when tool call is complete
+		if choice.FinishReason == "tool_calls" && currentToolCall != nil {
+			// parse accumulated arguments string
+			for _, toolcall := range toolCallCollects {
+				args, err := jsonStringToMap(toolcall.args)
+				if err != nil {
+					return nil, fmt.Errorf("generate error: could not parse tool args: %w", err)
+				}
+				toolcall.toolCall.Input = args
+				fullResponse.Message.Content = append(fullResponse.Message.Content, ai.NewToolRequestPart(toolcall.toolCall))
+			}
+			if currentArguments != "" {
+				args, err := jsonStringToMap(currentArguments)
+				if err != nil {
+					return nil, fmt.Errorf("generate error: could not parse tool args: %w", err)
+				}
+				currentToolCall.Input = args
+			}
+			fullResponse.Message.Content = append(fullResponse.Message.Content, ai.NewToolRequestPart(currentToolCall))
+			currentToolCall = nil
+			currentArguments = ""
+		}
+
+		// 思考
+		reasoningField := choice.Delta.JSON.ExtraFields[g.reasoningContentField]
+		reasoningContent := ""
+		if reasoningField.Raw() != "" {
+			_ = json.Unmarshal([]byte(reasoningField.Raw()), &reasoningContent)
+		}
+		if reasoningContent != "" {
+			part := &ai.Part{Kind: ai.PartReasoning, ContentType: "plain/text", Text: reasoningContent}
+			modelChunk.Content = append(modelChunk.Content, part)
+			fullResponse.Message.Content = append(fullResponse.Message.Content, part)
+		}
+		// 普通文本
+		if content := choice.Delta.Content; content != "" {
+			part := ai.NewTextPart(content)
+			modelChunk.Content = append(modelChunk.Content, part)
+			fullResponse.Message.Content = append(fullResponse.Message.Content, part)
+		}
+
+		if err := handleChunk(ctx, modelChunk); err != nil {
+			return nil, fmt.Errorf("generate error: callback error: %w", err)
+		}
+
 	}
 
 	if err := stream.Err(); err != nil {
@@ -335,14 +354,26 @@ func (g *ModelGenerator) generateComplete(ctx context.Context, req *ai.ModelRequ
 	resp := &ai.ModelResponse{
 		Request: req,
 		Usage: &ai.GenerationUsage{
-			InputTokens:    int(completion.Usage.PromptTokens),
-			OutputTokens:   int(completion.Usage.CompletionTokens),
-			ThoughtsTokens: int(completion.Usage.CompletionTokensDetails.ReasoningTokens),
-			TotalTokens:    int(completion.Usage.TotalTokens),
+			InputTokens:         int(completion.Usage.PromptTokens),
+			OutputTokens:        int(completion.Usage.CompletionTokens),
+			ThoughtsTokens:      int(completion.Usage.CompletionTokensDetails.ReasoningTokens),
+			CachedContentTokens: int(completion.Usage.PromptTokensDetails.CachedTokens),
+			TotalTokens:         int(completion.Usage.TotalTokens),
 		},
 		Message: &ai.Message{
 			Role: ai.RoleModel,
 		},
+	}
+
+	logger := logr.FromContextOrDiscard(ctx)
+	if completion.Usage.PromptTokensDetails.CachedTokens > 0 {
+		resp.Usage.CachedContentTokens += int(completion.Usage.PromptTokensDetails.CachedTokens)
+	} else {
+		logger.V(1).Info(fmt.Sprintf("usage raw: %s", completion.Usage.RawJSON()))
+		cached, err := strconv.ParseInt(completion.Usage.JSON.ExtraFields["prompt_cache_hit_tokens"].Raw(), 10, 64)
+		if err == nil {
+			resp.Usage.CachedContentTokens += int(cached)
+		}
 	}
 
 	if len(completion.Choices) == 0 {

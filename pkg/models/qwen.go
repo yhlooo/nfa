@@ -23,47 +23,43 @@ func QwenModels() []ModelConfig {
 			Name:      "qwen3.5-397b-a17b",
 			Reasoning: true,
 			Vision:    true,
-			Cost: ModelCost{
+			Prices: ModelPrices{
 				Input:  3, // 128K-256K
 				Output: 18,
 			},
-			ContextWindow:   254000,
-			MaxOutputTokens: 64000,
+			ContextWindow: 254000,
 		},
 		{
 			Name:      "qwen3.6-plus",
 			Reasoning: true,
 			Vision:    true,
-			Cost: ModelCost{
+			Prices: ModelPrices{
 				Input:  2, // <= 256K
 				Output: 12,
 				Cached: 0.2,
 			},
-			ContextWindow:   991000,
-			MaxOutputTokens: 64000,
+			ContextWindow: 991000,
 		},
 		{
 			Name:      "qwen3.6-35b-a3b",
 			Reasoning: true,
 			Vision:    true,
-			Cost: ModelCost{
+			Prices: ModelPrices{
 				Input:  1.8,
 				Output: 10.8,
 			},
-			ContextWindow:   254000,
-			MaxOutputTokens: 64000,
+			ContextWindow: 254000,
 		},
 		{
 			Name:      "qwen3.6-flash",
 			Reasoning: true,
 			Vision:    true,
-			Cost: ModelCost{
+			Prices: ModelPrices{
 				Input:  1.2, // <= 256K
 				Output: 7.2,
 				Cached: 0.12,
 			},
-			ContextWindow:   991000,
-			MaxOutputTokens: 64000,
+			ContextWindow: 991000,
 		},
 	}
 }

@@ -9,7 +9,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/coder/acp-go-sdk"
-	"github.com/firebase/genkit/go/ai"
 	"github.com/go-logr/logr"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 
@@ -19,6 +18,7 @@ import (
 	"github.com/yhlooo/nfa/pkg/history"
 	i18nutil "github.com/yhlooo/nfa/pkg/i18n"
 	"github.com/yhlooo/nfa/pkg/skills"
+	"github.com/yhlooo/nfa/pkg/tokentracker"
 )
 
 // Options UI 运行选项
@@ -76,7 +76,7 @@ type Chat struct {
 
 	sessionID       acp.SessionId
 	curPrimaryModel string
-	modelUsage      ai.GenerationUsage
+	modelUsage      tokentracker.Summary
 	skills          []skills.SkillMeta
 	history         *history.History
 	historyPath     string

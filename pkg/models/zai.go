@@ -21,36 +21,33 @@ func ZAIModels() []ModelConfig {
 		{
 			Name:      "glm-5.1",
 			Reasoning: true,
-			Cost: ModelCost{
+			Prices: ModelPrices{
 				Input:  8, // > 32K
 				Output: 28,
 				Cached: 2,
 			},
-			ContextWindow:   200000,
-			MaxOutputTokens: 128000,
+			ContextWindow: 200000,
 		},
 		{
 			Name:      "glm-5",
 			Reasoning: true,
-			Cost: ModelCost{
+			Prices: ModelPrices{
 				Input:  6, // > 32K
 				Output: 22,
 				Cached: 1.5,
 			},
-			ContextWindow:   200000,
-			MaxOutputTokens: 128000,
+			ContextWindow: 200000,
 		},
 		{
 			Name:      "glm-5v-turbo",
 			Reasoning: true,
 			Vision:    true,
-			Cost: ModelCost{
+			Prices: ModelPrices{
 				Input:  7, // > 32K
 				Output: 26,
 				Cached: 1.8,
 			},
-			ContextWindow:   200000,
-			MaxOutputTokens: 128000,
+			ContextWindow: 200000,
 		},
 	}
 }

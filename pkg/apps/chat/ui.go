@@ -97,13 +97,17 @@ func (chat *Chat) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case acp.PromptResponse:
-		chat.modelUsage = agents.GetMetaCurrentModelUsageValue(typedMsg.Meta)
+		if usage, ok := agents.GetMetaCurrentModelUsageValue(typedMsg.Meta); ok {
+			chat.modelUsage = usage
+		}
 		cmds = append(cmds, chat.vp.Flush())
 		if chat.autoExitAfterResponse {
 			cmds = append(cmds, tea.Quit)
 		}
 	case acp.SessionNotification:
-		chat.modelUsage = agents.GetMetaCurrentModelUsageValue(typedMsg.Meta)
+		if usage, ok := agents.GetMetaCurrentModelUsageValue(typedMsg.Meta); ok {
+			chat.modelUsage = usage
+		}
 		cmds = append(cmds, chat.vp.Flush())
 	case acp.PromptRequest:
 		cmds = append(cmds, chat.vp.Flush())
@@ -150,11 +154,17 @@ func (chat *Chat) View() string {
 	}
 
 	modelUsageView := ""
-	if chat.modelUsage.InputTokens != 0 {
-		modelUsageView += fmt.Sprintf("↑ %s", intWithSeparator(chat.modelUsage.InputTokens))
+	if in := chat.modelUsage.TotalUsage.InputTokens; in != 0 {
+		modelUsageView += fmt.Sprintf("↑ %s", intWithSeparator(in))
+		if cached := chat.modelUsage.TotalUsage.CacheReadTokens; cached != 0 {
+			modelUsageView += fmt.Sprintf(" (cache: %s)", intWithSeparator(cached))
+		}
 	}
-	if out := chat.modelUsage.ThoughtsTokens + chat.modelUsage.ThoughtsTokens; out != 0 {
+	if out := chat.modelUsage.TotalUsage.OutputTokens; out != 0 {
 		modelUsageView += fmt.Sprintf(" | ↓ %s", intWithSeparator(out))
+	}
+	if cost := chat.modelUsage.TotalCost; !cost.IsZero() {
+		modelUsageView += fmt.Sprintf(" | 💰 %s", cost.StringFixed(2))
 	}
 	if modelUsageView != "" {
 		modelUsageView = i18nutil.TContext(chat.ctx, MsgTokenUsage) + " " + strings.TrimPrefix(modelUsageView, " | ")
@@ -191,8 +201,8 @@ func (chat *Chat) printHello() tea.Cmd {
 }
 
 // intWithSeparator 每 step 位带分隔符 sep 的表示整数的字符串
-func intWithSeparator(v int) string {
-	vStr := strconv.FormatInt(int64(v), 10)
+func intWithSeparator(v int64) string {
+	vStr := strconv.FormatInt(v, 10)
 
 	// 暂时去除负号
 	sign := ""

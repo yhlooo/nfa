@@ -23,17 +23,15 @@ type ModelConfig struct {
 	Reasoning bool `json:"reasoning,omitempty"`
 	// 是否支持视觉、图片理解
 	Vision bool `json:"vision,omitempty"`
-
-	// 价格信息
-	Cost ModelCost `json:"cost,omitempty"`
 	// 上下文窗口大小
 	ContextWindow int64 `json:"contextWindow,omitempty"`
-	// 最大输出 Token 数
-	MaxOutputTokens int64 `json:"maxOutputTokens,omitempty"`
+
+	// 价格信息
+	Prices ModelPrices `json:"prices,omitempty"`
 }
 
-// ModelCost 价格信息
-type ModelCost struct {
+// ModelPrices 价格信息
+type ModelPrices struct {
 	// 每百万输入 Token 价格
 	Input float64 `json:"input,omitempty"`
 	// 每百万输出 Token 价格

@@ -9,6 +9,7 @@ import (
 	"github.com/firebase/genkit/go/genkit"
 
 	"github.com/yhlooo/nfa/pkg/ctxutil"
+	"github.com/yhlooo/nfa/pkg/tokentracker"
 )
 
 // DefineSimpleChatFlow 定义简单对话流程
@@ -20,11 +21,17 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts ...ai.GenerateO
 			promptMsg := ai.NewUserTextMessage(in.Prompt)
 			messages = append(messages, promptMsg)
 
+			modelName := ""
+			if m, ok := ctxutil.ModelsFromContext(ctx); ok {
+				modelName = m.GetPrimary()
+			}
+
 			opts := []ai.GenerateOption{
 				ai.WithReturnToolRequests(true),
+				ai.WithMiddleware(tokentracker.ModelMiddlewareFromContext(ctx, modelName)),
 			}
-			if m, ok := ctxutil.ModelsFromContext(ctx); ok {
-				opts = append(opts, ai.WithModelName(m.GetPrimary()))
+			if modelName != "" {
+				opts = append(opts, ai.WithModelName(modelName))
 			}
 			handleStream := ctxutil.HandleStreamFnFromContext(ctx)
 			if handleStream != nil {
@@ -49,7 +56,6 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts ...ai.GenerateO
 					return output, err
 				}
 				messages = append(messages, resp.Message)
-				ctxutil.AddModelUsageToContext(ctx, resp.Usage)
 				if resp.Usage != nil {
 					output.LastContextWindow = int64(resp.Usage.InputTokens)
 				}

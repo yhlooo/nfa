@@ -23,61 +23,56 @@ func OpenRouterModels() []ModelConfig {
 			Name:      "google/gemini-3.1-pro-preview",
 			Reasoning: true,
 			Vision:    true,
-			Cost: ModelCost{
+			Prices: ModelPrices{
 				Input:  2, // <= 200K
 				Output: 12,
 				Cached: 0.2,
 			},
-			ContextWindow:   1050000,
-			MaxOutputTokens: 65500,
+			ContextWindow: 1050000,
 		},
 		{
 			Name:      "openai/gpt-5.4",
 			Reasoning: true,
 			Vision:    true,
-			Cost: ModelCost{
+			Prices: ModelPrices{
 				Input:  2.5, // <= 272K
 				Output: 15,
 				Cached: 0.25,
 			},
-			ContextWindow:   1050000,
-			MaxOutputTokens: 128000,
+			ContextWindow: 1050000,
 		},
 		{
 			Name:      "anthropic/claude-sonnet-4.6",
 			Reasoning: true,
 			Vision:    true,
-			Cost: ModelCost{
+			Prices: ModelPrices{
 				Input:  3,
 				Output: 15,
 				Cached: 0.3,
 			},
-			ContextWindow:   1000000,
-			MaxOutputTokens: 128000,
+			ContextWindow: 1000000,
 		},
 		{
 			Name:      "anthropic/claude-opus-4.7",
 			Reasoning: true,
 			Vision:    true,
-			Cost: ModelCost{
+			Prices: ModelPrices{
 				Input:  5,
 				Output: 25,
 				Cached: 0.5,
 			},
-			ContextWindow:   1000000,
-			MaxOutputTokens: 128000,
+			ContextWindow: 1000000,
 		},
 		{
 			Name:      "x-ai/grok-4.20",
 			Reasoning: true,
 			Vision:    true,
-			Cost: ModelCost{
+			Prices: ModelPrices{
 				Input:  2,
 				Output: 6,
 				Cached: 0.2,
 			},
-			ContextWindow:   2000000,
-			MaxOutputTokens: 2000000,
+			ContextWindow: 2000000,
 		},
 	}
 }
