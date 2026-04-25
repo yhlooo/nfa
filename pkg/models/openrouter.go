@@ -29,6 +29,7 @@ func OpenRouterModels() []ModelConfig {
 				Cached: 0.2,
 			},
 			ContextWindow: 1050000,
+			Score:         9,
 		},
 		{
 			Name:      "openai/gpt-5.4",
@@ -40,6 +41,7 @@ func OpenRouterModels() []ModelConfig {
 				Cached: 0.25,
 			},
 			ContextWindow: 1050000,
+			Score:         10,
 		},
 		{
 			Name:      "anthropic/claude-sonnet-4.6",
@@ -51,6 +53,7 @@ func OpenRouterModels() []ModelConfig {
 				Cached: 0.3,
 			},
 			ContextWindow: 1000000,
+			Score:         9,
 		},
 		{
 			Name:      "anthropic/claude-opus-4.7",
@@ -62,6 +65,7 @@ func OpenRouterModels() []ModelConfig {
 				Cached: 0.5,
 			},
 			ContextWindow: 1000000,
+			Score:         10,
 		},
 		{
 			Name:      "x-ai/grok-4.20",
@@ -73,6 +77,7 @@ func OpenRouterModels() []ModelConfig {
 				Cached: 0.2,
 			},
 			ContextWindow: 2000000,
+			Score:         9,
 		},
 	}
 }

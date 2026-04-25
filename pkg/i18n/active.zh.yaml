@@ -55,6 +55,9 @@ commands.RootOptsResumeDesc:
 commands.RootOptsVisionModelDesc:
     hash: sha1-f4e06966166e382f73a317bd149624b959f482c2
     other: 当前会话使用的视觉理解模型
+commands.ScoreTag:
+    hash: sha1-489f4877244a299131d309f0ca10733c1a41251c
+    other: 评分
 commands.VersionOptsOutputFormatDesc:
     hash: sha1-de77ee0b2f5735c84d34c64306b85f45fa9e62b7
     other: 输出格式。可选值：(json)

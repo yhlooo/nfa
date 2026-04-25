@@ -27,6 +27,7 @@ func MinimaxModels() []ModelConfig {
 				Cached: 0.42,
 			},
 			ContextWindow: 200000,
+			Score:         5,
 		},
 	}
 }

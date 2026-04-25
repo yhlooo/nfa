@@ -28,6 +28,7 @@ func QwenModels() []ModelConfig {
 				Output: 18,
 			},
 			ContextWindow: 254000,
+			Score:         7,
 		},
 		{
 			Name:      "qwen3.6-plus",
@@ -39,6 +40,7 @@ func QwenModels() []ModelConfig {
 				Cached: 0.2,
 			},
 			ContextWindow: 991000,
+			Score:         8,
 		},
 		{
 			Name:      "qwen3.6-35b-a3b",
@@ -49,6 +51,7 @@ func QwenModels() []ModelConfig {
 				Output: 10.8,
 			},
 			ContextWindow: 254000,
+			Score:         4,
 		},
 		{
 			Name:      "qwen3.6-flash",
@@ -60,6 +63,7 @@ func QwenModels() []ModelConfig {
 				Cached: 0.12,
 			},
 			ContextWindow: 991000,
+			Score:         5,
 		},
 	}
 }

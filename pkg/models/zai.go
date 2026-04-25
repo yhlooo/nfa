@@ -27,6 +27,7 @@ func ZAIModels() []ModelConfig {
 				Cached: 2,
 			},
 			ContextWindow: 200000,
+			Score:         7,
 		},
 		{
 			Name:      "glm-5",
@@ -37,6 +38,7 @@ func ZAIModels() []ModelConfig {
 				Cached: 1.5,
 			},
 			ContextWindow: 200000,
+			Score:         6,
 		},
 		{
 			Name:      "glm-5v-turbo",
@@ -48,6 +50,7 @@ func ZAIModels() []ModelConfig {
 				Cached: 1.8,
 			},
 			ContextWindow: 200000,
+			Score:         5,
 		},
 	}
 }

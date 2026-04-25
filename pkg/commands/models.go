@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/olekukonko/tablewriter"
@@ -61,6 +62,27 @@ func runModelsList(ctx context.Context) error {
 	return outputModelList(ctx, agent.AvailableModels())
 }
 
+// scoreToStars 将 0-10 的评分转换为星标展示
+func scoreToStars(score int) string {
+	if score < 0 {
+		score = 0
+	}
+	if score > 10 {
+		score = 10
+	}
+	if score == 0 {
+		return ""
+	}
+	stars := make([]string, 0, 5)
+	for range score / 2 {
+		stars = append(stars, "⭐️")
+	}
+	if score%2 == 1 {
+		stars = append(stars, "✨")
+	}
+	return strings.Join(stars, " ")
+}
+
 // outputModelList 输出模型列表
 func outputModelList(ctx context.Context, modelList []models.ModelConfig) error {
 	t := tablewriter.NewTable(os.Stdout,
@@ -69,6 +91,7 @@ func outputModelList(ctx context.Context, modelList []models.ModelConfig) error 
 			i18n.TContext(ctx, MsgReasoningTag),
 			i18n.TContext(ctx, MsgVisionTag),
 			i18n.TContext(ctx, MsgModelContextTag),
+			i18n.TContext(ctx, MsgScoreTag),
 		}),
 		tablewriter.WithRendition(tw.Rendition{
 			Borders: tw.BorderNone,
@@ -76,7 +99,7 @@ func outputModelList(ctx context.Context, modelList []models.ModelConfig) error 
 				Separators: tw.Separators{BetweenColumns: tw.Off},
 			},
 		}),
-		tablewriter.WithAlignment([]tw.Align{tw.AlignLeft, tw.AlignCenter, tw.AlignCenter, tw.AlignRight}),
+		tablewriter.WithAlignment([]tw.Align{tw.AlignLeft, tw.AlignCenter, tw.AlignCenter, tw.AlignRight, tw.AlignLeft}),
 	)
 	defer func() { _ = t.Close() }()
 
@@ -95,7 +118,7 @@ func outputModelList(ctx context.Context, modelList []models.ModelConfig) error 
 			ctxSize = strconv.FormatInt(model.ContextWindow, 10)
 		}
 
-		_ = t.Append([]string{model.Name, reasoning, vision, ctxSize})
+		_ = t.Append([]string{model.Name, reasoning, vision, ctxSize, scoreToStars(model.Score)})
 	}
 
 	return t.Render()

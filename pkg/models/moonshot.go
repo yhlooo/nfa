@@ -28,6 +28,7 @@ func MoonshotModels() []ModelConfig {
 				Cached: 1.1,
 			},
 			ContextWindow: 256000,
+			Score:         7,
 		},
 		{
 			Name:      "kimi-k2.5",
@@ -39,6 +40,7 @@ func MoonshotModels() []ModelConfig {
 				Cached: 0.7,
 			},
 			ContextWindow: 256000,
+			Score:         6,
 		},
 	}
 }

@@ -27,6 +27,7 @@ func DeepSeekModels() []ModelConfig {
 				Cached: 1,
 			},
 			ContextWindow: 1000000,
+			Score:         10,
 		},
 		{
 			Name:      "deepseek-v4-flash",
@@ -37,6 +38,7 @@ func DeepSeekModels() []ModelConfig {
 				Cached: 0.2,
 			},
 			ContextWindow: 1000000,
+			Score:         8,
 		},
 	}
 }

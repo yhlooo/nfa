@@ -50,6 +50,8 @@ var (
 	MsgVisionTag       = &i18n.Message{ID: "commands.VisionTag", Other: "Vision"}
 	MsgModelContextTag = &i18n.Message{ID: "commands.ModelContextTag", Other: "Context"}
 
+	MsgScoreTag = &i18n.Message{ID: "commands.ScoreTag", Other: "Score"}
+
 	MsgCmdShortDescOtter = &i18n.Message{ID: "commands.CmdShortDescOtter", Other: "Print Otter image"}
 
 	MsgOtterOptsColorDesc      = &i18n.Message{ID: "commands.OtterOptsColorDesc", Other: "Print with color"}

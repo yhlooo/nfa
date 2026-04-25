@@ -28,6 +28,9 @@ type ModelConfig struct {
 
 	// 价格信息
 	Prices ModelPrices `json:"prices,omitempty"`
+
+	// 效果评分，0-10
+	Score int `json:"score,omitempty"`
 }
 
 // ModelPrices 价格信息
