@@ -12,7 +12,10 @@ NFA 的配置文件位于 `~/.nfa/nfa.json`。
 {
   "modelProviders": [...],
   "defaultModels": {...},
-  "dataProviders": {...}
+  "dataProviders": {...},
+  "channels": {...},
+  "language": "zh",
+  "maxContextWindow": 200000
 }
 ```
 
@@ -31,7 +34,9 @@ NFA 的配置文件位于 `~/.nfa/nfa.json`。
       "ollama": {
         "serverAddress": "http://localhost:11434",
         "timeout": 300,
-        "models": ["llama2"]
+        "models": [
+          {"name": "llama2"}
+        ]
       }
     }
   ]
@@ -41,7 +46,7 @@ NFA 的配置文件位于 `~/.nfa/nfa.json`。
 字段说明：
 - `serverAddress` - Ollama 服务端地址，默认 `http://localhost:11434`
 - `timeout` - 模型响应超时时间（秒），默认 `300`
-- `models` - 模型名列表（数组），空表示使用 Ollama 已下载的所有模型
+- `models` - 模型配置列表（对象数组），空表示使用 Ollama 已下载的所有模型
 
 #### Deepseek
 
@@ -56,6 +61,15 @@ NFA 的配置文件位于 `~/.nfa/nfa.json`。
   ]
 }
 ```
+
+字段说明：
+- `apiKey` - API 密钥（必填）
+- `baseURL` - API 基础地址（可选，默认 `https://api.deepseek.com`）
+- `models` - 模型配置列表（可选，默认使用预设模型）
+
+预设模型：
+- `deepseek-v4-pro` - 支持推理，1M 上下文
+- `deepseek-v4-flash` - 支持推理，1M 上下文，轻量快速
 
 #### OpenAI Compatible
 
@@ -78,13 +92,13 @@ NFA 的配置文件位于 `~/.nfa/nfa.json`。
 - `baseURL` - API 基础地址
 - `apiKey` - API 密钥
 
-#### MiniMax
+#### ZAI（智谱 AI）
 
 ```json
 {
   "modelProviders": [
     {
-      "minimax": {
+      "z-ai": {
         "apiKey": "your-api-key"
       }
     }
@@ -94,12 +108,38 @@ NFA 的配置文件位于 `~/.nfa/nfa.json`。
 
 字段说明：
 - `apiKey` - API 密钥（必填）
-- `baseURL` - API 基础地址（可选，默认 `https://api.minimax.chat/v1`）
+- `baseURL` - API 基础地址（可选，默认 `https://open.bigmodel.cn/api/paas/v4/`）
 - `models` - 模型配置列表（可选，默认使用预设模型）
 
 预设模型：
-- `minimax-m2.5` - 支持推理，128K 上下文
-- `minimax-m2.7` - 支持推理，256K 上下文
+- `glm-5.1` - 支持推理，200K 上下文
+- `glm-5` - 支持推理，200K 上下文
+- `glm-5v-turbo` - 支持推理和视觉理解，200K 上下文
+
+#### Qwen（通义千问）
+
+```json
+{
+  "modelProviders": [
+    {
+      "qwen": {
+        "apiKey": "your-api-key"
+      }
+    }
+  ]
+}
+```
+
+字段说明：
+- `apiKey` - API 密钥（必填）
+- `baseURL` - API 基础地址（可选，默认 `https://dashscope.aliyuncs.com/compatible-mode/v1`）
+- `models` - 模型配置列表（可选，默认使用预设模型）
+
+预设模型：
+- `qwen3.5-397b-a17b` - 支持推理和视觉理解，254K 上下文
+- `qwen3.6-plus` - 支持推理和视觉理解，991K 上下文
+- `qwen3.6-35b-a3b` - 支持推理和视觉理解，254K 上下文
+- `qwen3.6-flash` - 支持推理和视觉理解，991K 上下文
 
 #### Moonshot AI（月之暗面）
 
@@ -121,38 +161,56 @@ NFA 的配置文件位于 `~/.nfa/nfa.json`。
 - `models` - 模型配置列表（可选，默认使用预设模型）
 
 预设模型：
-- `kimi-k2.5` - 支持推理和视觉理解，256K 上下文，256K 最大输出
+- `kimi-k2.6` - 支持推理和视觉理解，256K 上下文
+- `kimi-k2.5` - 支持推理和视觉理解，256K 上下文
 
-**模型描述字段**:
-
-所有模型提供商都支持为每个模型添加描述信息，帮助你在交互式选择菜单中了解模型特点。
+#### MiniMax
 
 ```json
 {
   "modelProviders": [
     {
-      "ollama": {
-        "serverAddress": "http://localhost:11434",
-        "timeout": 300,
-        "models": [
-          {
-            "name": "llama3.2",
-            "description": "Meta 的开源模型，擅长通用对话和推理"
-          },
-          {
-            "name": "qwen3:14b",
-            "description": "阿里云通义千问，中英文双语能力强，适合金融分析"
-          },
-          {
-            "name": "mistral",
-            "description": "轻量级快速模型，适合简单任务"
-          }
-        ]
+      "minimax": {
+        "apiKey": "your-api-key"
       }
     }
   ]
 }
 ```
+
+字段说明：
+- `apiKey` - API 密钥（必填）
+- `baseURL` - API 基础地址（可选，默认 `https://api.minimaxi.com/v1`）
+- `models` - 模型配置列表（可选，默认使用预设模型）
+
+预设模型：
+- `minimax-m2.7` - 支持推理，200K 上下文
+
+#### OpenRouter
+
+```json
+{
+  "modelProviders": [
+    {
+      "openrouter": {
+        "apiKey": "your-api-key"
+      }
+    }
+  ]
+}
+```
+
+字段说明：
+- `apiKey` - API 密钥（必填）
+- `baseURL` - API 基础地址（可选，默认 `https://openrouter.ai/api/v1`）
+- `models` - 模型配置列表（可选，默认使用预设模型）
+
+预设模型：
+- `google/gemini-3.1-pro-preview` - 支持推理和视觉理解，1M 上下文
+- `openai/gpt-5.4` - 支持推理和视觉理解，1M 上下文
+- `anthropic/claude-sonnet-4.6` - 支持推理和视觉理解，1M 上下文
+- `anthropic/claude-opus-4.7` - 支持推理和视觉理解，1M 上下文
+- `x-ai/grok-4.20` - 支持推理和视觉理解，2M 上下文
 
 **模型配置字段**:
 
@@ -160,15 +218,13 @@ NFA 的配置文件位于 `~/.nfa/nfa.json`。
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `name` | string | ✓ | 模型名称 |
-| `description` | string | - | 模型描述，显示在选择菜单中 |
-| `reasoning` | boolean | - | 是否支持推理/思考模式 |
-| `vision` | boolean | - | 是否支持视觉/图片理解 |
-| `cost.input` | float | - | 每 1K 输入 Token 价格 |
-| `cost.output` | float | - | 每 1K 输出 Token 价格 |
-| `cost.cached` | float | - | 每 1K 缓存 Token 价格 |
-| `contextWindow` | int64 | - | 上下文窗口大小（Token 数） |
-| `maxOutputTokens` | int64 | - | 最大输出 Token 数 |
+| `name` | string | 是 | 模型名称 |
+| `reasoning` | boolean | 否 | 是否支持推理/思考模式 |
+| `vision` | boolean | 否 | 是否支持视觉/图片理解 |
+| `prices.input` | float | 否 | 每百万输入 Token 价格 |
+| `prices.output` | float | 否 | 每百万输出 Token 价格 |
+| `prices.cached` | float | 否 | 每百万缓存 Token 价格 |
+| `contextWindow` | int64 | 否 | 上下文窗口大小（Token 数） |
 
 **完整配置示例**:
 
@@ -182,27 +238,21 @@ NFA 的配置文件位于 `~/.nfa/nfa.json`。
         "models": [
           {
             "name": "llama3.2",
-            "description": "Meta Llama 3.2，通用对话能力强，适合复杂推理任务",
             "reasoning": true,
             "vision": false,
-            "contextWindow": 128000,
-            "maxOutputTokens": 4096
+            "contextWindow": 128000
           },
           {
             "name": "qwen3:14b",
-            "description": "通义千问 3 14B，中英双语平衡，金融领域表现优秀",
             "reasoning": true,
             "vision": false,
-            "contextWindow": 32768,
-            "maxOutputTokens": 8192
+            "contextWindow": 32768
           },
           {
             "name": "mistral",
-            "description": "Mistral 7B，轻量快速，适合简单问答和快速响应",
             "reasoning": false,
             "vision": false,
-            "contextWindow": 8192,
-            "maxOutputTokens": 2048
+            "contextWindow": 8192
           }
         ]
       }
@@ -212,13 +262,12 @@ NFA 的配置文件位于 `~/.nfa/nfa.json`。
         "apiKey": "your-api-key",
         "models": [
           {
-            "name": "deepseek-chat",
-            "description": "DeepSeek Chat，深度推理能力强，适合复杂分析",
+            "name": "deepseek-v4-pro",
             "reasoning": true,
             "vision": false,
-            "cost": {
-              "input": 0.14,
-              "output": 0.28
+            "prices": {
+              "input": 12,
+              "output": 24
             }
           }
         ]
@@ -227,26 +276,10 @@ NFA 的配置文件位于 `~/.nfa/nfa.json`。
   ],
   "defaultModels": {
     "primary": "ollama/llama3.2",
-    "light": "ollama/mistral",
     "vision": ""
   }
 }
 ```
-
-**描述显示效果**:
-
-在交互式模型选择菜单中，描述会显示在模型名称后面：
-
-```
-Select primary model
-
- ❯ 1. ollama/llama3.2 - Meta Llama 3.2，通用对话能力强，适合复杂推理任务
-   2. ollama/qwen3:14b - 通义千问 3 14B，中英双语平衡，金融领域表现优秀
-   3. ollama/mistral - Mistral 7B，轻量快速，适合简单问答和快速响应
-   4. deepseek/deepseek-chat - DeepSeek Chat，深度推理能力强，适合复杂分析
-```
-
-描述超过 80 字符时会自动截断并显示 "..."。
 
 ### defaultModels
 
@@ -256,7 +289,6 @@ Select primary model
 {
   "defaultModels": {
     "primary": "ollama/llama2",
-    "light": "ollama/llama2",
     "vision": ""
   }
 }
@@ -264,8 +296,7 @@ Select primary model
 
 字段说明：
 - `primary` - 主模型，用于回答用户问题
-- `light` - 轻量模型，用于处理简单事务。为空时使用主模型
-- `vision` - 视觉模型，用于处理图片理解任务
+- `vision` - 视觉模型，用于处理图片理解任务。为空时自动回退到主模型
 
 ### dataProviders
 
@@ -302,6 +333,69 @@ Select primary model
 - `secretKey` - 腾讯云 Secret Key
 - `endpoint` - 服务端点（可选）
 
+### channels
+
+消息通道配置，用于通过外部平台与 Agent 交互。
+
+```json
+{
+  "channels": {
+    "enabled": true,
+    "channels": [
+      {
+        "wecomAIBot": {
+          "botID": "your-bot-id",
+          "secret": "your-bot-secret"
+        }
+      },
+      {
+        "yuanbaoBot": {
+          "appID": "your-app-id",
+          "appSecret": "your-app-secret"
+        }
+      }
+    ]
+  }
+}
+```
+
+字段说明：
+- `enabled` - 是否启用消息通道
+- `channels` - 通道配置列表
+
+#### 企业微信智能机器人
+
+- `botID` - 机器人 ID（必填）
+- `secret` - 机器人密钥（必填）
+- `url` - 自定义回调 URL（可选）
+
+#### 元宝机器人
+
+- `appID` - 应用 ID（必填）
+- `appSecret` - 应用密钥（必填）
+- `baseURL` - API 基础地址（可选）
+- `websocketURL` - WebSocket 地址（可选）
+
+### language
+
+设置界面语言，可选值为 `en`（英文）或 `zh`（中文）。不设置时自动检测系统语言。
+
+```json
+{
+  "language": "zh"
+}
+```
+
+### maxContextWindow
+
+最大上下文窗口大小（Token 数），默认 200K。用于限制 Agent 对话的上下文长度。
+
+```json
+{
+  "maxContextWindow": 200000
+}
+```
+
 ## 完整配置示例
 
 ```json
@@ -311,7 +405,7 @@ Select primary model
       "ollama": {
         "serverAddress": "http://localhost:11434",
         "timeout": 300,
-        "models": ["llama2"]
+        "models": [{"name": "llama2"}]
       }
     },
     {
@@ -329,7 +423,6 @@ Select primary model
   ],
   "defaultModels": {
     "primary": "ollama/llama2",
-    "light": "ollama/llama2",
     "vision": ""
   },
   "dataProviders": {
@@ -341,6 +434,10 @@ Select primary model
       "secretKey": "your-secret-key",
       "endpoint": ""
     }
-  }
+  },
+  "channels": {
+    "enabled": false
+  },
+  "language": "zh"
 }
 ```

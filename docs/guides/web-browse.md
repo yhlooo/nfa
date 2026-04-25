@@ -36,8 +36,7 @@ WebBrowse 工具提供了完整的浏览器能力：
 ```json
 {
   "defaultModels": {
-    "main": "ollama/llama2",
-    "fast": "ollama/llama2",
+    "primary": "ollama/llama2",
     "vision": "openaiCompatible/gpt-4-vision-preview"
   }
 }
@@ -213,11 +212,10 @@ Agent 会根据任务需求自动选择合适的工具：
     }
   ],
   "defaultModels": {
-    "main": "ollama/llama2",
-    "fast": "ollama/llama2",
+    "primary": "ollama/llama2",
     "vision": "openai/gpt-4-vision-preview"
   },
-  "dataProviders": [...]
+  "dataProviders": {...}
 }
 ```
 

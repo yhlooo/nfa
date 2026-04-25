@@ -156,10 +156,13 @@ Module 名称：`yuanbao_openclaw_proxy`
 
 ```protobuf
 message AuthBindReq {
-    string     bizId      = 1;  // 固定 "ybBot"
-    AuthInfo   authInfo   = 2;
-    DeviceInfo deviceInfo = 3;
-    string     envName    = 5;  // 可选
+    string     bizId         = 1;  // 固定 "ybBot"
+    AuthInfo   authInfo      = 2;
+    DeviceInfo deviceInfo    = 3;
+    Container  containerInfo = 4;  // 可选
+    string     envName       = 5;  // 可选
+    uint32     bindMode      = 6;  // 可选
+    string     forceToken    = 7;  // 可选
 }
 
 message AuthInfo {
@@ -171,7 +174,9 @@ message AuthInfo {
 message DeviceInfo {
     string appVersion         = 1;
     string appOperationSystem = 2;
+    // ... 其他设备信息字段
     string instanceId         = 10; // 固定 "16"
+    // ... 其他设备信息字段
     string botVersion         = 24;
 }
 ```
@@ -180,8 +185,11 @@ message DeviceInfo {
 
 ```protobuf
 message AuthBindRsp {
-    int32  code    = 1;
-    string message = 2;
+    int32  code      = 1;
+    string message   = 2;
+    string connectId = 3;
+    uint64 timestamp = 4;
+    string clientIp  = 5;
 }
 ```
 
@@ -214,7 +222,11 @@ cmd 为 `inbound_message`，cmdType 为 `2`，`data` 字段为 **JSON 字符串*
   "from_account": "<发送者 ID>",
   "to_account": "<接收者 ID>",
   "sender_nickname": "<发送者昵称>",
+  "group_id": "<群组 ID（群组消息时有）>",
+  "group_code": "<群组代码（群组消息时有）>",
+  "group_name": "<群组名称（群组消息时有）>",
   "msg_seq": 2705291063,
+  "msg_random": 123456,
   "msg_time": 1776488290,
   "msg_key": "<消息 key>",
   "msg_id": "<消息 ID>",
@@ -227,6 +239,7 @@ cmd 为 `inbound_message`，cmdType 为 `2`，`data` 字段为 **JSON 字符串*
     }
   ],
   "cloud_custom_data": "{}",
+  "event_time": 1776488290,
   "bot_owner_id": "<所有者 ID>",
   "claw_msg_type": 2,
   "log_ext": {
