@@ -23,6 +23,7 @@ import (
 	"github.com/yhlooo/nfa/pkg/channels/wecomaibot"
 	"github.com/yhlooo/nfa/pkg/channels/yuanbaobot"
 	"github.com/yhlooo/nfa/pkg/configs"
+	"github.com/yhlooo/nfa/pkg/eula"
 	"github.com/yhlooo/nfa/pkg/i18n"
 	"github.com/yhlooo/nfa/pkg/version"
 )
@@ -150,6 +151,13 @@ func NewCommand(name string) *cobra.Command {
 			}
 
 			cmd.SetContext(ctx)
+
+			// EULA 检查（仅对主命令生效）
+			if cmd.Name() == name {
+				if err := eula.Check(ctx, globalOpts.DataRoot); err != nil {
+					return err
+				}
+			}
 
 			return nil
 		},

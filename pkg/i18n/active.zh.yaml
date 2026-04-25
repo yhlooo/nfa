@@ -64,6 +64,18 @@ commands.VersionOptsOutputFormatDesc:
 commands.VisionTag:
     hash: sha1-40b0906c4f3b5a2658a393a02faf70a3ff416418
     other: 视觉
+eula.AgreePrompt:
+    hash: sha1-bad3336ef2040a0afd4f3f47f5af9ce164157fa9
+    other: '是否同意以上条款？(y/n): '
+eula.Declined:
+    hash: sha1-9c715b62d72373e3d00c3bab79cb224680011ff0
+    other: 您必须同意最终用户许可协议才能使用本软件。正在退出。
+eula.InvalidInput:
+    hash: sha1-2a9197efbccedce5dd920185917065180fa132a8
+    other: 输入无效，请输入 'y'（同意）或 'n'（拒绝）。
+eula.Updated:
+    hash: sha1-d3277a817ac74ad5a28c891f6e503ba20d9b4e97
+    other: 最终用户许可协议已更新，请查看以下新条款：
 skills.ShortTermTrendForecastDesc:
     hash: sha1-d1f1ca49c1c0c3a0326b93049b3bcfb9e1753759
     other: 对股票短期趋势（数天、一周、一个月内）进行分析和预测
