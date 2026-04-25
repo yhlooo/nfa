@@ -7,11 +7,9 @@ import (
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/core/api"
 	"github.com/firebase/genkit/go/genkit"
-	"github.com/firebase/genkit/go/plugins/ollama"
 	"github.com/go-logr/logr"
 
 	"github.com/yhlooo/nfa/pkg/agents/flows"
-	"github.com/yhlooo/nfa/pkg/genkitplugins/oai"
 	"github.com/yhlooo/nfa/pkg/models"
 	"github.com/yhlooo/nfa/pkg/tools/fs"
 	"github.com/yhlooo/nfa/pkg/tools/webbrowse"
@@ -83,45 +81,17 @@ func NewGenkitWithModels(
 
 	// 确定插件
 	var (
-		ollamaPlugin = &ollama.Ollama{}
-		oaiPlugins   = map[int]*oai.OpenAICompatible{}
-		plugins      []api.Plugin
-		modelConfigs []models.ModelConfig
+		modelRegisters []models.ModelRegister
+		plugins        []api.Plugin
+		modelConfigs   []models.ModelConfig
 	)
-	for i, p := range providers {
-		switch {
-		case p.Ollama != nil:
-			ollamaPlugin = p.Ollama.OllamaPlugin()
-			plugins = append(plugins, ollamaPlugin)
-		case p.ZAI != nil:
-			plugin := p.ZAI.Plugin()
-			plugins = append(plugins, plugin)
-			oaiPlugins[i] = plugin
-		case p.Qwen != nil:
-			plugin := p.Qwen.Plugin()
-			plugins = append(plugins, plugin)
-			oaiPlugins[i] = plugin
-		case p.MoonshotAI != nil:
-			plugin := p.MoonshotAI.Plugin()
-			plugins = append(plugins, plugin)
-			oaiPlugins[i] = plugin
-		case p.Deepseek != nil:
-			plugin := p.Deepseek.Plugin()
-			plugins = append(plugins, plugin)
-			oaiPlugins[i] = plugin
-		case p.Minimax != nil:
-			plugin := p.Minimax.Plugin()
-			plugins = append(plugins, plugin)
-			oaiPlugins[i] = plugin
-		case p.OpenRouter != nil:
-			plugin := p.OpenRouter.Plugin()
-			plugins = append(plugins, plugin)
-			oaiPlugins[i] = plugin
-		case p.OpenAICompatible != nil:
-			plugin := p.OpenAICompatible.OpenAICompatiblePlugin()
-			plugins = append(plugins, plugin)
-			oaiPlugins[i] = plugin
+	for _, p := range providers {
+		modelRegister := p.Register()
+		if modelRegister == nil {
+			continue
 		}
+		plugins = append(plugins, modelRegister.GenkitPlugin())
+		modelRegisters = append(modelRegisters, modelRegister)
 	}
 
 	genkitOpts := []genkit.GenkitOption{
@@ -133,65 +103,13 @@ func NewGenkitWithModels(
 	g := genkit.Init(ctx, genkitOpts...)
 
 	// 注册模型
-	for i, p := range providers {
-		switch {
-		case p.Ollama != nil:
-			registeredModels, err := p.Ollama.RegisterModels(g, ollamaPlugin)
-			if err != nil {
-				logger.Error(err, "define ollama models error")
-				continue
-			}
-			modelConfigs = append(modelConfigs, registeredModels...)
-		case p.ZAI != nil:
-			registeredModels, err := p.ZAI.RegisterModels(ctx, g, oaiPlugins[i])
-			if err != nil {
-				logger.Error(err, "define z-ai models error")
-				continue
-			}
-			modelConfigs = append(modelConfigs, registeredModels...)
-		case p.Qwen != nil:
-			registeredModels, err := p.Qwen.RegisterModels(ctx, g, oaiPlugins[i])
-			if err != nil {
-				logger.Error(err, "define qwen models error")
-				continue
-			}
-			modelConfigs = append(modelConfigs, registeredModels...)
-		case p.MoonshotAI != nil:
-			registeredModels, err := p.MoonshotAI.RegisterModels(ctx, g, oaiPlugins[i])
-			if err != nil {
-				logger.Error(err, "define moonshot models error")
-				continue
-			}
-			modelConfigs = append(modelConfigs, registeredModels...)
-		case p.Deepseek != nil:
-			registeredModels, err := p.Deepseek.RegisterModels(ctx, g, oaiPlugins[i])
-			if err != nil {
-				logger.Error(err, "define deepseek models error")
-				continue
-			}
-			modelConfigs = append(modelConfigs, registeredModels...)
-		case p.Minimax != nil:
-			registeredModels, err := p.Minimax.RegisterModels(ctx, g, oaiPlugins[i])
-			if err != nil {
-				logger.Error(err, "define minimax models error")
-				continue
-			}
-			modelConfigs = append(modelConfigs, registeredModels...)
-		case p.OpenRouter != nil:
-			registeredModels, err := p.OpenRouter.RegisterModels(ctx, g, oaiPlugins[i])
-			if err != nil {
-				logger.Error(err, "define openrouter models error")
-				continue
-			}
-			modelConfigs = append(modelConfigs, registeredModels...)
-		case p.OpenAICompatible != nil:
-			registeredModels, err := p.OpenAICompatible.RegisterModels(g, oaiPlugins[i])
-			if err != nil {
-				logger.Error(err, "define openai compatible models error")
-				continue
-			}
-			modelConfigs = append(modelConfigs, registeredModels...)
+	for i, reg := range modelRegisters {
+		registeredModels, err := reg.RegisterModels(ctx, g)
+		if err != nil {
+			logger.Error(err, fmt.Sprintf("register model for provider %d error", i))
+			continue
 		}
+		modelConfigs = append(modelConfigs, registeredModels...)
 	}
 
 	// 警告：如果没有配置任何模型

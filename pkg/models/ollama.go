@@ -1,7 +1,10 @@
 package models
 
 import (
+	"context"
+
 	"github.com/firebase/genkit/go/ai"
+	"github.com/firebase/genkit/go/core/api"
 	"github.com/firebase/genkit/go/genkit"
 	"github.com/firebase/genkit/go/plugins/ollama"
 )
@@ -30,23 +33,35 @@ func (opts *OllamaOptions) Complete() {
 	}
 }
 
-// OllamaPlugin 基于选项创建 Ollama 插件
-func (opts *OllamaOptions) OllamaPlugin() *ollama.Ollama {
+// NewOllamaRegister 创建 Ollama 模型注册器
+func NewOllamaRegister(opts OllamaOptions) *OllamaRegister {
 	opts.Complete()
-	return &ollama.Ollama{
-		ServerAddress: opts.BaseURL,
-		Timeout:       opts.Timeout,
+	return &OllamaRegister{
+		Plugin: &ollama.Ollama{
+			ServerAddress: opts.BaseURL,
+			Timeout:       opts.Timeout,
+		},
 	}
 }
 
+// OllamaRegister Ollama 模型注册器
+type OllamaRegister struct {
+	Plugin *ollama.Ollama
+	Models []ModelConfig
+}
+
+var _ ModelRegister = (*OllamaRegister)(nil)
+
+// GenkitPlugin 获取对应 Genkit 插件
+func (r *OllamaRegister) GenkitPlugin() api.Plugin {
+	return r.Plugin
+}
+
 // RegisterModels 注册模型
-func (opts *OllamaOptions) RegisterModels(
-	g *genkit.Genkit,
-	plugin *ollama.Ollama,
-) ([]ModelConfig, error) {
+func (r *OllamaRegister) RegisterModels(_ context.Context, g *genkit.Genkit) ([]ModelConfig, error) {
 	var registeredModels []ModelConfig
-	for _, modelConfig := range opts.Models {
-		m := plugin.DefineModel(g, ollama.ModelDefinition{
+	for _, modelConfig := range r.Models {
+		m := r.Plugin.DefineModel(g, ollama.ModelDefinition{
 			Name: modelConfig.Name,
 			Type: "chat",
 		}, &ai.ModelOptions{

@@ -1,15 +1,96 @@
 package models
 
+import (
+	"context"
+
+	"github.com/firebase/genkit/go/core/api"
+	"github.com/firebase/genkit/go/genkit"
+)
+
 // ModelProvider 模型供应商配置
 type ModelProvider struct {
-	Ollama           *OllamaOptions           `json:"ollama,omitempty"`
-	ZAI              *ZAIOptions              `json:"z-ai,omitempty"`
-	Qwen             *QwenOptions             `json:"qwen,omitempty"`
-	MoonshotAI       *MoonshotOptions         `json:"moonshotai,omitempty"`
-	Deepseek         *DeepseekOptions         `json:"deepseek,omitempty"`
-	Minimax          *MinimaxOptions          `json:"minimax,omitempty"`
-	OpenRouter       *OpenRouterOptions       `json:"openrouter,omitempty"`
+	Ollama *OllamaOptions `json:"ollama,omitempty"`
+
 	OpenAICompatible *OpenAICompatibleOptions `json:"openai-compatible,omitempty"`
+	OpenRouter       *OpenAICompatibleOptions `json:"openrouter,omitempty"`
+	OpenCode         *OpenAICompatibleOptions `json:"opencode,omitempty"`
+	OpenCodeGo       *OpenAICompatibleOptions `json:"opencode-go,omitempty"`
+	Deepseek         *OpenAICompatibleOptions `json:"deepseek,omitempty"`
+	Qwen             *OpenAICompatibleOptions `json:"qwen,omitempty"`
+	MoonshotAI       *OpenAICompatibleOptions `json:"moonshotai,omitempty"`
+	ZAI              *OpenAICompatibleOptions `json:"z-ai,omitempty"`
+	Minimax          *OpenAICompatibleOptions `json:"minimax,omitempty"`
+}
+
+// Register 返回对应的模型注册器
+func (p ModelProvider) Register() ModelRegister {
+	switch {
+	case p.Ollama != nil:
+		return NewOllamaRegister(*p.Ollama)
+	case p.OpenAICompatible != nil:
+		return NewOpenAICompatibleRegister(
+			*p.OpenAICompatible,
+			"", "",
+			nil, DefaultOpenAIExtension,
+		)
+	case p.OpenRouter != nil:
+		return NewOpenAICompatibleRegister(
+			*p.OpenRouter,
+			OpenRouterProviderName, OpenRouterBaseURL,
+			OpenRouterModels, OpenRouterOpenAIExtension,
+		)
+	case p.OpenCode != nil:
+		return NewOpenAICompatibleRegister(
+			*p.OpenCode,
+			OpenCodeProviderName, OpenCodeBaseURL,
+			OpenCodeModels, DefaultOpenAIExtension,
+		)
+	case p.OpenCodeGo != nil:
+		return NewOpenAICompatibleRegister(
+			*p.OpenCodeGo,
+			OpenCodeGoProviderName, OpenCodeGoBaseURL,
+			OpenCodeGoModels, DefaultOpenAIExtension,
+		)
+	case p.Deepseek != nil:
+		return NewOpenAICompatibleRegister(
+			*p.Deepseek,
+			DeepseekProviderName, DeepseekBaseURL,
+			DeepSeekModels, DefaultOpenAIExtension,
+		)
+	case p.Qwen != nil:
+		return NewOpenAICompatibleRegister(
+			*p.Qwen,
+			QwenProviderName, QwenBaseURL,
+			QwenModels, QwenOpenAIExtension,
+		)
+	case p.MoonshotAI != nil:
+		return NewOpenAICompatibleRegister(
+			*p.MoonshotAI,
+			MoonshotProviderName, MoonshotBaseURL,
+			MoonshotModels, DefaultOpenAIExtension,
+		)
+	case p.ZAI != nil:
+		return NewOpenAICompatibleRegister(
+			*p.ZAI,
+			ZAIProviderName, ZAIBaseURL,
+			ZAIModels, DefaultOpenAIExtension,
+		)
+	case p.Minimax != nil:
+		return NewOpenAICompatibleRegister(
+			*p.Minimax,
+			MinimaxProviderName, MinimaxBaseURL,
+			MinimaxModels, DefaultOpenAIExtension,
+		)
+	}
+	return nil
+}
+
+// ModelRegister 模型注册器
+type ModelRegister interface {
+	// GenkitPlugin 获取对应 Genkit 插件
+	GenkitPlugin() api.Plugin
+	// RegisterModels 注册模型
+	RegisterModels(ctx context.Context, g *genkit.Genkit) ([]ModelConfig, error)
 }
 
 // ModelConfig 模型配置
@@ -31,6 +112,20 @@ type ModelConfig struct {
 
 	// 效果评分，0-10
 	Score int `json:"score,omitempty"`
+}
+
+// WithName 返回带指定名字的该模型
+func (cfg ModelConfig) WithName(name string) ModelConfig {
+	out := cfg
+	out.Name = name
+	return out
+}
+
+// WithPrices 返回带指定价格的该模型
+func (cfg ModelConfig) WithPrices(prices ModelPrices) ModelConfig {
+	out := cfg
+	out.Prices = prices
+	return out
 }
 
 // ModelPrices 价格信息

@@ -1,13 +1,5 @@
 package models
 
-import (
-	"context"
-
-	"github.com/firebase/genkit/go/genkit"
-
-	"github.com/yhlooo/nfa/pkg/genkitplugins/oai"
-)
-
 const (
 	// DeepseekProviderName Deepseek 模型供应商名
 	DeepseekProviderName = "deepseek"
@@ -15,84 +7,33 @@ const (
 	DeepseekBaseURL = "https://api.deepseek.com"
 )
 
+var (
+	DeepSeekV4Pro = ModelConfig{
+		Name:      "deepseek-v4-pro",
+		Reasoning: true,
+		Prices: ModelPrices{
+			Input:  12,
+			Output: 24,
+			Cached: 1,
+		},
+		ContextWindow: 1000000,
+		Score:         10,
+	}
+	DeepSeekV4Flash = ModelConfig{
+		Name:      "deepseek-v4-flash",
+		Reasoning: true,
+		Prices: ModelPrices{
+			Input:  1,
+			Output: 2,
+			Cached: 0.2,
+		},
+		ContextWindow: 1000000,
+		Score:         8,
+	}
+)
+
 // DeepSeekModels 建议的 DeepSeek 模型
-func DeepSeekModels() []ModelConfig {
-	return []ModelConfig{
-		{
-			Name:      "deepseek-v4-pro",
-			Reasoning: true,
-			Prices: ModelPrices{
-				Input:  12,
-				Output: 24,
-				Cached: 1,
-			},
-			ContextWindow: 1000000,
-			Score:         10,
-		},
-		{
-			Name:      "deepseek-v4-flash",
-			Reasoning: true,
-			Prices: ModelPrices{
-				Input:  1,
-				Output: 2,
-				Cached: 0.2,
-			},
-			ContextWindow: 1000000,
-			Score:         8,
-		},
-	}
-}
-
-// DeepseekOptions Deepseek 选项
-type DeepseekOptions struct {
-	// API 地址
-	BaseURL string `json:"baseURL,omitempty"`
-	// API 密钥
-	APIKey string `json:"apiKey"`
-	// 模型列表
-	Models []ModelConfig `json:"models,omitempty"`
-}
-
-// Complete 使用默认值补全选项
-func (opts *DeepseekOptions) Complete() {
-	if opts.BaseURL == "" {
-		opts.BaseURL = DeepseekBaseURL
-	}
-
-}
-
-// Plugin 基于选项创建 OpenAICompatible 插件
-func (opts *DeepseekOptions) Plugin() *oai.OpenAICompatible {
-	opts.Complete()
-	return &oai.OpenAICompatible{
-		Provider: DeepseekProviderName,
-		BaseURL:  opts.BaseURL,
-		APIKey:   opts.APIKey,
-	}
-}
-
-// RegisterModels 注册模型
-func (opts *DeepseekOptions) RegisterModels(
-	_ context.Context,
-	g *genkit.Genkit,
-	plugin *oai.OpenAICompatible,
-) ([]ModelConfig, error) {
-	definedModels := map[string]struct{}{}
-	for _, m := range opts.Models {
-		definedModels[m.Name] = struct{}{}
-	}
-
-	// 注册建议模型
-	for _, m := range DeepSeekModels() {
-		if _, ok := definedModels[m.Name]; !ok {
-			opts.Models = append(opts.Models, m)
-		}
-	}
-
-	return (&OpenAICompatibleOptions{
-		Name:    DeepseekProviderName,
-		BaseURL: opts.BaseURL,
-		APIKey:  opts.APIKey,
-		Models:  opts.Models,
-	}).RegisterModels(g, plugin)
+var DeepSeekModels = []ModelConfig{
+	DeepSeekV4Pro,
+	DeepSeekV4Flash,
 }

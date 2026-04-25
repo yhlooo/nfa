@@ -179,12 +179,16 @@ func runModelsAdd(ctx context.Context, providerName string, opts ModelsAddOption
 	// 查找供应商是否已经配置
 	existingIdx := slices.IndexFunc(cfg.ModelProviders, func(p models.ModelProvider) bool {
 		switch providerName {
-		case "openai-compatible":
-			return p.OpenAICompatible != nil
 		case "ollama":
 			return p.Ollama != nil
+		case "openai-compatible":
+			return p.OpenAICompatible != nil
 		case "openrouter":
 			return p.OpenRouter != nil
+		case "opencode":
+			return p.OpenCode != nil
+		case "opencode-go":
+			return p.OpenCodeGo != nil
 		case "deepseek":
 			return p.Deepseek != nil
 		case "qwen":
@@ -219,6 +223,12 @@ func runModelsAdd(ctx context.Context, providerName string, opts ModelsAddOption
 // buildModelProvider 根据供应商名构建对应的 ModelProvider
 func buildModelProvider(key string, opts ModelsAddOptions) models.ModelProvider {
 	switch key {
+	case "ollama":
+		return models.ModelProvider{
+			Ollama: &models.OllamaOptions{
+				BaseURL: opts.BaseURL,
+			},
+		}
 	case "openai-compatible":
 		return models.ModelProvider{
 			OpenAICompatible: &models.OpenAICompatibleOptions{
@@ -227,35 +237,37 @@ func buildModelProvider(key string, opts ModelsAddOptions) models.ModelProvider 
 				APIKey:  opts.APIKey,
 			},
 		}
-	case "ollama":
-		return models.ModelProvider{
-			Ollama: &models.OllamaOptions{
-				BaseURL: opts.BaseURL,
-			},
-		}
 	case "openrouter":
 		return models.ModelProvider{
-			OpenRouter: &models.OpenRouterOptions{BaseURL: opts.BaseURL, APIKey: opts.APIKey},
+			OpenRouter: &models.OpenAICompatibleOptions{Name: opts.Name, BaseURL: opts.BaseURL, APIKey: opts.APIKey},
+		}
+	case "opencode":
+		return models.ModelProvider{
+			OpenCode: &models.OpenAICompatibleOptions{Name: opts.Name, BaseURL: opts.BaseURL, APIKey: opts.APIKey},
+		}
+	case "opencode-go":
+		return models.ModelProvider{
+			OpenCodeGo: &models.OpenAICompatibleOptions{Name: opts.Name, BaseURL: opts.BaseURL, APIKey: opts.APIKey},
 		}
 	case "deepseek":
 		return models.ModelProvider{
-			Deepseek: &models.DeepseekOptions{BaseURL: opts.BaseURL, APIKey: opts.APIKey},
+			Deepseek: &models.OpenAICompatibleOptions{Name: opts.Name, BaseURL: opts.BaseURL, APIKey: opts.APIKey},
 		}
 	case "qwen":
 		return models.ModelProvider{
-			Qwen: &models.QwenOptions{BaseURL: opts.BaseURL, APIKey: opts.APIKey},
+			Qwen: &models.OpenAICompatibleOptions{Name: opts.Name, BaseURL: opts.BaseURL, APIKey: opts.APIKey},
 		}
 	case "moonshotai":
 		return models.ModelProvider{
-			MoonshotAI: &models.MoonshotOptions{BaseURL: opts.BaseURL, APIKey: opts.APIKey},
+			MoonshotAI: &models.OpenAICompatibleOptions{Name: opts.Name, BaseURL: opts.BaseURL, APIKey: opts.APIKey},
 		}
 	case "z-ai":
 		return models.ModelProvider{
-			ZAI: &models.ZAIOptions{BaseURL: opts.BaseURL, APIKey: opts.APIKey},
+			ZAI: &models.OpenAICompatibleOptions{Name: opts.Name, BaseURL: opts.BaseURL, APIKey: opts.APIKey},
 		}
 	case "minimax":
 		return models.ModelProvider{
-			Minimax: &models.MinimaxOptions{BaseURL: opts.BaseURL, APIKey: opts.APIKey},
+			Minimax: &models.OpenAICompatibleOptions{Name: opts.Name, BaseURL: opts.BaseURL, APIKey: opts.APIKey},
 		}
 	}
 	return models.ModelProvider{}
