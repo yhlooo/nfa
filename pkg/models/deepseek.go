@@ -19,23 +19,24 @@ const (
 func DeepSeekModels() []ModelConfig {
 	return []ModelConfig{
 		{
-			Name:      "deepseek-reasoner",
+			Name:      "deepseek-v4-pro",
 			Reasoning: true,
 			Prices: ModelPrices{
-				Input:  2,
-				Output: 3,
-				Cached: 0.2,
+				Input:  12,
+				Output: 24,
+				Cached: 1,
 			},
-			ContextWindow: 128000,
+			ContextWindow: 1000000,
 		},
 		{
-			Name: "deepseek-chat",
+			Name:      "deepseek-v4-flash",
+			Reasoning: true,
 			Prices: ModelPrices{
-				Input:  2,
-				Output: 3,
+				Input:  1,
+				Output: 2,
 				Cached: 0.2,
 			},
-			ContextWindow: 128000,
+			ContextWindow: 1000000,
 		},
 	}
 }

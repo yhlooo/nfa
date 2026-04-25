@@ -78,11 +78,11 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts ...ai.GenerateO
 					}
 
 					// 结束对话
-					output.Messages = append(output.Messages, pruneReasoning(resp.Message))
+					output.Messages = append(output.Messages, resp.Message)
 					return output, nil
 				}
 
-				output.Messages = append(output.Messages, pruneReasoning(resp.Message))
+				output.Messages = append(output.Messages, resp.Message)
 
 				// 调用工具
 				var parts []*ai.Part

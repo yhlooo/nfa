@@ -4,12 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/core"
-	"github.com/go-logr/logr"
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/param"
@@ -193,7 +191,6 @@ func (g *ModelGenerator) Generate(
 
 // generateStream 对话补全流式生成
 func (g *ModelGenerator) generateStream(ctx context.Context, handleChunk core.StreamCallback[*ai.ModelResponseChunk]) (*ai.ModelResponse, error) {
-	logger := logr.FromContextOrDiscard(ctx)
 	stream := g.client.Chat.Completions.NewStreaming(
 		ctx, *g.request,
 		option.WithJSONSet("stream_options.include_usage", true),
@@ -226,15 +223,7 @@ func (g *ModelGenerator) generateStream(ctx context.Context, handleChunk core.St
 		fullResponse.Usage.InputTokens += int(chunk.Usage.PromptTokens)
 		fullResponse.Usage.OutputTokens += int(chunk.Usage.CompletionTokens)
 		fullResponse.Usage.ThoughtsTokens += int(chunk.Usage.CompletionTokensDetails.ReasoningTokens)
-		if chunk.Usage.PromptTokensDetails.CachedTokens > 0 {
-			fullResponse.Usage.CachedContentTokens += int(chunk.Usage.PromptTokensDetails.CachedTokens)
-		} else {
-			logger.V(1).Info(fmt.Sprintf("usage raw: %s", chunk.Usage.RawJSON()))
-			cached, err := strconv.ParseInt(chunk.Usage.JSON.ExtraFields["prompt_cache_hit_tokens"].Raw(), 10, 64)
-			if err == nil {
-				fullResponse.Usage.CachedContentTokens += int(cached)
-			}
-		}
+		fullResponse.Usage.CachedContentTokens += int(chunk.Usage.PromptTokensDetails.CachedTokens)
 		fullResponse.Usage.TotalTokens += int(chunk.Usage.TotalTokens)
 
 		if len(chunk.Choices) == 0 {
@@ -363,17 +352,6 @@ func (g *ModelGenerator) generateComplete(ctx context.Context, req *ai.ModelRequ
 		Message: &ai.Message{
 			Role: ai.RoleModel,
 		},
-	}
-
-	logger := logr.FromContextOrDiscard(ctx)
-	if completion.Usage.PromptTokensDetails.CachedTokens > 0 {
-		resp.Usage.CachedContentTokens += int(completion.Usage.PromptTokensDetails.CachedTokens)
-	} else {
-		logger.V(1).Info(fmt.Sprintf("usage raw: %s", completion.Usage.RawJSON()))
-		cached, err := strconv.ParseInt(completion.Usage.JSON.ExtraFields["prompt_cache_hit_tokens"].Raw(), 10, 64)
-		if err == nil {
-			resp.Usage.CachedContentTokens += int(cached)
-		}
 	}
 
 	if len(completion.Choices) == 0 {
