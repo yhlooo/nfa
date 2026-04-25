@@ -2,7 +2,9 @@ package commands
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -10,6 +12,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/olekukonko/tablewriter/tw"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	"github.com/yhlooo/nfa/pkg/agents"
 	"github.com/yhlooo/nfa/pkg/configs"
@@ -27,6 +30,7 @@ func newModelsCommand() *cobra.Command {
 
 	cmd.AddCommand(
 		newModelsListCommand(),
+		newModelsAddCommand(),
 	)
 
 	return cmd
@@ -62,27 +66,6 @@ func runModelsList(ctx context.Context) error {
 	return outputModelList(ctx, agent.AvailableModels())
 }
 
-// scoreToStars 将 0-10 的评分转换为星标展示
-func scoreToStars(score int) string {
-	if score < 0 {
-		score = 0
-	}
-	if score > 10 {
-		score = 10
-	}
-	if score == 0 {
-		return ""
-	}
-	stars := make([]string, 0, 5)
-	for range score / 2 {
-		stars = append(stars, "⭐️")
-	}
-	if score%2 == 1 {
-		stars = append(stars, "✨")
-	}
-	return strings.Join(stars, " ")
-}
-
 // outputModelList 输出模型列表
 func outputModelList(ctx context.Context, modelList []models.ModelConfig) error {
 	t := tablewriter.NewTable(os.Stdout,
@@ -99,7 +82,10 @@ func outputModelList(ctx context.Context, modelList []models.ModelConfig) error 
 				Separators: tw.Separators{BetweenColumns: tw.Off},
 			},
 		}),
-		tablewriter.WithAlignment([]tw.Align{tw.AlignLeft, tw.AlignCenter, tw.AlignCenter, tw.AlignRight, tw.AlignLeft}),
+		tablewriter.WithAlignment([]tw.Align{
+			tw.AlignLeft, tw.AlignCenter, tw.AlignCenter,
+			tw.AlignRight, tw.AlignLeft,
+		}),
 	)
 	defer func() { _ = t.Close() }()
 
@@ -122,4 +108,155 @@ func outputModelList(ctx context.Context, modelList []models.ModelConfig) error 
 	}
 
 	return t.Render()
+}
+
+// scoreToStars 将 0-10 的评分转换为星标展示
+func scoreToStars(score int) string {
+	if score < 0 {
+		score = 0
+	}
+	if score > 10 {
+		score = 10
+	}
+	if score == 0 {
+		return ""
+	}
+	stars := make([]string, 0, 5)
+	for range score / 2 {
+		stars = append(stars, "⭐️")
+	}
+	if score%2 == 1 {
+		stars = append(stars, "✨")
+	}
+	return strings.Join(stars, " ")
+}
+
+// NewModelsAddOptions 创建默认 ModelsAddOptions
+func NewModelsAddOptions() ModelsAddOptions {
+	return ModelsAddOptions{
+		APIKey:  "",
+		BaseURL: "",
+		Name:    "",
+	}
+}
+
+// ModelsAddOptions models add 子命令选项
+type ModelsAddOptions struct {
+	APIKey  string
+	BaseURL string
+	Name    string
+}
+
+// AddPFlags 将选项绑定到命令行参数
+func (opts *ModelsAddOptions) AddPFlags(fs *pflag.FlagSet) {
+	fs.StringVar(&opts.APIKey, "api-key", opts.APIKey, i18n.T(MsgModelsAddOptAPIKeyDesc))
+	fs.StringVar(&opts.BaseURL, "base-url", opts.BaseURL, i18n.T(MsgModelsAddOptBaseURLDesc))
+	fs.StringVar(&opts.Name, "name", opts.Name, i18n.T(MsgModelsAddOptNameDesc))
+}
+
+// newModelsAddCommand 创建 models add 子命令
+func newModelsAddCommand() *cobra.Command {
+	opts := NewModelsAddOptions()
+	cmd := &cobra.Command{
+		Use:   "add <provider>",
+		Short: i18n.T(MsgCmdShortDescModelsAdd),
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runModelsAdd(cmd.Context(), args[0], opts)
+		},
+	}
+
+	opts.AddPFlags(cmd.Flags())
+
+	return cmd
+}
+
+// runModelsAdd 执行 models add 命令
+func runModelsAdd(ctx context.Context, providerName string, opts ModelsAddOptions) error {
+	cfg := configs.ConfigFromContext(ctx)
+	cfgPath := configs.ConfigPathFromContext(ctx)
+
+	// 查找供应商是否已经配置
+	existingIdx := slices.IndexFunc(cfg.ModelProviders, func(p models.ModelProvider) bool {
+		switch providerName {
+		case "openai-compatible":
+			return p.OpenAICompatible != nil
+		case "ollama":
+			return p.Ollama != nil
+		case "openrouter":
+			return p.OpenRouter != nil
+		case "deepseek":
+			return p.Deepseek != nil
+		case "qwen":
+			return p.Qwen != nil
+		case "moonshotai":
+			return p.MoonshotAI != nil
+		case "z-ai":
+			return p.ZAI != nil
+		case "minimax":
+			return p.Minimax != nil
+		}
+		return false
+	})
+
+	provider := buildModelProvider(providerName, opts)
+	if existingIdx >= 0 {
+		// 更新已有供应商配置
+		cfg.ModelProviders[existingIdx] = provider
+	} else {
+		// 添加供应商配置
+		cfg.ModelProviders = append(cfg.ModelProviders, provider)
+	}
+
+	// 保存配置
+	if err := configs.SaveConfig(cfgPath, cfg); err != nil {
+		return fmt.Errorf("save config error: %w", err)
+	}
+
+	return nil
+}
+
+// buildModelProvider 根据供应商名构建对应的 ModelProvider
+func buildModelProvider(key string, opts ModelsAddOptions) models.ModelProvider {
+	switch key {
+	case "openai-compatible":
+		return models.ModelProvider{
+			OpenAICompatible: &models.OpenAICompatibleOptions{
+				Name:    opts.Name,
+				BaseURL: opts.BaseURL,
+				APIKey:  opts.APIKey,
+			},
+		}
+	case "ollama":
+		return models.ModelProvider{
+			Ollama: &models.OllamaOptions{
+				BaseURL: opts.BaseURL,
+			},
+		}
+	case "openrouter":
+		return models.ModelProvider{
+			OpenRouter: &models.OpenRouterOptions{BaseURL: opts.BaseURL, APIKey: opts.APIKey},
+		}
+	case "deepseek":
+		return models.ModelProvider{
+			Deepseek: &models.DeepseekOptions{BaseURL: opts.BaseURL, APIKey: opts.APIKey},
+		}
+	case "qwen":
+		return models.ModelProvider{
+			Qwen: &models.QwenOptions{BaseURL: opts.BaseURL, APIKey: opts.APIKey},
+		}
+	case "moonshotai":
+		return models.ModelProvider{
+			MoonshotAI: &models.MoonshotOptions{BaseURL: opts.BaseURL, APIKey: opts.APIKey},
+		}
+	case "z-ai":
+		return models.ModelProvider{
+			ZAI: &models.ZAIOptions{BaseURL: opts.BaseURL, APIKey: opts.APIKey},
+		}
+	case "minimax":
+		return models.ModelProvider{
+			Minimax: &models.MinimaxOptions{BaseURL: opts.BaseURL, APIKey: opts.APIKey},
+		}
+	}
+	return models.ModelProvider{}
 }

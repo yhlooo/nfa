@@ -44,6 +44,7 @@ var (
 
 	MsgCmdShortDescModels     = &i18n.Message{ID: "commands.CmdShortDescModels", Other: "Manage LLMs used by the agent"}
 	MsgCmdShortDescModelsList = &i18n.Message{ID: "commands.CmdShortDescModelsList", Other: "List available models"}
+	MsgCmdShortDescModelsAdd  = &i18n.Message{ID: "commands.CmdShortDescModelsAdd", Other: "Add a model provider configuration"}
 
 	MsgModelNameTag    = &i18n.Message{ID: "commands.ModelNameTag", Other: "Name"}
 	MsgReasoningTag    = &i18n.Message{ID: "commands.ReasoningTag", Other: "Reasoning"}
@@ -51,6 +52,10 @@ var (
 	MsgModelContextTag = &i18n.Message{ID: "commands.ModelContextTag", Other: "Context"}
 
 	MsgScoreTag = &i18n.Message{ID: "commands.ScoreTag", Other: "Score"}
+
+	MsgModelsAddOptAPIKeyDesc  = &i18n.Message{ID: "commands.ModelsAddOptAPIKeyDesc", Other: "API key for the provider"}
+	MsgModelsAddOptBaseURLDesc = &i18n.Message{ID: "commands.ModelsAddOptBaseURLDesc", Other: "Base URL for the provider API"}
+	MsgModelsAddOptNameDesc    = &i18n.Message{ID: "commands.ModelsAddOptNameDesc", Other: "Display name for the provider (required for openai-compatible)"}
 
 	MsgCmdShortDescOtter = &i18n.Message{ID: "commands.CmdShortDescOtter", Other: "Print Otter image"}
 

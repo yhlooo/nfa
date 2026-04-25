@@ -101,8 +101,8 @@ func NewGenkitWithModels(
 			plugin := p.Qwen.Plugin()
 			plugins = append(plugins, plugin)
 			oaiPlugins[i] = plugin
-		case p.Moonshot != nil:
-			plugin := p.Moonshot.Plugin()
+		case p.MoonshotAI != nil:
+			plugin := p.MoonshotAI.Plugin()
 			plugins = append(plugins, plugin)
 			oaiPlugins[i] = plugin
 		case p.Deepseek != nil:
@@ -156,8 +156,8 @@ func NewGenkitWithModels(
 				continue
 			}
 			modelConfigs = append(modelConfigs, registeredModels...)
-		case p.Moonshot != nil:
-			registeredModels, err := p.Moonshot.RegisterModels(ctx, g, oaiPlugins[i])
+		case p.MoonshotAI != nil:
+			registeredModels, err := p.MoonshotAI.RegisterModels(ctx, g, oaiPlugins[i])
 			if err != nil {
 				logger.Error(err, "define moonshot models error")
 				continue

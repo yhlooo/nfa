@@ -11,7 +11,7 @@ type OllamaOptions struct {
 	// Ollama 服务端地址
 	//
 	// 默认 http://localhost:11434
-	ServerAddress string `json:"serverAddress,omitempty"`
+	BaseURL string `json:"baseURL,omitempty"`
 	// 模型响应超时时间，秒
 	//
 	// 默认 300
@@ -22,8 +22,8 @@ type OllamaOptions struct {
 
 // Complete 使用默认值补全选项
 func (opts *OllamaOptions) Complete() {
-	if opts.ServerAddress == "" {
-		opts.ServerAddress = "http://localhost:11434"
+	if opts.BaseURL == "" {
+		opts.BaseURL = "http://localhost:11434"
 	}
 	if opts.Timeout == 0 {
 		opts.Timeout = 300
@@ -34,7 +34,7 @@ func (opts *OllamaOptions) Complete() {
 func (opts *OllamaOptions) OllamaPlugin() *ollama.Ollama {
 	opts.Complete()
 	return &ollama.Ollama{
-		ServerAddress: opts.ServerAddress,
+		ServerAddress: opts.BaseURL,
 		Timeout:       opts.Timeout,
 	}
 }

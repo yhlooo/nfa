@@ -4,6 +4,9 @@ commands.CmdShortDesc:
 commands.CmdShortDescModels:
     hash: sha1-0fd9caa1a33979fb5b1dc70a195a96e227cbfc58
     other: 管理 Agent 使用的模型
+commands.CmdShortDescModelsAdd:
+    hash: sha1-bb4fe78059858e2284aecc98edbb96b04c25a1a6
+    other: 添加模型提供商配置
 commands.CmdShortDescModelsList:
     hash: sha1-de324f9ffc865610f224b63ba18369fe71fcefcf
     other: 列出可用模型
@@ -28,6 +31,30 @@ commands.ModelContextTag:
 commands.ModelNameTag:
     hash: sha1-709a23220f2c3d64d1e1d6d18c4d5280f8d82fca
     other: 名称
+commands.ModelsAddMissingRequired:
+    hash: sha1-eebdae64300237a8b8bb9ddc145beafd115abd6c
+    other: 缺少必需的参数：{{.Flags}}
+commands.ModelsAddOptAPIKeyDesc:
+    hash: sha1-9d5d25b2f171f6e76c5b1f35925bebaa2972266e
+    other: 提供商的 API 密钥
+commands.ModelsAddOptBaseURLDesc:
+    hash: sha1-0e11625e30dd64974db6611d2bf4da25ec2326b1
+    other: 提供商 API 的基础 URL
+commands.ModelsAddOptNameDesc:
+    hash: sha1-049a4545d88e98d76f1c80c7a295448eb1b3ff86
+    other: 提供商的显示名称（openai-compatible 类型必填）
+commands.ModelsAddOptServerAddressDesc:
+    hash: sha1-ff6594b08592a2fbefedc0c642dc80588daf2d25
+    other: Ollama 服务器地址
+commands.ModelsAddOptTimeoutDesc:
+    hash: sha1-53b6503d42084b07b4f4f804c690f630467e6c5b
+    other: Ollama 请求超时时间（秒）
+commands.ModelsAddSuccess:
+    hash: sha1-dd28ccff403ba19be46862eb7ad7ef5fefa8db8d
+    other: 模型提供商 "{{.Name}}" 已成功添加
+commands.ModelsAddUnknownProvider:
+    hash: sha1-75eef33622231fb6311cd0af621e7f1495f6139b
+    other: 未知的提供商类型 "{{.Name}}"。支持的提供商：{{.Providers}}
 commands.OtterOptsBackgroundDesc:
     hash: sha1-75614009ba55d609624c7d06a122bee0178abff7
     other: 带背景打印

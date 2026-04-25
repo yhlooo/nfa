@@ -1,5 +1,6 @@
 commands.CmdShortDesc: Financial Trading LLM AI Agent. **This is Not Financial Advice.**
 commands.CmdShortDescModels: Manage LLMs used by the agent
+commands.CmdShortDescModelsAdd: Add a model provider configuration
 commands.CmdShortDescModelsList: List available models
 commands.CmdShortDescOtter: Print Otter image
 commands.CmdShortDescVersion: Print the version information
@@ -8,6 +9,14 @@ commands.GlobalOptsLangDesc: The language used in UI (en or zh)
 commands.GlobalOptsVerbosityDesc: Number for the log level verbosity (0, 1, or 2)
 commands.ModelContextTag: Context
 commands.ModelNameTag: Name
+commands.ModelsAddMissingRequired: 'Missing required flag(s): {{.Flags}}'
+commands.ModelsAddOptAPIKeyDesc: API key for the provider
+commands.ModelsAddOptBaseURLDesc: Base URL for the provider API
+commands.ModelsAddOptNameDesc: Display name for the provider (required for openai-compatible)
+commands.ModelsAddOptServerAddressDesc: Ollama server address
+commands.ModelsAddOptTimeoutDesc: Ollama request timeout in seconds
+commands.ModelsAddSuccess: Model provider "{{.Name}}" added successfully
+commands.ModelsAddUnknownProvider: 'Unknown provider type "{{.Name}}". Supported providers: {{.Providers}}'
 commands.OtterOptsBackgroundDesc: Print with background
 commands.OtterOptsColorDesc: Print with color
 commands.OtterOptsScaleDesc: Scaling factor
