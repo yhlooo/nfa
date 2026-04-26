@@ -19,7 +19,7 @@ type ModelProvider struct {
 	Qwen             *OpenAICompatibleOptions `json:"qwen,omitempty"`
 	MoonshotAI       *OpenAICompatibleOptions `json:"moonshotai,omitempty"`
 	ZAI              *OpenAICompatibleOptions `json:"z-ai,omitempty"`
-	Tencent          *OpenAICompatibleOptions `json:"tencent,omitempty"`
+	TencentCloud     *OpenAICompatibleOptions `json:"tencent-cloud,omitempty"`
 	Minimax          *OpenAICompatibleOptions `json:"minimax,omitempty"`
 }
 
@@ -44,13 +44,13 @@ func (p ModelProvider) Register() ModelRegister {
 		return NewOpenAICompatibleRegister(
 			*p.OpenCode,
 			OpenCodeProviderName, OpenCodeBaseURL,
-			OpenCodeModels, DefaultOpenAIExtension, // TODO: ...
+			OpenCodeModels, DefaultOpenAIExtension,
 		)
 	case p.OpenCodeGo != nil:
 		return NewOpenAICompatibleRegister(
 			*p.OpenCodeGo,
 			OpenCodeGoProviderName, OpenCodeGoBaseURL,
-			OpenCodeGoModels, DefaultOpenAIExtension, // TODO: ...
+			OpenCodeGoModels, DefaultOpenAIExtension,
 		)
 	case p.Deepseek != nil:
 		return NewOpenAICompatibleRegister(
@@ -76,11 +76,11 @@ func (p ModelProvider) Register() ModelRegister {
 			ZAIProviderName, ZAIBaseURL,
 			ZAIModels, DefaultOpenAIExtension,
 		)
-	case p.Tencent != nil:
+	case p.TencentCloud != nil:
 		return NewOpenAICompatibleRegister(
-			*p.Tencent,
-			TencentProviderName, TencentBaseURL,
-			TencentModels, DefaultOpenAIExtension,
+			*p.TencentCloud,
+			TencentCloudProviderName, TencentCloudBaseURL,
+			TencentCloudModels, DefaultOpenAIExtension,
 		)
 	case p.Minimax != nil:
 		return NewOpenAICompatibleRegister(

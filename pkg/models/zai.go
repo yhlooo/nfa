@@ -19,6 +19,18 @@ var (
 		ContextWindow: 200000,
 		Score:         7,
 	}
+	GLM5VTurbo = ModelConfig{
+		Name:      "glm-5v-turbo",
+		Reasoning: true,
+		Vision:    true,
+		Prices: ModelPrices{
+			Input:  7, // > 32K
+			Output: 26,
+			Cached: 1.8,
+		},
+		ContextWindow: 200000,
+		Score:         6,
+	}
 	GLM5 = ModelConfig{
 		Name:      "glm-5",
 		Reasoning: true,
@@ -35,5 +47,6 @@ var (
 // ZAIModels 建议的智谱 AI 模型
 var ZAIModels = []ModelConfig{
 	GLM51,
+	GLM5VTurbo,
 	GLM5,
 }

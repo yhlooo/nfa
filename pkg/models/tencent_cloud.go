@@ -1,10 +1,10 @@
 package models
 
 const (
-	// TencentProviderName 腾讯云 TokenHub 模型供应商名
-	TencentProviderName = "tencent"
-	// TencentBaseURL 腾讯云 TokenHub 默认 API 地址
-	TencentBaseURL = "https://tokenhub.tencentmaas.com/v1"
+	// TencentCloudProviderName 腾讯云 TokenHub 模型供应商名
+	TencentCloudProviderName = "tencent-cloud"
+	// TencentCloudBaseURL 腾讯云 TokenHub 默认 API 地址
+	TencentCloudBaseURL = "https://tokenhub.tencentmaas.com/v1"
 )
 
 var (
@@ -21,7 +21,15 @@ var (
 	}
 )
 
-// TencentModels 腾讯云推荐模型
-var TencentModels = []ModelConfig{
+// TencentCloudModels 腾讯云推荐模型
+var TencentCloudModels = []ModelConfig{
 	HY3Preview,
+	DeepseekV4Pro,
+	DeepseekV4Flash,
+	KimiK26,
+	KimiK25,
+	GLM51,
+	GLM5VTurbo,
+	GLM5,
+	MinimaxM27,
 }
