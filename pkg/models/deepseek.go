@@ -8,7 +8,7 @@ const (
 )
 
 var (
-	DeepSeekV4Pro = ModelConfig{
+	DeepseekV4Pro = ModelConfig{
 		Name:      "deepseek-v4-pro",
 		Reasoning: true,
 		Prices: ModelPrices{
@@ -19,7 +19,7 @@ var (
 		ContextWindow: 1000000,
 		Score:         10,
 	}
-	DeepSeekV4Flash = ModelConfig{
+	DeepseekV4Flash = ModelConfig{
 		Name:      "deepseek-v4-flash",
 		Reasoning: true,
 		Prices: ModelPrices{
@@ -32,8 +32,8 @@ var (
 	}
 )
 
-// DeepSeekModels 建议的 DeepSeek 模型
-var DeepSeekModels = []ModelConfig{
-	DeepSeekV4Pro,
-	DeepSeekV4Flash,
+// DeepseekModels 建议的 DeepSeek 模型
+var DeepseekModels = []ModelConfig{
+	DeepseekV4Pro,
+	DeepseekV4Flash,
 }

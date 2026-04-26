@@ -41,6 +41,10 @@ var (
 		ID:    "commands.RootOptsResumeDesc",
 		Other: "Resume a previous session by session ID",
 	}
+	MsgRootOptsReasoningLevelDesc = &i18n.Message{
+		ID:    "commands.RootOptsReasoningLevelDesc",
+		Other: "Reasoning level (0, 1 or 2)",
+	}
 
 	MsgCmdShortDescModels     = &i18n.Message{ID: "commands.CmdShortDescModels", Other: "Manage LLMs used by the agent"}
 	MsgCmdShortDescModelsList = &i18n.Message{ID: "commands.CmdShortDescModelsList", Other: "List available models"}

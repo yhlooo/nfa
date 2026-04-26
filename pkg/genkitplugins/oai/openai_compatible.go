@@ -64,26 +64,32 @@ func (d *OpenAICompatible) Init(_ context.Context) []api.Action {
 type ModelOptions struct {
 	ai.ModelOptions
 
-	// 是否开启思考模式
+	// 是否支持思考模式
 	Reasoning bool
-	// 开启思考模式的参数
-	EnableReasoningExtraFields map[string]any
-	// 关闭思考模式的参数
-	DisableReasoningExtraFields map[string]any
+	// 三档思考程度字段
+	// 关闭 / 中档 / 最高
+	ReasoningEffortFields [3]map[string]any
 	// 思考内容字段
 	ReasoningContentField string
 }
 
 // Complete 使用默认值补全参数
 func (opts *ModelOptions) Complete() {
-	if opts.Reasoning && opts.EnableReasoningExtraFields == nil {
-		opts.EnableReasoningExtraFields = map[string]any{
-			"thinking": map[string]any{"type": "enabled"},
+	if opts.Reasoning {
+		if opts.ReasoningEffortFields[0] == nil {
+			opts.ReasoningEffortFields[0] = map[string]any{
+				"reasoning_effort": "none",
+			}
 		}
-	}
-	if !opts.Reasoning && opts.DisableReasoningExtraFields == nil {
-		opts.EnableReasoningExtraFields = map[string]any{
-			"thinking": map[string]any{"type": "disabled"},
+		if opts.ReasoningEffortFields[1] == nil {
+			opts.ReasoningEffortFields[1] = map[string]any{
+				"reasoning_effort": "medium",
+			}
+		}
+		if opts.ReasoningEffortFields[2] == nil {
+			opts.ReasoningEffortFields[2] = map[string]any{
+				"reasoning_effort": "xhigh",
+			}
 		}
 	}
 	if opts.ReasoningContentField == "" {

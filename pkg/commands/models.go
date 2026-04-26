@@ -197,6 +197,8 @@ func runModelsAdd(ctx context.Context, providerName string, opts ModelsAddOption
 			return p.MoonshotAI != nil
 		case "z-ai":
 			return p.ZAI != nil
+		case "tencent":
+			return p.Tencent != nil
 		case "minimax":
 			return p.Minimax != nil
 		}
@@ -264,6 +266,10 @@ func buildModelProvider(key string, opts ModelsAddOptions) models.ModelProvider 
 	case "z-ai":
 		return models.ModelProvider{
 			ZAI: &models.OpenAICompatibleOptions{Name: opts.Name, BaseURL: opts.BaseURL, APIKey: opts.APIKey},
+		}
+	case "tencent":
+		return models.ModelProvider{
+			Tencent: &models.OpenAICompatibleOptions{Name: opts.Name, BaseURL: opts.BaseURL, APIKey: opts.APIKey},
 		}
 	case "minimax":
 		return models.ModelProvider{

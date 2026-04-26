@@ -66,19 +66,21 @@ func (o *GlobalOptions) AddPFlags(fs *pflag.FlagSet) {
 // NewOptions 创建默认 Options
 func NewOptions() Options {
 	return Options{
-		Model:        "",
-		VisionModel:  "",
-		PrintAndExit: false,
-		Resume:       "",
+		Model:          "",
+		VisionModel:    "",
+		PrintAndExit:   false,
+		Resume:         "",
+		ReasoningLevel: -1,
 	}
 }
 
 // Options 运行选项
 type Options struct {
-	Model        string
-	VisionModel  string
-	PrintAndExit bool
-	Resume       string
+	Model          string
+	VisionModel    string
+	PrintAndExit   bool
+	Resume         string
+	ReasoningLevel int
 }
 
 // AddPFlags 将选项绑定到命令行参数
@@ -87,6 +89,7 @@ func (o *Options) AddPFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.VisionModel, "vision-model", o.VisionModel, i18n.T(MsgRootOptsVisionModelDesc))
 	fs.BoolVarP(&o.PrintAndExit, "print", "p", o.PrintAndExit, i18n.T(MsgRootOptsPrintAndExitDesc))
 	fs.StringVar(&o.Resume, "resume", o.Resume, i18n.T(MsgRootOptsResumeDesc))
+	fs.IntVarP(&o.ReasoningLevel, "reasoning-level", "r", o.ReasoningLevel, i18n.T(MsgRootOptsReasoningLevelDesc))
 }
 
 // NewCommand 创建根命令
@@ -174,6 +177,9 @@ func NewCommand(name string) *cobra.Command {
 			}
 			if opts.VisionModel != "" {
 				m.Vision = opts.VisionModel
+			}
+			if opts.ReasoningLevel >= 0 {
+				m.ReasoningLevel = &opts.ReasoningLevel
 			}
 
 			// 创建 Agent

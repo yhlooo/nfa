@@ -26,8 +26,8 @@ var OpenCodeModels = []ModelConfig{
 
 // OpenCodeGoModels 建议的 OpenCode Go 模型
 var OpenCodeGoModels = []ModelConfig{
-	DeepSeekV4Pro,
-	DeepSeekV4Flash,
+	DeepseekV4Pro,
+	DeepseekV4Flash,
 	GLM51,
 	GLM5,
 	Qwen36Plus,

@@ -9,6 +9,7 @@ import (
 	"github.com/firebase/genkit/go/genkit"
 
 	"github.com/yhlooo/nfa/pkg/ctxutil"
+	"github.com/yhlooo/nfa/pkg/genkitplugins/oai"
 	"github.com/yhlooo/nfa/pkg/tokentracker"
 )
 
@@ -22,8 +23,10 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts ...ai.GenerateO
 			messages = append(messages, promptMsg)
 
 			modelName := ""
+			reasoningLevel := 0
 			if m, ok := ctxutil.ModelsFromContext(ctx); ok {
 				modelName = m.GetPrimary()
+				reasoningLevel = m.GetReasoningLevel()
 			}
 
 			opts := []ai.GenerateOption{
@@ -31,7 +34,10 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts ...ai.GenerateO
 				ai.WithMiddleware(tokentracker.ModelMiddlewareFromContext(ctx, modelName)),
 			}
 			if modelName != "" {
-				opts = append(opts, ai.WithModelName(modelName))
+				opts = append(opts,
+					ai.WithModelName(modelName),
+					ai.WithConfig(oai.GenerateConfig{ReasoningLevel: reasoningLevel}),
+				)
 			}
 			handleStream := ctxutil.HandleStreamFnFromContext(ctx)
 			if handleStream != nil {
@@ -73,6 +79,14 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts ...ai.GenerateO
 **注意：新组织的回答应当作给用户的第一个回答，不应该向用户透露反思结果等额外信息**
 `))
 
+						if handleStream != nil {
+							if err := handleStream(ctx, &ai.ModelResponseChunk{
+								Content: []*ai.Part{ai.NewReasoningPart("[reflection] ", nil)},
+								Role:    ai.RoleModel,
+							}); err != nil {
+								return output, fmt.Errorf("handle stream error: %w", err)
+							}
+						}
 						reflected++
 						continue
 					}

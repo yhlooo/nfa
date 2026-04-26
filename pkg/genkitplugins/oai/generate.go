@@ -22,10 +22,20 @@ func NewModelGenerator(client *openai.Client, req *ai.ModelRequest, opts ModelOp
 
 	cfg, hasCfg := req.Config.(GenerateConfig)
 
-	if opts.Reasoning && (!hasCfg || cfg.Reasoning) {
-		rawReq.SetExtraFields(opts.EnableReasoningExtraFields)
-	} else {
-		rawReq.SetExtraFields(opts.DisableReasoningExtraFields)
+	reasoningLevel := 2
+	if hasCfg {
+		reasoningLevel = cfg.ReasoningLevel
+	}
+	if !opts.Reasoning {
+		reasoningLevel = 0
+	}
+	switch reasoningLevel {
+	case 1:
+		rawReq.SetExtraFields(opts.ReasoningEffortFields[1])
+	case 2:
+		rawReq.SetExtraFields(opts.ReasoningEffortFields[2])
+	default: // 0
+		rawReq.SetExtraFields(opts.ReasoningEffortFields[0])
 	}
 
 	return &ModelGenerator{
