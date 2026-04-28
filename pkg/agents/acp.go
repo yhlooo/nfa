@@ -215,6 +215,10 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	if a.memSummarizer != nil {
 		a.memSummarizer.Cancel()
 	}
+	// 取消正在进行的中期记忆总结
+	if a.dailySummarizer != nil {
+		a.dailySummarizer.Cancel()
+	}
 
 	session.lock.Lock()
 	if session.cancelPrompt != nil {
@@ -356,6 +360,10 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	// 启动异步记忆总结（1分钟防抖）
 	if a.memSummarizer != nil {
 		a.memSummarizer.Schedule(ctx, messages)
+	}
+	// 启动中期记忆总结（1分钟防抖）
+	if a.dailySummarizer != nil {
+		a.dailySummarizer.Schedule(ctx, messages)
 	}
 
 	SetMetaCurrentModelUsage(resp.Meta, session.tokenTracker.Summary())

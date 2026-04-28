@@ -75,16 +75,26 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 		memContent = mem.Content()
 	}
 
+	// 加载中期记忆（最近 7 天）
+	dailyMem := memory.NewDailyMemory(a.opts.DataRoot)
+	dailyMemContent, err := dailyMem.LoadRecent(7)
+	if err != nil {
+		a.logger.Error(err, "load daily memory error")
+		dailyMemContent = ""
+	}
+
 	// 注册 flows
 	a.chatFlow = flows.DefineSimpleChatFlow(a.g, ChatFlowName,
-		ai.WithSystemFn(AnalystSystemPrompt(a.skillLoader, memContent)),
+		ai.WithSystemFn(AnalystSystemPrompt(a.skillLoader, memContent, dailyMemContent)),
 		ai.WithTools(a.availableTools...),
 	)
 
 	// 记忆总结器
-	if memContent != "" {
+	if mem != nil {
 		a.memSummarizer = memory.NewSummarizer(a.g, mem)
 	}
+	// 中期记忆总结器
+	a.dailySummarizer = memory.NewDailySummarizer(a.g, dailyMem)
 }
 
 // NewGenkitWithModels 创建 genkit 对象并注册模型

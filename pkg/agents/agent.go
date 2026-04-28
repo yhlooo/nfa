@@ -77,8 +77,9 @@ type NFAAgent struct {
 	availableModels []models.ModelConfig
 	availableTools  []ai.ToolRef
 
-	chatFlow      flows.ChatFlow
-	memSummarizer *memory.Summarizer
+	chatFlow        flows.ChatFlow
+	memSummarizer   *memory.Summarizer
+	dailySummarizer *memory.DailySummarizer
 
 	sessions map[acp.SessionId]*Session
 }
