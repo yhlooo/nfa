@@ -10,7 +10,7 @@ import (
 )
 
 // AnalystSystemPrompt 分析师系统提示
-func AnalystSystemPrompt(sl *skills.SkillLoader) func(context.Context, any) (string, error) {
+func AnalystSystemPrompt(sl *skills.SkillLoader, memoryContent string) func(context.Context, any) (string, error) {
 	now := time.Now().Format(time.RFC3339)
 	return func(_ context.Context, _ any) (string, error) {
 		return NewAgentSystemPrompt(AgentSystemPromptData{
@@ -32,7 +32,8 @@ func AnalystSystemPrompt(sl *skills.SkillLoader) func(context.Context, any) (str
 - alpha-vantage_ 开头的工具是由 AlphaVantage MCP 提供的，可用于查询美股市场的行情、咨询，不能用于查询港股、 A 股 ，港股、 A 股相关数据不要尝试通过该工具查询
 - WebBrowse 比 WebFetch 要好得多， WebBrowse 使用视觉方式理解页面内容，如果需要访问网页应该首先使用 WebBrowse ，只有当 WebBrowse 失败时才使用 WebFetch
 `,
-			Time: now,
+			Memory: memoryContent,
+			Time:   now,
 		})
 	}
 }
@@ -51,6 +52,8 @@ type AgentSystemPromptData struct {
 	Skills []skills.SkillMeta
 	// 额外信息
 	Extra string
+	// 用户记忆
+	Memory string
 	// 当前时间
 	Time string
 }
@@ -92,8 +95,15 @@ var AgentSystemPromptTpl = template.Must(template.New("AgentSystemPrompt").
 {{ .Extra }}
 {{- end }}
 
+{{- if .Memory }}
+
+## 用户记忆
+以下是对用户的长期记忆，可在回答时参考这些信息提供更个性化的建议，但注意这些信息可能存在过时或偏差：
+{{ .Memory }}
+{{- end }}
+
 ## 其它信息
-- 当前日期： {{ .Time }}
+- 当前时间： {{ .Time }}
 `))
 
 // NewAgentSystemPrompt 创建 Agent 系统提示

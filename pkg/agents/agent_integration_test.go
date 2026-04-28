@@ -273,7 +273,7 @@ Test content.
 	}
 
 	// 生成系统提示
-	systemPromptFn := AnalystSystemPrompt(agent.skillLoader)
+	systemPromptFn := AnalystSystemPrompt(agent.skillLoader, "")
 	prompt, err := systemPromptFn(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("AnalystSystemPrompt() error = %v", err)

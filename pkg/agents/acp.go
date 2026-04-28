@@ -211,6 +211,11 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 		)
 	}
 
+	// 取消正在进行的记忆总结
+	if a.memSummarizer != nil {
+		a.memSummarizer.Cancel()
+	}
+
 	session.lock.Lock()
 	if session.cancelPrompt != nil {
 		session.lock.Unlock()
@@ -346,6 +351,11 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 	// 保存会话
 	if err := SaveSession(filepath.Join(a.opts.DataRoot, SessionsDirName), params.SessionId, messages); err != nil {
 		a.logger.Error(err, "save session error")
+	}
+
+	// 启动异步记忆总结（1分钟防抖）
+	if a.memSummarizer != nil {
+		a.memSummarizer.Schedule(ctx, messages)
 	}
 
 	SetMetaCurrentModelUsage(resp.Meta, session.tokenTracker.Summary())

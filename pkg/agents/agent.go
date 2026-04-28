@@ -11,6 +11,7 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 
 	"github.com/yhlooo/nfa/pkg/agents/flows"
+	"github.com/yhlooo/nfa/pkg/memory"
 	"github.com/yhlooo/nfa/pkg/models"
 	"github.com/yhlooo/nfa/pkg/skills"
 	"github.com/yhlooo/nfa/pkg/tokentracker"
@@ -76,7 +77,8 @@ type NFAAgent struct {
 	availableModels []models.ModelConfig
 	availableTools  []ai.ToolRef
 
-	chatFlow flows.ChatFlow
+	chatFlow      flows.ChatFlow
+	memSummarizer *memory.Summarizer
 
 	sessions map[acp.SessionId]*Session
 }

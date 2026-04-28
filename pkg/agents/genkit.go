@@ -3,6 +3,7 @@ package agents
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/core/api"
@@ -10,6 +11,7 @@ import (
 	"github.com/go-logr/logr"
 
 	"github.com/yhlooo/nfa/pkg/agents/flows"
+	"github.com/yhlooo/nfa/pkg/memory"
 	"github.com/yhlooo/nfa/pkg/models"
 	"github.com/yhlooo/nfa/pkg/tools/fs"
 	"github.com/yhlooo/nfa/pkg/tools/webbrowse"
@@ -64,11 +66,25 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 		a.logger.Info(fmt.Sprintf("registered tool: %s", t.Name()))
 	}
 
+	// 加载长期记忆
+	memContent := ""
+	mem, err := memory.Load(filepath.Join(a.opts.DataRoot, "MEMORY.md"))
+	if err != nil {
+		a.logger.Error(err, "load memory error")
+	} else {
+		memContent = mem.Content()
+	}
+
 	// 注册 flows
 	a.chatFlow = flows.DefineSimpleChatFlow(a.g, ChatFlowName,
-		ai.WithSystemFn(AnalystSystemPrompt(a.skillLoader)),
+		ai.WithSystemFn(AnalystSystemPrompt(a.skillLoader, memContent)),
 		ai.WithTools(a.availableTools...),
 	)
+
+	// 记忆总结器
+	if memContent != "" {
+		a.memSummarizer = memory.NewSummarizer(a.g, mem)
+	}
 }
 
 // NewGenkitWithModels 创建 genkit 对象并注册模型
