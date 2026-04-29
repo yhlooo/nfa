@@ -14,7 +14,7 @@ var (
 		Prices: ModelPrices{
 			Input:  12,
 			Output: 24,
-			Cached: 1,
+			Cached: 0.1,
 		},
 		ContextWindow: 1000000,
 		Score:         10,
@@ -25,7 +25,7 @@ var (
 		Prices: ModelPrices{
 			Input:  1,
 			Output: 2,
-			Cached: 0.2,
+			Cached: 0.02,
 		},
 		ContextWindow: 1000000,
 		Score:         8,
