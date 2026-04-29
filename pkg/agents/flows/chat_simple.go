@@ -45,8 +45,8 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts ...ai.GenerateO
 				opts = append(opts, ai.WithStreaming(handleTextStream(handleStream, true, true)))
 			}
 
-			reflected := 0
-
+			reflected := false
+			var finalMsgParts []*ai.Part
 			for {
 				curTurnOpts := append([]ai.GenerateOption{ai.WithMessages(messages...)}, opts...)
 				curTurnOpts = append(curTurnOpts, genOpts...)
@@ -69,7 +69,14 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts ...ai.GenerateO
 				toolRequests := resp.ToolRequests()
 				if len(toolRequests) == 0 {
 					// 反思一轮
-					if reflected < 1 {
+					if !reflected {
+						// 记录反思前最后一轮思考内容
+						for _, p := range resp.Message.Content {
+							if p.IsReasoning() {
+								finalMsgParts = append(finalMsgParts, p)
+							}
+						}
+
 						messages = append(messages, ai.NewUserTextMessage(`[SystemPrompt] 请根据以下检查项反思你的回答是否正确解决了用户的问题，并在确认无误后重新组织回答：
 1. 形式：检查回答在形式上是否真正回答了用户的问题？
 2. 广度和深度：回顾自己的之前的思考是否已经充分考虑了问题的广度和深度，是否有关键遗漏？
@@ -87,9 +94,17 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts ...ai.GenerateO
 								return output, fmt.Errorf("handle stream error: %w", err)
 							}
 						}
-						reflected++
+						reflected = true
 						continue
 					}
+
+					// 反思前思考拼上反思后的回答作为最终结果
+					for _, p := range resp.Message.Content {
+						if !p.IsReasoning() {
+							finalMsgParts = append(finalMsgParts, p)
+						}
+					}
+					resp.Message.Content = finalMsgParts
 
 					// 结束对话
 					output.Messages = append(output.Messages, resp.Message)
@@ -175,21 +190,4 @@ func handleToolCall(ctx context.Context, g *genkit.Genkit, req *ai.ToolRequest) 
 		Ref:    req.Ref,
 		Output: output,
 	})
-}
-
-// pruneReasoning 去除消息中的思考过程
-func pruneReasoning(msg *ai.Message) *ai.Message {
-	parts := make([]*ai.Part, 0, len(msg.Content))
-	for _, part := range msg.Content {
-		if part.IsReasoning() {
-			continue
-		}
-		parts = append(parts, part)
-	}
-
-	return &ai.Message{
-		Content:  parts,
-		Metadata: msg.Metadata,
-		Role:     msg.Role,
-	}
 }
