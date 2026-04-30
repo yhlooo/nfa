@@ -2,6 +2,7 @@ package memory
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -11,27 +12,37 @@ import (
 	"github.com/go-logr/logr"
 )
 
-// Summarizer 异步记忆总结器
+// Summarizer 异步记忆总结器，统一管理长期记忆和中期记忆的总结
 type Summarizer struct {
-	mu         sync.Mutex
-	memory     *Memory
+	lock       sync.Mutex
 	cancelFunc context.CancelFunc
-	run        func(ctx context.Context, in SummarizeInput) (SummarizeOutput, error)
+
+	summarizeLongTermMemoryFlow SummarizeFlow
+	longTermMemory              Store
+
+	summarizeDailyMemoryFlow SummarizeFlow
+	dailyMemory              Store
 }
 
-// NewSummarizer 创建总结器
-func NewSummarizer(g *genkit.Genkit, memory *Memory) *Summarizer {
+// NewSummarizer 创建记忆总结器
+func NewSummarizer(g *genkit.Genkit, dataRoot string) *Summarizer {
 	return &Summarizer{
-		memory: memory,
-		run:    DefineSummarizeFlow(g, "MemorySummarize").Run,
+		summarizeLongTermMemoryFlow: DefineSummarizeFlow(g, "SummarizeLongTermMemory", SummarizeOptions{
+			SystemPrompt: summarizeLongTermMemorySystemPrompt,
+		}),
+		longTermMemory: NewFileStore(filepath.Join(dataRoot, "MEMORY.md")),
+		summarizeDailyMemoryFlow: DefineSummarizeFlow(g, "SummarizeDailyMemory", SummarizeOptions{
+			SystemPrompt: summarizeDailyMemorySystemPrompt,
+		}),
+		dailyMemory: NewDailyStore(filepath.Join(dataRoot, "memory"), 7),
 	}
 }
 
 // Schedule 安排防抖总结。在调用方对话结束后调用。
 // 等待 1 分钟，期间如果被 Cancel 则取消，否则开始异步总结。
 func (s *Summarizer) Schedule(ctx context.Context, history []*ai.Message) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.lock.Lock()
+	defer s.lock.Unlock()
 
 	if s.cancelFunc != nil {
 		s.cancelFunc()
@@ -47,22 +58,39 @@ func (s *Summarizer) Schedule(ctx context.Context, history []*ai.Message) {
 			return
 		}
 
-		s.summarize(ctx, history)
+		// 总结长期记忆
+		s.summarize(ctx, history, s.summarizeLongTermMemoryFlow, s.longTermMemory)
+		// 总结每日记忆
+		s.summarize(ctx, history, s.summarizeDailyMemoryFlow, s.dailyMemory)
 	}()
 }
 
 // Cancel 取消正在进行的防抖等待或异步总结
 func (s *Summarizer) Cancel() {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	if s.cancelFunc != nil {
 		s.cancelFunc()
 		s.cancelFunc = nil
 	}
 }
 
-// summarize 执行记忆总结
-func (s *Summarizer) summarize(ctx context.Context, history []*ai.Message) {
+// LongTermMemory 返回长期记忆
+func (s *Summarizer) LongTermMemory() Store {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	return s.longTermMemory
+}
+
+// DailyMemory 返回每日记忆
+func (s *Summarizer) DailyMemory() Store {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	return s.dailyMemory
+}
+
+// summarize 执行单个流程的记忆总结
+func (s *Summarizer) summarize(ctx context.Context, history []*ai.Message, flow SummarizeFlow, mem Store) {
 	logger := logr.FromContextOrDiscard(ctx)
 
 	select {
@@ -71,23 +99,27 @@ func (s *Summarizer) summarize(ctx context.Context, history []*ai.Message) {
 	default:
 	}
 
-	existingMemory := s.memory.Content()
+	activeMemory, err := mem.ReadActiveContent()
+	if err != nil {
+		logger.Error(err, "read active memory for summarization error")
+		return
+	}
 
-	out, err := s.run(ctx, SummarizeInput{
-		ExistingMemory: existingMemory,
-		History:        history,
+	out, err := flow.Run(ctx, SummarizeInput{
+		CurrentMemory: activeMemory,
+		History:       history,
 	})
 	if err != nil {
-		logger.Error(err, "memory summarization failed")
+		logger.Error(err, "memory summarization error")
 		return
 	}
 
-	result := strings.TrimSpace(out.Memory)
-	if result == "" || result == existingMemory {
+	newMem := strings.TrimSpace(out.Memory) + "\n"
+	if newMem == "" || newMem == activeMemory {
 		return
 	}
 
-	if err := s.memory.Update(result); err != nil {
-		logger.Error(err, "failed to update memory file")
+	if err := mem.Update(newMem); err != nil {
+		logger.Error(err, "save new memory error")
 	}
 }

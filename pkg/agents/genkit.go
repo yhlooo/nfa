@@ -3,7 +3,6 @@ package agents
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 
 	"github.com/firebase/genkit/go/ai"
 	"github.com/firebase/genkit/go/core/api"
@@ -66,35 +65,22 @@ func (a *NFAAgent) InitGenkit(ctx context.Context) {
 		a.logger.Info(fmt.Sprintf("registered tool: %s", t.Name()))
 	}
 
-	// 加载长期记忆
-	memContent := ""
-	mem, err := memory.Load(filepath.Join(a.opts.DataRoot, "MEMORY.md"))
+	// 记忆
+	a.summarizer = memory.NewSummarizer(a.g, a.opts.DataRoot)
+	longTermMem, err := a.summarizer.LongTermMemory().Read()
 	if err != nil {
-		a.logger.Error(err, "load memory error")
-	} else {
-		memContent = mem.Content()
+		a.logger.Error(err, "read long-term memory error")
 	}
-
-	// 加载中期记忆（最近 7 天）
-	dailyMem := memory.NewDailyMemory(a.opts.DataRoot)
-	dailyMemContent, err := dailyMem.LoadRecent(7)
+	dailyMemory, err := a.summarizer.DailyMemory().Read()
 	if err != nil {
-		a.logger.Error(err, "load daily memory error")
-		dailyMemContent = ""
+		a.logger.Error(err, "read daily memory error")
 	}
 
 	// 注册 flows
 	a.chatFlow = flows.DefineSimpleChatFlow(a.g, ChatFlowName,
-		ai.WithSystemFn(AnalystSystemPrompt(a.skillLoader, memContent, dailyMemContent)),
+		ai.WithSystemFn(AnalystSystemPrompt(a.skillLoader, longTermMem, dailyMemory)),
 		ai.WithTools(a.availableTools...),
 	)
-
-	// 记忆总结器
-	if mem != nil {
-		a.memSummarizer = memory.NewSummarizer(a.g, mem)
-	}
-	// 中期记忆总结器
-	a.dailySummarizer = memory.NewDailySummarizer(a.g, dailyMem)
 }
 
 // NewGenkitWithModels 创建 genkit 对象并注册模型

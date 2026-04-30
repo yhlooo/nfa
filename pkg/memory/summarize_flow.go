@@ -2,6 +2,7 @@ package memory
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -12,8 +13,8 @@ import (
 
 // SummarizeInput 记忆总结流程输入
 type SummarizeInput struct {
-	ExistingMemory string        `json:"existingMemory"`
-	History        []*ai.Message `json:"history"`
+	CurrentMemory string        `json:"currentMemory"`
+	History       []*ai.Message `json:"history"`
 }
 
 // SummarizeOutput 记忆总结流程输出
@@ -24,29 +25,139 @@ type SummarizeOutput struct {
 // SummarizeFlow 记忆总结流程
 type SummarizeFlow = *core.Flow[SummarizeInput, SummarizeOutput, struct{}]
 
+// SummarizeOptions 记忆总结选项
+type SummarizeOptions struct {
+	SystemPrompt string
+}
+
 // DefineSummarizeFlow 定义记忆总结流程
-func DefineSummarizeFlow(g *genkit.Genkit, name string) SummarizeFlow {
+func DefineSummarizeFlow(g *genkit.Genkit, name string, opts SummarizeOptions) SummarizeFlow {
 	return genkit.DefineFlow(g, name,
 		func(ctx context.Context, in SummarizeInput) (SummarizeOutput, error) {
-			historyText := historyToText(in.History)
-			userPrompt := buildUserPrompt(in.ExistingMemory, historyText)
-
 			resp, err := genkit.Generate(ctx, g,
+				ai.WithSystem(opts.SystemPrompt),
 				ai.WithMessages(
-					ai.NewSystemTextMessage(summarySystemPrompt),
-					ai.NewUserTextMessage(userPrompt),
+					ai.NewUserTextMessage(buildSummarizePrompt(in.CurrentMemory, in.History)),
 				),
 			)
 			if err != nil {
 				return SummarizeOutput{}, err
 			}
 
-			return SummarizeOutput{Memory: resp.Message.Text()}, nil
+			out := strings.TrimSpace(resp.Message.Text())
+			out = strings.TrimPrefix(out, "```markdown")
+			out = strings.TrimSuffix(out, "```")
+			out += "\n"
+
+			return SummarizeOutput{Memory: out}, nil
 		},
 	)
 }
 
-const summarySystemPrompt = `你是一个记忆管理助手，负责从用户与 AI 的对话历史中提取和更新关于用户的长期记忆。
+// buildSummarizePrompt 构建总结记忆的指令
+func buildSummarizePrompt(currentMemory string, history []*ai.Message) string {
+	var b strings.Builder
+	b.WriteString("总结对话历史，更新当前记忆内容\n\n")
+	b.WriteString("## 当前记忆\n\n")
+	b.WriteString(currentMemory)
+	b.WriteString("\n\n")
+	b.WriteString("## 对话历史\n\n")
+	b.WriteString(historyToText(history))
+	return b.String()
+}
+
+// historyToText 将消息历史转换为易读的文本格式
+func historyToText(history []*ai.Message) string {
+	var b strings.Builder
+	for _, msg := range history {
+		switch msg.Role {
+		case ai.RoleSystem:
+			b.WriteString(fmt.Sprintf("<system>%s</system>\n", msg.Text()))
+		case ai.RoleModel:
+			b.WriteString("<assistant>")
+			reasoning := ""
+			for _, p := range msg.Content {
+				if p.IsReasoning() {
+					reasoning += p.Text
+				}
+			}
+			if reasoning != "" {
+				b.WriteString(fmt.Sprintf("<think>%s</think>\n", reasoning))
+			}
+			b.WriteString(msg.Text())
+			for _, p := range msg.Content {
+				if p.IsToolRequest() {
+					inRaw, _ := json.Marshal(p.ToolRequest.Input)
+					b.WriteString(fmt.Sprintf(
+						"<tool-call><id>%s</id><name>%s</name><input>%s</input></tool-call>\n",
+						p.ToolRequest.Ref, p.ToolRequest.Name, string(inRaw),
+					))
+				}
+			}
+			b.WriteString("</assistant>\n")
+		case ai.RoleUser:
+			b.WriteString(fmt.Sprintf("<user>%s</user>\n", msg.Text()))
+		case ai.RoleTool:
+			for _, p := range msg.Content {
+				if p.IsToolResponse() {
+					outRaw, _ := json.Marshal(p.ToolResponse.Output)
+					b.WriteString(fmt.Sprintf(
+						"<tool><id>%s</id><result>%s</result></tool>\n",
+						p.ToolResponse.Ref, truncate(string(outRaw), 300),
+					))
+				}
+			}
+		}
+	}
+
+	return b.String()
+}
+
+func truncate(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen] + "..."
+}
+
+const summarizeDailyMemorySystemPrompt = `你是一个中期记忆管理助手，负责从用户与 AI 的今天的对话历史中提取中期记忆。
+
+## 记忆内容要求
+提取并记录以下类型的 **时间敏感** 信息：
+- 用户今天关注了什么（询问了哪些股票、话题、市场动态等）
+- 今天对话中得出的结论或判断（用户或 AI 的分析结论、决策理由等）
+- 用户提到的未来需要关注的事件（财报日期、经济数据发布、政策变化等）
+- 跨天持续的讨论主题（同一话题在多天内的进展和变化）
+
+## 记忆原则
+- **只记录时间敏感信息** ，长期稳定的偏好（投资风格、风险偏好、回答风格等）属于长期记忆范畴， **不要记录**
+- 与当天现有记忆去重合并，不要重复记录已有的内容
+- 保持记忆简洁，每条信息一行
+- 如果对话中没有新的值得记录的信息，直接返回当天现有记忆原文（如果有），不做修改
+- 如果当天没有任何值得记录的信息且当天也无现有记忆，返回空
+
+## 输出格式
+直接输出当天中期记忆的完整内容。 **严禁** 在输出中包含任何分析过程、推理步骤、解释说明、前缀或后缀文字。
+
+输出使用 Markdown 格式，参考结构如下：
+
+` + "```markdown" + `
+#### 今日关注
+- 关注股票/话题：xxx
+- 查询内容：xxx
+
+#### 今日结论
+- 关于 xxx 的判断：xxx
+- 决策：xxx
+
+#### 待关注事件
+- xxx（日期/时间范围）
+
+#### .... （其它小节）
+` + "```" + `
+`
+
+const summarizeLongTermMemorySystemPrompt = `你是一个记忆管理助手，负责从用户与 AI 的对话历史中提取和更新关于用户的长期记忆。
 
 ## 记忆内容要求
 提取并记录以下类型的信息：
@@ -63,113 +174,25 @@ const summarySystemPrompt = `你是一个记忆管理助手，负责从用户与
 - 如果现有记忆中的某些信息已经过时或与新信息矛盾，更新或替换它们
 
 ## 输出格式
-**直接**输出更新后的完整记忆文件内容。**严禁**在输出中包含任何分析过程、推理步骤、解释说明、前缀或后缀文字。你的回复必须以 "# NFA Memory" 开头，只包含以下 Markdown 格式的记忆文件内容：
+直接输出更新后的完整记忆文件内容。 **严禁** 在输出中包含任何分析过程、推理步骤、解释说明、前缀或后缀文字。
 
-# NFA Memory
+输出使用 Markdown 格式，参考结构如下：
 
-## 用户关注
+` + "```markdown" + `
+### 用户关注
 - 关注股票：xxx、xxx
 - 关注板块：xxx、xxx
 
-## 投资偏好
+### 投资偏好
 - 投资风格：xxx
 - 风险偏好：xxx
 
-## 回答风格
+### 回答风格
 - xxx
 
-## 经验与知识
+### 经验与知识
 - xxx
+
+### .... （其它小节）
+` + "```" + `
 `
-
-func buildUserPrompt(existingMemory, historyText string) string {
-	var b strings.Builder
-	if existingMemory != "" {
-		b.WriteString("## 现有记忆\n")
-		b.WriteString(existingMemory)
-		b.WriteString("\n\n")
-	}
-	b.WriteString("## 本轮对话历史\n")
-	b.WriteString(historyText)
-	return b.String()
-}
-
-// historyToText 将消息历史转换为易读的文本格式
-func historyToText(history []*ai.Message) string {
-	var b strings.Builder
-	for _, msg := range history {
-		roleLabel := roleLabel(msg.Role)
-		for _, part := range msg.Content {
-			text := partText(part)
-			if text == "" {
-				continue
-			}
-			if b.Len() > 0 {
-				b.WriteString("\n")
-			}
-			b.WriteString(fmt.Sprintf("%s: %s", roleLabel, text))
-		}
-	}
-	return b.String()
-}
-
-func roleLabel(role ai.Role) string {
-	switch role {
-	case ai.RoleUser:
-		return "用户"
-	case ai.RoleModel:
-		return "助手"
-	case ai.RoleTool:
-		return "工具"
-	case ai.RoleSystem:
-		return "系统"
-	default:
-		return string(role)
-	}
-}
-
-func partText(part *ai.Part) string {
-	switch part.Kind {
-	case ai.PartText:
-		return part.Text
-	case ai.PartReasoning:
-		return ""
-	case ai.PartToolRequest:
-		if part.ToolRequest != nil {
-			return fmt.Sprintf("[调用工具: %s]", part.ToolRequest.Name)
-		}
-		return "[调用工具]"
-	case ai.PartToolResponse:
-		if part.ToolResponse != nil {
-			output := toolOutputText(part.ToolResponse.Output)
-			return "[工具返回: " + truncate(output, 300) + "]"
-		}
-		return "[工具返回]"
-	default:
-		if part.Text != "" {
-			return part.Text
-		}
-		return ""
-	}
-}
-
-func toolOutputText(output any) string {
-	if output == nil {
-		return ""
-	}
-	switch v := output.(type) {
-	case string:
-		return v
-	case fmt.Stringer:
-		return v.String()
-	default:
-		return fmt.Sprintf("%v", v)
-	}
-}
-
-func truncate(s string, maxLen int) string {
-	if len(s) <= maxLen {
-		return s
-	}
-	return s[:maxLen] + "..."
-}

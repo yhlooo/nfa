@@ -10,7 +10,10 @@ import (
 )
 
 // AnalystSystemPrompt 分析师系统提示
-func AnalystSystemPrompt(sl *skills.SkillLoader, memoryContent, dailyMemoryContent string) func(context.Context, any) (string, error) {
+func AnalystSystemPrompt(
+	sl *skills.SkillLoader,
+	longTermMemory, dailyMemory string,
+) func(context.Context, any) (string, error) {
 	now := time.Now().Format(time.RFC3339)
 	return func(_ context.Context, _ any) (string, error) {
 		return NewAgentSystemPrompt(AgentSystemPromptData{
@@ -32,9 +35,9 @@ func AnalystSystemPrompt(sl *skills.SkillLoader, memoryContent, dailyMemoryConte
 - alpha-vantage_ 开头的工具是由 AlphaVantage MCP 提供的，可用于查询美股市场的行情、咨询，不能用于查询港股、 A 股 ，港股、 A 股相关数据不要尝试通过该工具查询
 - WebBrowse 比 WebFetch 要好得多， WebBrowse 使用视觉方式理解页面内容，如果需要访问网页应该首先使用 WebBrowse ，只有当 WebBrowse 失败时才使用 WebFetch
 `,
-			Memory:      memoryContent,
-			DailyMemory: dailyMemoryContent,
-			Time:        now,
+			LongTermMemory: longTermMemory,
+			DailyMemory:    dailyMemory,
+			Time:           now,
 		})
 	}
 }
@@ -53,9 +56,9 @@ type AgentSystemPromptData struct {
 	Skills []skills.SkillMeta
 	// 额外信息
 	Extra string
-	// 用户记忆（长期）
-	Memory string
-	// 近期动态（中期记忆）
+	// 长期记忆
+	LongTermMemory string
+	// 近期每日动态（中期记忆）
 	DailyMemory string
 	// 当前时间
 	Time string
@@ -98,17 +101,17 @@ var AgentSystemPromptTpl = template.Must(template.New("AgentSystemPrompt").
 {{ .Extra }}
 {{- end }}
 
-{{- if .Memory }}
+{{- if .LongTermMemory }}
 
-## 用户记忆
+## 记忆
 以下是对用户的长期记忆，可在回答时参考这些信息提供更个性化的建议，但注意这些信息可能存在过时或偏差：
-{{ .Memory }}
+{{ .LongTermMemory }}
 {{- end }}
 
 {{- if .DailyMemory }}
 
 ## 近期动态
-以下是对用户最近 7 天的中期记忆，可帮助你了解用户近期的关注点和上下文，但注意这些信息可能存在偏差或滞后：
+以下是对用户最近数天的中期记忆，可帮助你了解用户近期的关注点和上下文，但注意这些信息可能存在偏差或滞后：
 {{ .DailyMemory }}
 {{- end }}
 
