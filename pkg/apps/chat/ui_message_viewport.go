@@ -7,9 +7,9 @@ import (
 	"slices"
 	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/glamour"
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/glamour/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/coder/acp-go-sdk"
 	"github.com/go-logr/logr"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
@@ -19,7 +19,7 @@ import (
 
 // NewMessageViewport 创建消息视窗
 func NewMessageViewport(ctx context.Context) (MessageViewport, error) {
-	r, err := glamour.NewTermRenderer(glamour.WithAutoStyle())
+	r, err := glamour.NewTermRenderer(glamour.WithStylePath("dark"))
 	if err != nil {
 		return MessageViewport{}, fmt.Errorf("new markdown renderer error: %w", err)
 	}

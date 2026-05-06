@@ -10,7 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/charmbracelet/glamour"
+	"charm.land/glamour/v2"
+
 	"github.com/yhlooo/nfa/pkg/i18n"
 )
 
@@ -73,7 +74,11 @@ func promptAndSign(ctx context.Context, sigPath, sha256 string, isUpdate bool) e
 	content := Content()
 
 	// 使用 glamour 渲染 Markdown 并打印
-	rendered, err := glamour.Render(content, "auto")
+	r, err := glamour.NewTermRenderer(glamour.WithStylePath("dark"))
+	if err != nil {
+		return err
+	}
+	rendered, err := r.Render(content)
 	if err != nil {
 		// 渲染失败时回退到原始文本
 		fmt.Println(strings.Repeat("-", 72))

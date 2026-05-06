@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/textarea"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/textarea"
+	tea "charm.land/bubbletea/v2"
 	"github.com/coder/acp-go-sdk"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 
@@ -59,10 +59,10 @@ func (chat *Chat) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		chat.modelUsageStyle = chat.modelUsageStyle.Width(typedMsg.Width)
 		chat.logger.Info(fmt.Sprintf("resize message: width: %d, height: %d", typedMsg.Width, typedMsg.Height))
 
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		chat.logger.Info(fmt.Sprintf("key message: %q", typedMsg.String()))
-		switch typedMsg.Type {
-		case tea.KeyEnter:
+		switch typedMsg.String() {
+		case "enter":
 			if !chat.vp.AgentProcessing() && !chat.input.MultiLineMode() {
 				content := strings.TrimRight(chat.input.Value(), "\n")
 				chat.input.Reset()
@@ -84,12 +84,12 @@ func (chat *Chat) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 
-		case tea.KeyEsc:
+		case "esc":
 			if chat.vp.AgentProcessing() {
 				cmds = append(cmds, chat.cancelPrompt)
 			}
 
-		case tea.KeyCtrlC:
+		case "ctrl+c":
 			if !chat.vp.AgentProcessing() {
 				return chat, tea.Quit
 			}
@@ -142,7 +142,7 @@ func (chat *Chat) updateComponents() []tea.Cmd {
 }
 
 // View 渲染显示内容
-func (chat *Chat) View() string {
+func (chat *Chat) View() tea.View {
 	vpView := chat.vp.View()
 	if vpView != "" {
 		vpView += "\n"
@@ -170,7 +170,7 @@ func (chat *Chat) View() string {
 		modelUsageView = i18nutil.TContext(chat.ctx, MsgTokenUsage) + " " + strings.TrimPrefix(modelUsageView, " | ")
 	}
 
-	return fmt.Sprintf(
+	v := tea.NewView(fmt.Sprintf(
 		`%s
 %s%s
 
@@ -178,7 +178,8 @@ func (chat *Chat) View() string {
 		vpView,
 		bottomView,
 		chat.modelUsageStyle.Render(modelUsageView),
-	)
+	))
+	return v
 }
 
 // printHello 输出欢迎信息

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 	"github.com/coder/acp-go-sdk"
 
 	"github.com/yhlooo/nfa/pkg/agents"

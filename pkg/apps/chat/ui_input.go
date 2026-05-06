@@ -4,10 +4,10 @@ import (
 	"context"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/table"
-	"github.com/charmbracelet/bubbles/textarea"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/table"
+	"charm.land/bubbles/v2/textarea"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/go-logr/logr"
 
 	"github.com/yhlooo/nfa/pkg/history"
@@ -21,9 +21,11 @@ func NewInputBox(ctx context.Context, commands []SelectorOption, hist *history.H
 	input := textarea.New()
 	input.ShowLineNumbers = false
 	input.SetWidth(100)
-	input.FocusedStyle.Base = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true, false)
-	input.FocusedStyle.CursorLine = lipgloss.NewStyle()
-	input.BlurredStyle.CursorLine = lipgloss.NewStyle()
+	styles := textarea.DefaultDarkStyles()
+	styles.Focused.Base = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true, false)
+	styles.Focused.CursorLine = lipgloss.NewStyle()
+	styles.Blurred.CursorLine = lipgloss.NewStyle()
+	input.SetStyles(styles)
 	input.Focus()
 
 	commandSelector := NewSelector(commands, "/", 8, 100)
@@ -81,21 +83,8 @@ func (box *InputBox) Update(msg tea.Msg) (*InputBox, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		box.width = typedMsg.Width
 
-	case tea.KeyMsg:
-		switch typedMsg.Type {
-		case tea.KeyRunes, tea.KeyBackspace:
-			box.doubleEsc = false
-			// 用户输入时重置历史导航
-			box.history.ResetNav()
-			box.historyTempValue = ""
-
-			if val := box.input.Value(); strings.HasPrefix(val, "/") {
-				box.commandSelector.SetSearchKey(strings.TrimPrefix(val, "/"))
-				box.commandSelector.SetEnabled(true)
-			} else {
-				box.commandSelector.SetEnabled(false)
-			}
-
+	case tea.KeyPressMsg:
+		switch typedMsg.Code {
 		case tea.KeyUp:
 			// 单行模式下浏览历史（命令选择器启用时不处理，由选择器处理上下键）
 			if !box.commandSelector.Enabled() && !box.multiLine && box.history != nil && box.history.Count() > 0 {
@@ -150,7 +139,21 @@ func (box *InputBox) Update(msg tea.Msg) (*InputBox, tea.Cmd) {
 			box.doubleEsc = !box.doubleEsc
 			box.commandSelector.SetEnabled(false)
 		default:
-			box.doubleEsc = false
+			if len(typedMsg.Text) > 0 || typedMsg.Code == tea.KeyBackspace {
+				box.doubleEsc = false
+				// 用户输入时重置历史导航
+				box.history.ResetNav()
+				box.historyTempValue = ""
+
+				if val := box.input.Value(); strings.HasPrefix(val, "/") {
+					box.commandSelector.SetSearchKey(strings.TrimPrefix(val, "/"))
+					box.commandSelector.SetEnabled(true)
+				} else {
+					box.commandSelector.SetEnabled(false)
+				}
+			} else {
+				box.doubleEsc = false
+			}
 		}
 	}
 

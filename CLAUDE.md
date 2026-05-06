@@ -13,7 +13,7 @@ NFA (Not Financial Advice，非财务建议) 是一个基于 Go 语言构建的�
   - AI Agent 框架： `github.com/firebase/genkit/go`
   - Agent 和 TUI 使用 ACP 协议交互： `github.com/coder/acp-go-sdk`
   - 命令行入口： `github.com/spf13/cobra`
-  - TUI 框架： `github.com/charmbracelet/bubbletea`
+  - TUI 框架： `charm.land/bubbletea/v2`
   - 日志： `github.com/go-logr/logr`
   - 单元测试断言： `github.com/stretchr/testify`
   - 国际化： `github.com/nicksnyder/go-i18n/v2/i18n`
