@@ -136,7 +136,6 @@ func (a *NFAAgent) LoadSession(ctx context.Context, params acp.LoadSessionReques
 	// 回放历史消息
 	handleFn := a.handleStreamChunk(params.SessionId, nil)
 	for _, msg := range data.Messages {
-		time.Sleep(5 * time.Millisecond) // 由于客户端并行处理，发送太快的话到达客户端是乱序的，所以这里略微 sleep 一下
 		switch msg.Role {
 		case ai.RoleUser:
 			if err := a.client.SessionUpdate(ctx, acp.SessionNotification{
@@ -192,10 +191,36 @@ func (a *NFAAgent) sendAvailableCommands(ctx context.Context, sessionID acp.Sess
 	}
 }
 
+// CloseSession 关闭会话
+func (a *NFAAgent) CloseSession(_ context.Context, _ acp.CloseSessionRequest) (acp.CloseSessionResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+// ListSessions 列出会话
+func (a *NFAAgent) ListSessions(_ context.Context, _ acp.ListSessionsRequest) (acp.ListSessionsResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+// ResumeSession 恢复会话
+func (a *NFAAgent) ResumeSession(_ context.Context, _ acp.ResumeSessionRequest) (acp.ResumeSessionResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // SetSessionMode 设置会话模式
 func (a *NFAAgent) SetSessionMode(_ context.Context, _ acp.SetSessionModeRequest) (acp.SetSessionModeResponse, error) {
 	return acp.SetSessionModeResponse{},
 		fmt.Errorf("%w: method session/set_mode not supported", acputil.ErrNotSupported)
+}
+
+// SetSessionConfigOption 设置会话选项
+func (a *NFAAgent) SetSessionConfigOption(
+	_ context.Context,
+	_ acp.SetSessionConfigOptionRequest,
+) (acp.SetSessionConfigOptionResponse, error) {
+	return acp.SetSessionConfigOptionResponse{}, nil
 }
 
 // Prompt 对话
@@ -259,8 +284,7 @@ func (a *NFAAgent) Prompt(ctx context.Context, params acp.PromptRequest) (acp.Pr
 
 	a.logger.Info("prompt turn start")
 
-	extraMeta, _ := params.Meta.(map[string]any)
-	handleStreamFn := a.handleStreamChunk(params.SessionId, extraMeta)
+	handleStreamFn := a.handleStreamChunk(params.SessionId, params.Meta)
 	ctx = ctxutil.ContextWithHandleStreamFn(ctx, handleStreamFn)
 	resp := acp.PromptResponse{Meta: map[string]any{}, StopReason: acp.StopReasonEndTurn}
 

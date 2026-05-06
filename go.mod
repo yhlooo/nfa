@@ -9,7 +9,7 @@ require (
 	charm.land/lipgloss/v2 v2.0.3
 	github.com/bombsimon/logrusr/v4 v4.1.0
 	github.com/chromedp/chromedp v0.15.1
-	github.com/coder/acp-go-sdk v0.6.3
+	github.com/coder/acp-go-sdk v0.12.2
 	github.com/firebase/genkit/go v1.7.0
 	github.com/go-logr/logr v1.4.3
 	github.com/google/uuid v1.6.0

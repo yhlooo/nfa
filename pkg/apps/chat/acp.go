@@ -18,6 +18,8 @@ type ACPAgent interface {
 	acp.AgentLoader
 }
 
+var _ acp.Client = (*Chat)(nil)
+
 // initAgent 初始化 Agent
 func (chat *Chat) initAgent(ctx context.Context) error {
 	_, err := chat.agent.Initialize(ctx, acp.InitializeRequest{

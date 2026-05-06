@@ -17,8 +17,8 @@ type ClientTerminal interface {
 	ReleaseTerminal(ctx context.Context, params acp.ReleaseTerminalRequest) (acp.ReleaseTerminalResponse, error)
 	// WaitForTerminalExit 等待终端结束
 	WaitForTerminalExit(ctx context.Context, params acp.WaitForTerminalExitRequest) (acp.WaitForTerminalExitResponse, error)
-	// KillTerminalCommand 杀终端
-	KillTerminalCommand(ctx context.Context, params acp.KillTerminalCommandRequest) (acp.KillTerminalCommandResponse, error)
+	// KillTerminal 杀终端
+	KillTerminal(ctx context.Context, params acp.KillTerminalRequest) (acp.KillTerminalResponse, error)
 }
 
 // NopTerminal 无终端
@@ -53,10 +53,10 @@ func (NopTerminal) WaitForTerminalExit(
 		fmt.Errorf("%w: method terminal/wait_for_exit not supported", ErrNotSupported)
 }
 
-// KillTerminalCommand 杀终端
-func (NopTerminal) KillTerminalCommand(
+// KillTerminal 杀终端
+func (NopTerminal) KillTerminal(
 	_ context.Context,
-	_ acp.KillTerminalCommandRequest,
-) (acp.KillTerminalCommandResponse, error) {
-	return acp.KillTerminalCommandResponse{}, fmt.Errorf("%w: method terminal/kill not supported", ErrNotSupported)
+	_ acp.KillTerminalRequest,
+) (acp.KillTerminalResponse, error) {
+	return acp.KillTerminalResponse{}, fmt.Errorf("%w: method terminal/kill not supported", ErrNotSupported)
 }
