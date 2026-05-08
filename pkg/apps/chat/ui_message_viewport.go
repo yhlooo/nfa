@@ -128,34 +128,11 @@ func (vp MessageViewport) View() string {
 func (vp MessageViewport) viewMessages(messages MessagesList, renderMD bool) string {
 	var ret strings.Builder
 	for _, msg := range messages {
-		switch msg.Type {
-		case MessageTypeUser:
-			if strings.HasPrefix(msg.Text, "/") {
-				ret.WriteString("👉 \033[1;32m" + withIndent(msg.Text, 2) + "\033[0m\n")
-			} else {
-				ret.WriteString("☝️ \033[1;32m" + withIndent(msg.Text, 2) + "\033[0m\n")
-			}
-		case MessageTypeAgent:
-			if renderMD {
-				ret.WriteString(vp.renderMarkdown(msg.Text) + "\n")
-			} else {
-				ret.WriteString(msg.Text + "\n")
-			}
-		case MessageTypeAgentThought:
-			content := msg.Text
-			//if renderMD {
-			//	content = vp.renderMarkdown(msg.Text)
-			//}
-			ret.WriteString("🧠 \033[2m" + withIndent(content, 2) + "\033[0m\n")
-		case MessageTypeToolCall:
-			ret.WriteString("🔧 \033[34m" + withIndent(msg.Text, 2) + "\033[0m\n")
-		case MessageTypeToolCallUpdate:
-			ret.WriteString("  \033[34m" + withIndent(msg.Text, 2) + "\033[0m\n")
-		case MessageTypeError:
-			ret.WriteString("❌ \033[31m" + withIndent(msg.Text, 2) + "\033[0m\n")
-		case MessageTypeUnknown:
-			ret.WriteString(msg.Text + "\n")
+		content := msg.Render()
+		if msg.Type == MessageTypeAgent && renderMD {
+			content = vp.renderMarkdown(content)
 		}
+		ret.WriteString(content + "\n")
 	}
 	return strings.TrimRight(ret.String(), "\n")
 }
@@ -164,17 +141,13 @@ func (vp MessageViewport) viewMessages(messages MessagesList, renderMD bool) str
 //
 //goland:noinspection GoMixedReceiverTypes
 func (vp *MessageViewport) Flush() tea.Cmd {
-	n := len(vp.messages) - 1
-	if vp.agentProcessing == 0 {
-		n = len(vp.messages)
-	}
-	if n <= 0 {
+	a, b := vp.messages.Split(vp.agentProcessing > 0)
+	if len(a) == 0 {
 		return nil
 	}
 
-	content := vp.viewMessages(vp.messages[:n], true)
-	vp.messages = vp.messages[n:]
-
+	content := vp.viewMessages(a, true)
+	vp.messages = b
 	return tea.Println(content)
 }
 
@@ -263,8 +236,51 @@ func renderAgentContent(content acp.ContentBlock) string {
 
 // MessageItem 消息项
 type MessageItem struct {
-	Type MessageType
-	Text string
+	Type          MessageType
+	Text          string
+	WithFirstLine bool
+}
+
+// Render 渲染
+func (msg MessageItem) Render() string {
+	emojiPrefix := ""
+	colorPrefix := ""
+	content := msg.Text
+	colorSuffix := ""
+	switch msg.Type {
+	case MessageTypeUser:
+		if strings.HasPrefix(msg.Text, "/") {
+			emojiPrefix = "👉 "
+		} else {
+			emojiPrefix = "☝️ "
+		}
+		colorPrefix = "\033[1;32m"
+	case MessageTypeAgentThought:
+		emojiPrefix = "🧠 "
+		colorPrefix = "\033[2m"
+	case MessageTypeToolCall:
+		emojiPrefix = "🔧 "
+		colorPrefix = "\033[34m"
+	case MessageTypeToolCallUpdate:
+		emojiPrefix = "  "
+		colorPrefix = "\033[34m"
+	case MessageTypeError:
+		emojiPrefix = "❌ "
+		colorPrefix = "\033[31m"
+	case MessageTypeAgent, MessageTypeUnknown:
+	default:
+	}
+	if colorPrefix != "" {
+		colorSuffix = "\033[0m"
+	}
+	if emojiPrefix != "" {
+		if !msg.WithFirstLine {
+			emojiPrefix = "  "
+		}
+		content = withIndent(msg.Text, 2)
+	}
+
+	return emojiPrefix + colorPrefix + content + colorSuffix
 }
 
 // MessageType 消息类型
@@ -288,6 +304,7 @@ func (l MessagesList) Append(item MessageItem) MessagesList {
 	if len(l) == 0 ||
 		!slices.Contains([]MessageType{MessageTypeUser, MessageTypeAgent, MessageTypeAgentThought}, item.Type) ||
 		item.Type != l[len(l)-1].Type {
+		item.WithFirstLine = true
 		return append(l, item)
 	}
 
@@ -296,4 +313,38 @@ func (l MessagesList) Append(item MessageItem) MessagesList {
 	l[len(l)-1] = last
 
 	return l
+}
+
+// Split 将消息列表切分为前面的固定部分和最后的可追加部分
+func (l MessagesList) Split(agentProcessing bool) (MessagesList, MessagesList) {
+	i := len(l) - 1
+	if !agentProcessing {
+		i = len(l)
+	}
+	if i < 0 {
+		i = 0
+	}
+
+	a := make(MessagesList, i)
+	copy(a, l[:i])
+	b := l[i:]
+
+	// 最后一个消息按行切分
+	if len(b) == 1 && strings.Contains(b[0].Text, "\n") {
+		sep := "\n"
+		if b[0].Type == MessageTypeAgent {
+			sep = "\n\n"
+		}
+
+		divided := strings.Split(b[0].Text, sep)
+		a = append(a, MessageItem{
+			Type:          b[0].Type,
+			Text:          strings.Join(divided[:len(divided)-1], sep),
+			WithFirstLine: b[0].WithFirstLine,
+		})
+		b[0].Text = divided[len(divided)-1]
+		b[0].WithFirstLine = false
+	}
+
+	return a, b
 }
