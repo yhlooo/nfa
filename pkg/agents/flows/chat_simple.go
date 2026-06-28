@@ -46,6 +46,7 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts ...ai.GenerateO
 			}
 
 			reflected := false
+			subTurn := 0
 			var finalMsgParts []*ai.Part
 			for {
 				curTurnOpts := append([]ai.GenerateOption{ai.WithMessages(messages...)}, opts...)
@@ -65,19 +66,21 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts ...ai.GenerateO
 				if resp.Usage != nil {
 					output.LastContextWindow = int64(resp.Usage.InputTokens)
 				}
+				subTurn++
 
 				toolRequests := resp.ToolRequests()
 				if len(toolRequests) == 0 {
 					// 反思一轮
-					if !reflected {
-						// 记录反思前最后一轮思考内容
-						for _, p := range resp.Message.Content {
-							if p.IsReasoning() {
-								finalMsgParts = append(finalMsgParts, p)
+					if subTurn > 3 {
+						if !reflected {
+							// 记录反思前最后一轮思考内容
+							for _, p := range resp.Message.Content {
+								if p.IsReasoning() {
+									finalMsgParts = append(finalMsgParts, p)
+								}
 							}
-						}
 
-						messages = append(messages, ai.NewUserTextMessage(`[SystemPrompt] 请根据以下检查项反思你的回答是否正确解决了用户的问题，并在确认无误后重新组织回答：
+							messages = append(messages, ai.NewUserTextMessage(`[SystemPrompt] 请根据以下检查项反思你的回答是否正确解决了用户的问题，并在确认无误后重新组织回答：
 1. 形式：检查回答在形式上是否真正回答了用户的问题？
 2. 广度和深度：回顾自己的之前的思考是否已经充分考虑了问题的广度和深度，是否有关键遗漏？
 3. 事实和数据：评估支撑自己结论的关键数据是什么？数据对结论是否形成有力支撑？这些数据的来源是否真实可靠？
@@ -86,25 +89,26 @@ func DefineSimpleChatFlow(g *genkit.Genkit, name string, genOpts ...ai.GenerateO
 **注意：新组织的回答应当作给用户的第一个回答，不应该向用户透露反思结果等额外信息**
 `))
 
-						if handleStream != nil {
-							if err := handleStream(ctx, &ai.ModelResponseChunk{
-								Content: []*ai.Part{ai.NewReasoningPart("[reflection] ", nil)},
-								Role:    ai.RoleModel,
-							}); err != nil {
-								return output, fmt.Errorf("handle stream error: %w", err)
+							if handleStream != nil {
+								if err := handleStream(ctx, &ai.ModelResponseChunk{
+									Content: []*ai.Part{ai.NewReasoningPart("[reflection] ", nil)},
+									Role:    ai.RoleModel,
+								}); err != nil {
+									return output, fmt.Errorf("handle stream error: %w", err)
+								}
+							}
+							reflected = true
+							continue
+						}
+
+						// 反思前思考拼上反思后的回答作为最终结果
+						for _, p := range resp.Message.Content {
+							if !p.IsReasoning() {
+								finalMsgParts = append(finalMsgParts, p)
 							}
 						}
-						reflected = true
-						continue
+						resp.Message.Content = finalMsgParts
 					}
-
-					// 反思前思考拼上反思后的回答作为最终结果
-					for _, p := range resp.Message.Content {
-						if !p.IsReasoning() {
-							finalMsgParts = append(finalMsgParts, p)
-						}
-					}
-					resp.Message.Content = finalMsgParts
 
 					// 结束对话
 					output.Messages = append(output.Messages, resp.Message)
