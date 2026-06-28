@@ -184,12 +184,13 @@ func NewCommand(name string) *cobra.Command {
 
 			// 创建 Agent
 			agent := agents.NewNFA(agents.Options{
-				Logger:         logger,
-				Localizer:      i18n.LocalizerFromContext(ctx),
-				ModelProviders: cfg.ModelProviders,
-				DataProviders:  cfg.DataProviders,
-				DefaultModels:  m,
-				DataRoot:       globalOpts.DataRoot,
+				Logger:           logger,
+				Localizer:        i18n.LocalizerFromContext(ctx),
+				ModelProviders:   cfg.ModelProviders,
+				DataProviders:    cfg.DataProviders,
+				DefaultModels:    m,
+				DataRoot:         globalOpts.DataRoot,
+				MaxContextWindow: cfg.MaxContextWindow,
 			})
 
 			// 连接信道

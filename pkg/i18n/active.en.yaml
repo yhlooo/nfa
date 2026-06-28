@@ -9,21 +9,16 @@ commands.GlobalOptsLangDesc: The language used in UI (en or zh)
 commands.GlobalOptsVerbosityDesc: Number for the log level verbosity (0, 1, or 2)
 commands.ModelContextTag: Context
 commands.ModelNameTag: Name
-commands.ModelsAddMissingRequired: 'Missing required flag(s): {{.Flags}}'
 commands.ModelsAddOptAPIKeyDesc: API key for the provider
 commands.ModelsAddOptBaseURLDesc: Base URL for the provider API
 commands.ModelsAddOptNameDesc: Display name for the provider (required for openai-compatible)
-commands.ModelsAddOptServerAddressDesc: Ollama server address
-commands.ModelsAddOptTimeoutDesc: Ollama request timeout in seconds
-commands.ModelsAddSuccess: Model provider "{{.Name}}" added successfully
-commands.ModelsAddUnknownProvider: 'Unknown provider type "{{.Name}}". Supported providers: {{.Providers}}'
 commands.OtterOptsBackgroundDesc: Print with background
 commands.OtterOptsColorDesc: Print with color
 commands.OtterOptsScaleDesc: Scaling factor
 commands.ReasoningTag: Reasoning
-commands.RootOptsLightModelDesc: Light model for the current session
 commands.RootOptsModelDesc: Primary model for the current session
 commands.RootOptsPrintAndExitDesc: Print answer and exit after responding
+commands.RootOptsReasoningLevelDesc: Reasoning level (0, 1 or 2)
 commands.RootOptsResumeDesc: Resume a previous session by session ID
 commands.RootOptsVisionModelDesc: Vision model for the current session
 commands.ScoreTag: Score
